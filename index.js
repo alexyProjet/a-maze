@@ -10,16 +10,92 @@ app.set('view engine', 'pug')
 app.use(express.static(path.join(__dirname, '/public')))
 app.use(ignoreFavicon)
 
+const newId = () => Math.floor(Math.random()*1000000000)
+
 // const fs = require('fs')
 
-app.ws('/*', (ws, req) => {
-/*    ws.send(JSON.stringify(data))
+
+
+const position = (x,y) => Object({x,y})
+const player = (position,role,score=0,inventory=[],id=newId()) => Object({id,position,role,score,inventory})
+const piege = (parentId,position,triggered=null,id=newId()) => Object({parentId,position,triggered})
+const reward = (position,score) => Object({position,score})
+const map = () => [1] || [
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+]
+let model = {
+    players: [],
+    traps: [],
+    rewards:[],
+    map:map()
+}
+
+const fuzeTime = 500
+const thickness = 0.5
+
+const roles = {
+    explorer: true,
+    trapper: false
+}
+
+clients = []
+const updateModels = model => clients.forEach(client => client.send(JSON.stringify(model)))
+
+const collision = (posEntity, listEntity) => listEntity.map(v => distance(posEntity, v.position)).filter(v => v < 2 * thickness)
+const plan_explosion = (trap1) => setTimeout(() => {
+    collision(trap1.position, model.players).forEach(player1 => {
+        player1.role = roles.trapper
+        model.players.filter(player2 => player2.id == trap1.parentId).forEach(killer => killer.score++) //FIXME: donne des points en cas de suicide, mince :)))
+        model.traps = model.traps.filter(candidat => candidat.id != trap1.id)
+    })
+},fuzeTime)
+
+
+app.ws('/', (ws, req) => {
+    let key = newId()
+    
+    clients[key] = ws
+    
+    ref = player(position(1,1),roles.explorer)
+//    console.log(JSON.stringify(ref))
+    model.players.push(ref)
+
+    ws.send(JSON.stringify(model))
+
     ws.on('message', msg => {
-      Object.assign(data,JSON.parse(msg))
-      updateModels(data)
+        let data = JSON.parse(msg)
+        if(data.type == "PLACE"){
+            model.traps.push(data.trap) // FIXME: mmake sure the reference is not lost
+            model.rewards.push(data.reward)
+
+            if(collision(data.trap.position, model.players) > 0) {
+                data.trap.triggered = Date.now()
+                plan_explosion(trap1)
+            }
+        }
+
+        else if(data.type == "MOVE"){
+            
+            ref.position = data.position
+            // let trapTrigger = collision(ref.position, model.traps);
+            // trapTrigger.forEach(trap1 => {
+            //     trap1.triggered = Date.now();
+            //     plan_explosion(trap1)
+            // })
+        }
+        updateModels(model)
     })
     ws.on('close',() => delete clients[key])
-*/
 })
 
 app.get('*', (req, resp) => resp.render('game'))
