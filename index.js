@@ -10,7 +10,6 @@ app.set('view engine', 'pug')
 app.use(express.static(path.join(__dirname, '/public')))
 app.use(ignoreFavicon)
 
-
 // const fs = require('fs')
 
 app.ws('/*', (ws, req) => {
