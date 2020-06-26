@@ -1,10 +1,19 @@
 class Renderer{
 
     constructor(){
+        this.canva = document.getElementById("renderer")
+        this.canva.setAttribute('width', window.innerWidth);
+        this.canva.setAttribute('height', window.innerHeight); //set à la longueur et largeur de la fenetre    
+
         this.context = document.getElementById("renderer").getContext("2d")
 
-        this.spriteWidth = Math.floor($("#renderer")[0].clientWidth / 60)
-        this.spriteHeight = Math.floor($("#renderer")[0].clientHeight / 60)
+        this.context.imageSmoothingEnabled = false;
+        this.context.mozImageSmoothingEnabled = false;
+        this.context.webkitImageSmoothingEnabled = false;
+        this.context.msImageSmoothingEnabled = false;
+
+        this.spriteWidth = Math.floor($("#renderer")[0].clientHeight / 22)
+        this.spriteHeight = Math.floor($("#renderer")[0].clientHeight / 22)
 
         this.isAssetLoadingOver = false
     }
@@ -42,9 +51,12 @@ class Renderer{
         this.mainPlayer_Left2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_20.png", this.spriteWidth/2, this.spriteHeight/2)
         this.mainPlayer_Left3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_18.png", this.spriteWidth/2, this.spriteHeight/2)
 
+        this.anonymousEntity = await this._syncedLoadImg("/img/PNG/Default size/Ground/environment_07.png", this.spriteWidth, this.spriteHeight)
+        
         this.isAssetLoadingOver = true
     }
 
+    
     async _syncedLoadImg(src_, width_, height_){
         let ctx = this.context
         return await new Promise( (resolve, reject) =>{
@@ -59,84 +71,56 @@ class Renderer{
         })
     }
 
-    /*
+    clearAll(){
+        this.context.clearRect(0, 0, this.canva.width, this.canva.height);
+    }
+  
     //recoit un tableau de 0 et 1
     //1 est un mur, 0 est du sol
     map(mapArray){
         for (var i = 0; i < mapArray.length; i++) {
-            for (var j = 0; j < mapArray.length; j++) {
+            for (var j = 0; j < mapArray[i].length; j++) {
                 if (mapArray[i][j] == 0) {
-                    //canva render img  ground_06.png c'est du sol
+                    this.context.drawImage(this.floor, j * this.floor.width, i * this.floor.height, this.floor.width, this.floor.height) //rend le sol
                 }
                 else {
+                  	this.context.drawImage(this.wall, j * this.wall.width, i * this.wall.height, this.wall.width, this.wall.height) //canva block_03 c'est un mur
                 }
-                //canva block_03 c'est un mur
+                
             }
         }
     }
 
-    trap(trapArray){
+    traps(trapArray){
         for (var i = 0; i < trapArray.length; i++) {
-            float coordX = trapArray[i].x
-            float coordY = trapArray[i].y
+            let coordX = trapArray[i].x
+            let coordY = trapArray[i].y
             if (myPlayer.role == "explorer") {
-                //canvamescouilles x et y afficher environment07 
+                 this.context.drawImage(this.anonymousEntity, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité anonyme 
             } else {
-                //canvamescouilles x et y afficher environment05 
+                this.context.drawImage(this, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.this.spriteHeight) // Entité piège
             }
         }
     }
 
     bonus(bonusArray){
         for (var i = 0; i < bonusArray.length; i++) {
-            float coordX = bonusArray[i].x
-            float coordY = bonusArray[i].y
+            let coordX = bonusArray[i].x
+            let coordY = bonusArray[i].y
             if (myPlayer.role == "explorer") {
-                //canvamescouilles x et y afficher environment07 
+                this.context.drawImage(this.anonymousEntity, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité anonyme 
             } else {
-                //canvamescouilles x et y afficher environment12
+                this.context.drawImage(this.bonus, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.this.spriteHeight) // Entité bonus
             }
         }
     }
 
     players(playersArray){
-        for (var i = 0; i < playersArray.length; i++) {spriteWidth
-            //canva draw mes couilles x y :)
+        for (var i = 0; i < playersArray.length; i++) {
+            let coordX = playersArray[i].x
+            let coordY = playersArray[i].y
+            this.context.drawImage(this.player, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité bonus
         }
-    }*/
-
-    _numToImg(number_) {
-        switch (number_) {
-            case 0:
-                return this.floor
-            case 1:
-                return this.wall
-            case 2:
-                return this.trap
-            case 3:
-                return this.bonus
-        }
-    }
-
-
-    /** 
-     * Fait le rendu de la même avec chaque case qui correspond au numéro donné
-     * 0: sol
-     * 1: mur
-     * 2: piège
-     * 3: bonus
-     */
-    renderMap(mapArray_) {
-        if(!this.isAssetLoadingOver) {
-            console.log("Les assets ont pas eu le temps de se charger :/")
-            return false
-        }
-        for (let i in mapArray_) {
-            for (let j in mapArray_[i]) {
-                this.context.drawImage(this._numToImg(mapArray_[i][j]), j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight)
-            }
-        }
-        return true
     }
 
 }
