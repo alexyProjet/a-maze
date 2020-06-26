@@ -3,7 +3,9 @@ class UI {
     constructor() {
         this.mainPlayerID = null
         this.allPlayerIDs = new Set()
-        this.renderer = 
+        this.renderer = new Renderer()
+        this.renderer.loadAssets()
+        this.renderer.renderMap([[0,1],[0,0]])
     }
 
     /** */
@@ -36,25 +38,6 @@ class UI {
 
     /** Modifie la coordonnée du joueur donné */
     movePlayerTo(playerId_, coordinates_) {
-
-    }
-
-    renderMap(mapArray) {
-        for (var i = 0; i < mapArray.length; i++) {
-            for (var j = 0; j < mapArray.length; j++) {
-                switch (mapArray[i][j]) {
-                    case 0: //sol
-                        document.getElementById("renderer").getContext("2d")
-                        break;
-                    case 1: //mur
-                        break;
-                    case 2: //bonus
-                        break;
-                    case 3: //piège
-                        break;
-                }
-            }
-        }
 
     }
 }
