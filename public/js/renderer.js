@@ -8,7 +8,6 @@ class Renderer{
         this.context = document.getElementById("renderer").getContext("2d")
 
         this.context.imageSmoothingEnabled = false;
-        this.context.mozImageSmoothingEnabled = false;
         this.context.webkitImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
 
@@ -24,35 +23,37 @@ class Renderer{
         this.trap = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_03.png", this.spriteWidth, this.spriteHeight)
         this.bonus = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_04.png", this.spriteWidth, this.spriteHeight)
 
-        this.ennemyPlayer_Back1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_01.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Back2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_02.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Back3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_24.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Front1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_22.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Front2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_23.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Front3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_21.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Right1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_10.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Right2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_11.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Right2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_09.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Left1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_13.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Left2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_14.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.ennemyPlayer_Left3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_12.png", this.spriteWidth/2, this.spriteHeight/2)
-
-
-        this.mainPlayer_Front1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_04.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Front2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_05.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Front3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_03.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Back1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_07.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Back2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_08.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Back3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_06.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Right1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_16.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Right2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_17.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Right3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_15.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Left1 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_19.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Left2 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_20.png", this.spriteWidth/2, this.spriteHeight/2)
-        this.mainPlayer_Left3 = await this._syncedLoadImg("file:///home/breizh/Desktop/Game2/public/img/PNG/Retina/Player/player_18.png", this.spriteWidth/2, this.spriteHeight/2)
-
-        this.anonymousEntity = await this._syncedLoadImg("/img/PNG/Default size/Ground/environment_07.png", this.spriteWidth, this.spriteHeight)
+        let halfWidth = Math.floor(this.spriteWidth/2)
+        let halfHeight = Math.floor(this.spriteHeight/2)
         
+        this.ennemyPlayer_Back1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Back2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_02.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Back3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_24.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Front1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_22.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Front2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_23.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Front3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_21.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Right1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_10.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Right2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_11.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Right2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_09.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Left1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_13.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Left2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_14.png", halfWidth, halfHeight)
+        this.ennemyPlayer_Left3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_12.png", halfWidth, halfHeight)
+
+        this.mainPlayer_Front1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_04.png", halfWidth, halfHeight)
+        this.mainPlayer_Front2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_05.png", halfWidth, halfHeight)
+        this.mainPlayer_Front3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_03.png", halfWidth, halfHeight)
+        this.mainPlayer_Back1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_07.png", halfWidth, halfHeight)
+        this.mainPlayer_Back2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_08.png", halfWidth, halfHeight)
+        this.mainPlayer_Back3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_06.png", halfWidth, halfHeight)
+        this.mainPlayer_Right1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_16.png", halfWidth, halfHeight)
+        this.mainPlayer_Right2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_17.png", halfWidth, halfHeight)
+        this.mainPlayer_Right3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_15.png", halfWidth, halfHeight)
+        this.mainPlayer_Left1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_19.png", halfWidth, halfHeight)
+        this.mainPlayer_Left2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_20.png", halfWidth, halfHeight)
+        this.mainPlayer_Left3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_18.png", halfWidth, halfHeight)
+        
+        this.anonymousEntity = await this._syncedLoadImg("/img/PNG/Default%20size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
+
         this.isAssetLoadingOver = true
     }
 
@@ -63,12 +64,12 @@ class Renderer{
             let result = new Image(width_, height_)
             result.src = src_
             result.onload = () => {
-                console.log(ctx)
-                ctx.imageSmoothingEnabled = false; // empeche que ce soit degueu EN FAIT NON MDR
+                //console.log(ctx)
+                //ctx.imageSmoothingEnabled = false; // empeche que ce soit degueu EN FAIT NON MDR
                 resolve(result)
             }
             result.onerror = reject
-        })
+        }).catch(error => console.log(error))
     }
 
     clearAll(){
@@ -80,10 +81,8 @@ class Renderer{
     map(mapArray){
         for (var i = 0; i < mapArray.length; i++) {
             for (var j = 0; j < mapArray[i].length; j++) {
-                if (mapArray[i][j] == 0) {
-                    this.context.drawImage(this.floor, j * this.floor.width, i * this.floor.height, this.floor.width, this.floor.height) //rend le sol
-                }
-                else {
+                this.context.drawImage(this.floor, j * this.floor.width, i * this.floor.height, this.floor.width, this.floor.height) //rend le sol
+                if (mapArray[i][j] == 1) {
                   	this.context.drawImage(this.wall, j * this.wall.width, i * this.wall.height, this.wall.width, this.wall.height) //canva block_03 c'est un mur
                 }
                 
