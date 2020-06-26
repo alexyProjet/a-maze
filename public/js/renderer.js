@@ -106,7 +106,7 @@ class Renderer {
     }
     //rend sombre tout autour du joueur
     darken() {
-        let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
+        let myPlayer = controller.getCurrentPlayer()
         let coordX = myPlayer.position.x
         let coordY = myPlayer.position.y
         this.context.beginPath()
@@ -122,7 +122,7 @@ class Renderer {
             let coordX = trapArray[i].position.x
             let coordY = trapArray[i].position.y
             console.log("ackack",coordX,coordY)
-            let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
+            let myPlayer = controller.getCurrentPlayer()
             if (myPlayer.role == true) {
                 this.context.drawImage(this.anonymousEntity, coordX * this.anonymousEntity.width, coordY * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
@@ -134,7 +134,7 @@ class Renderer {
         for (var i = 0; i < bonusArray.length; i++) {
             let coordX = bonusArray[i].x
             let coordY = bonusArray[i].y
-            let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
+            let myPlayer = controller.getCurrentPlayer()
             if (myPlayer.role == true) {
                 this.context.drawImage(this.anonymousEntity, coordX * this.anonymousEntity.width, coordY * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
