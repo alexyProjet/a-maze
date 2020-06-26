@@ -1,6 +1,6 @@
 const wsUrl = `localhost:3000`
 
-const controller = () => {
+const controller = (() => {
 
     let ws
 
@@ -23,4 +23,4 @@ const controller = () => {
 
     return { moveTo, place, getModel }
 
-}
+})()
