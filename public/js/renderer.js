@@ -15,6 +15,7 @@ class Renderer{
         this.spriteHeight = Math.floor($("#renderer")[0].clientHeight / 22)
 
         this.isAssetLoadingOver = false
+       
     }
 
     async loadAssets(){
@@ -78,7 +79,10 @@ class Renderer{
   
     //recoit un tableau de 0 et 1
     //1 est un mur, 0 est du sol
-    map(mapArray){
+    map(/*mapArray*/){
+        //temp
+        let mapArray = [    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],    [1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,0,0,1],[1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0,0,1,0,0,0,0,1,0,0,1,0,1],[1,0,0,1,0,0,0,1,0,0,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,1,0,1],[1,0,0,0,0,0,0,1,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],[1,0,0,0,1,1,1,1,1,1,1,0,1,0,1,0,1,0,0,1,0,0,0,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,1,0,0,1,0,1,0,1,0,0,1,0,0,0,1,0,0,0,1,0,1],[1,0,1,1,1,1,1,0,0,1,0,0,0,0,0,0,0,1,0,0,1,0,1,1,0,0,1,1,0,1],[1,0,0,0,0,0,1,0,0,1,0,1,1,1,1,0,0,1,0,0,1,0,1,0,0,1,1,1,0,1],    [1,0,1,1,0,1,0,0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,1,1],[1,0,0,1,0,1,1,1,0,0,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,0,1,1,1],[1,0,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,1,0,0,1,1,0,1],[1,0,1,0,0,0,0,1,0,0,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,0,1,0,1],[1,0,0,1,1,1,1,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,1,1,0,0,1,0,1],[1,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1],[1,0,0,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1],[1,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1,1,1,1],[1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]]
+   
         for (var i = 0; i < mapArray.length; i++) {
             for (var j = 0; j < mapArray[i].length; j++) {
                 this.context.drawImage(this.floor, j * this.floor.width, i * this.floor.height, this.floor.width, this.floor.height) //rend le sol
@@ -89,6 +93,17 @@ class Renderer{
             }
         }
     }
+
+    //rend sombre tout autour du joueur
+    darken(){
+        let coordX = model.actualPlayer.position[0]
+        let coordY = model.actualPlayer.position[1]
+        this.context.beginPath()
+        this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
+        this.context.arc(coordX,coordY,55,0,Math.PI*2, true);
+        this.context.fill();
+    }
+
 
     traps(trapArray){
         for (var i = 0; i < trapArray.length; i++) {
@@ -120,6 +135,5 @@ class Renderer{
             let coordY = playersArray[i].y
             this.context.drawImage(this.player, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité bonus
         }
-    }
-
+    }   
 }
