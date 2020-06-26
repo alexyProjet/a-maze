@@ -11,7 +11,6 @@ class UI {
     homeInterface() {
         //NOTTODO  
     }
-    
 
     /**Contient le labyrinthe
         les joueurs

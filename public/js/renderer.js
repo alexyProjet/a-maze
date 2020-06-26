@@ -1,4 +1,3 @@
-var model = { actualPlayer: { position: [0, 0], role: "explorer" } }
 class Renderer {
 
     constructor(isShadowed_ = true) {
@@ -23,11 +22,6 @@ class Renderer {
     }
 
     async loadAssets() {
-        this.floor = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_06.png", this.spriteWidth, this.spriteHeight)
-        this.wall = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
-        this.trap = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_03.png", this.spriteWidth, this.spriteHeight)
-        this.bonus = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_04.png", this.spriteWidth, this.spriteHeight)
-
         this.ennemyPlayer_Back1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_02.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_24.png", this.halfWidth, this.halfHeight)
@@ -99,11 +93,9 @@ class Renderer {
                 if (mapArray[i][j] == 1) {
                     this.context.drawImage(this.wall, j * this.wall.width, i * this.wall.height, this.wall.width, this.wall.height) //canva block_03 c'est un mur
                 }
-
             }
         }
     }
-
     //rend sombre tout autour du joueur
     darken() {
         let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
@@ -128,7 +120,6 @@ class Renderer {
             }
         }
     }
-
     bonus(bonusArray) {
         for (var i = 0; i < bonusArray.length; i++) {
             let coordX = bonusArray[i].x
@@ -138,6 +129,7 @@ class Renderer {
                 this.context.drawImage(this.anonymousEntity, coordX * this.anonymousEntity.width, coordY * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
                 this.context.drawImage(this.bonus, coordX * this.bonus.width, coordY * this.bonus.height, this.bonus.width, this.bonus.height) // Entité bonus
+
             }
         }
     }
