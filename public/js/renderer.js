@@ -22,6 +22,14 @@ class Renderer {
     }
 
     async loadAssets() {
+        this.floor = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_06.png", this.spriteWidth, this.spriteHeight)
+        this.wall = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
+        this.trap = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_03.png", this.spriteWidth, this.spriteHeight)
+        this.bonus = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_04.png", this.spriteWidth, this.spriteHeight)
+
+        this.player = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight) //FIXME: DELETE DIS
+
+
         this.ennemyPlayer_Back1 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back2 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_02.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back3 = await this._syncedLoadImg("/img/PNG/Retina/Player/player_24.png", this.halfWidth, this.halfHeight)
@@ -99,21 +107,23 @@ class Renderer {
     //rend sombre tout autour du joueur
     darken() {
         let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
-        let coordX = myPlayer.position[0]
-        let coordY = myPlayer.position[1]
+        let coordX = myPlayer.position.x
+        let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        this.context.arc(coordX, coordY, 55, 0, Math.PI * 2, true);
+        console.log("ack",myPlayer,coordX,coordY)
+        this.context.arc(coordX * this.spriteWidth, coordY * this.spriteHeight, 55, 0, Math.PI * 2, true);
         this.context.fill();
     }
 
 
     traps(trapArray) {
         for (var i = 0; i < trapArray.length; i++) {
-            let coordX = trapArray[i].x
-            let coordY = trapArray[i].y
+            let coordX = trapArray[i].position.x
+            let coordY = trapArray[i].position.y
+            console.log("ackack",coordX,coordY)
             let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
-            if (myPlayer.role == "explorer") {
+            if (myPlayer.role == true) {
                 this.context.drawImage(this.anonymousEntity, coordX * this.anonymousEntity.width, coordY * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
                 this.context.drawImage(this.trap, coordX * this.trap.width, coordY * this.trap.height, this.trap.width, this.trap.height) // Entité piège
@@ -125,7 +135,7 @@ class Renderer {
             let coordX = bonusArray[i].x
             let coordY = bonusArray[i].y
             let myPlayer = controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
-            if (myPlayer.role == "explorer") {
+            if (myPlayer.role == true) {
                 this.context.drawImage(this.anonymousEntity, coordX * this.anonymousEntity.width, coordY * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
                 this.context.drawImage(this.bonus, coordX * this.bonus.width, coordY * this.bonus.height, this.bonus.width, this.bonus.height) // Entité bonus
@@ -136,9 +146,13 @@ class Renderer {
 
     players(playersArray) {
         for (var i = 0; i < playersArray.length; i++) {
-            let coordX = playersArray[i].x
-            let coordY = playersArray[i].y
-            this.context.drawImage(this.player, coordX * this.player.halfWidth, coordY * this.player.halfHeight, this.player.halfWidth, this.player.halfHeight) // Entité bonus
+            if(playersArray[i]){
+                let coordX = playersArray[i].position.x
+                let coordY = playersArray[i].position.y
+                console.log("ackackackacacacacac",coordX,coordY,this.player)
+
+                this.context.drawImage(this.player, coordX * this.player.halfWidth, coordY * this.player.halfHeight, this.player.halfWidth, this.player.halfHeight) // Entité bonus
+            }
         }
     }
 }

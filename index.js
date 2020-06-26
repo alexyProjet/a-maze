@@ -104,7 +104,7 @@ app.ws('/', (ws, req) => {
         delete model.players[key];
         updateModels(model);
     })
-
+})
 app.get('*', (req, resp) => resp.render('game'))
 app.listen(port)
-JSON.stringify(trap(0,))
+//JSON.stringify(trap(0,))
