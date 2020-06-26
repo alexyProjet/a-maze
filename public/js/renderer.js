@@ -1,6 +1,6 @@
 class Renderer{
 
-    constructor(){
+    constructor(isShadowed_ = false){
         this.canva = document.getElementById("renderer")
         this.canva.setAttribute('width', window.innerWidth);
         this.canva.setAttribute('height', window.innerHeight); //set à la longueur et largeur de la fenetre    
@@ -15,7 +15,8 @@ class Renderer{
         this.spriteHeight = Math.floor($("#renderer")[0].clientHeight / 22)
 
         this.isAssetLoadingOver = false
-       
+
+        this.isShadowed = isShadowed_
     }
 
     async loadAssets(){
@@ -75,6 +76,15 @@ class Renderer{
 
     clearAll(){
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
+    }
+
+    render(){
+        this.map()
+        this.traps()
+        this.bonus()
+        this.players()
+        if(this.isShadowed) this.darken()
+        window.requestAnimationFrame(this.render)
     }
   
     //recoit un tableau de 0 et 1
