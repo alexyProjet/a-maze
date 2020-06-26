@@ -15,7 +15,6 @@ class Renderer{
         this.spriteHeight = Math.floor($("#renderer")[0].clientHeight / 22)
 
         this.isAssetLoadingOver = false
-       
     }
 
     async loadAssets(){
@@ -109,10 +108,10 @@ class Renderer{
         for (var i = 0; i < trapArray.length; i++) {
             let coordX = trapArray[i].x
             let coordY = trapArray[i].y
-            if (myPlayer.role == "explorer") {
-                 this.context.drawImage(this.anonymousEntity, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité anonyme 
+            if (model.actualPlayer.role == "explorer") {
+                 this.context.drawImage(this.anonymousEntity, j * this.anonymousEntity.width, i * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
-                this.context.drawImage(this, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.this.spriteHeight) // Entité piège
+                this.context.drawImage(this.trap, j * this.trap.width, i * this.trap.height, this.trap.width, this.trap.height) // Entité piège
             }
         }
     }
@@ -121,10 +120,10 @@ class Renderer{
         for (var i = 0; i < bonusArray.length; i++) {
             let coordX = bonusArray[i].x
             let coordY = bonusArray[i].y
-            if (myPlayer.role == "explorer") {
-                this.context.drawImage(this.anonymousEntity, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité anonyme 
+            if (model.actualPlayer.role == "explorer") {
+                this.context.drawImage(this.anonymousEntity, j * this.anonymousEntity.width, i * this.anonymousEntity.height, this.anonymousEntity.width, this.anonymousEntity.height) // Entité anonyme 
             } else {
-                this.context.drawImage(this.bonus, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.this.spriteHeight) // Entité bonus
+                this.context.drawImage(this.bonus, j * this.bonus.width, i * this.bonus.height, this.bonus.width, this.bonus.height) // Entité bonus
             }
         }
     }
@@ -133,7 +132,7 @@ class Renderer{
         for (var i = 0; i < playersArray.length; i++) {
             let coordX = playersArray[i].x
             let coordY = playersArray[i].y
-            this.context.drawImage(this.player, j * this.spriteWidth, i * this.spriteHeight, this.spriteWidth, this.spriteHeight) // Entité bonus
+            this.context.drawImage(this.player, j * this.player.halfWidth, i * this.player.halfHeight, this.player.halfWidth, this.player.halfHeight) // Entité bonus
         }
     }   
 }
