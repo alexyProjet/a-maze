@@ -54,12 +54,12 @@ const roles = {
 clients = []
 const updateModels = model => clients.forEach((client,i) => client.send(JSON.stringify(Object.assign({currentPlayer:model.players[i].id},model))))
 
-const collision = (posEntity, listEntity) => listEntity.map(v => distance(posEntity, v.position)).filter(v => v < 2 * thickness)
+const collision = (posEntity, listEntity) => listEntity.filter(Boolean).map(v => distance(posEntity, v.position)).filter(v => v < 2 * thickness)
 const plan_explosion = (trap1) => setTimeout(() => {
     console.log("collision1")
     collision(trap1.position, model.players).forEach(player1 => {
         player1.role = roles.trapper
-        model.players.filter(player2 => player2.id == trap1.parentId).forEach(killer => killer.score++) //FIXME: donne des points en cas de suicide, mince :)))
+        model.players.filter(Boolean).filter(player2 => player2.id == trap1.parentId).forEach(killer => killer.score++) //FIXME: donne des points en cas de suicide, mince :)))
         model.traps = model.traps.filter(candidat => candidat.id != trap1.id)
     })
 },fuzeTime)

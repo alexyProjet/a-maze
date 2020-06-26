@@ -18,7 +18,7 @@ const controller = (() => {
     const place = (trapPosition, rewardPosition) => ws.send(JSON.stringify({ type : "PLACE", trap: trapPosition, reward: rewardPosition }))
 
     const getModel = () => { return model }
-    const getCurrentPlayer = () => controller.getModel().players.filter(p => p.id == controller.getModel().currentPlayer)[0]
+    const getCurrentPlayer = () => controller.getModel().players.filter(Boolean).filter(p => p.id == controller.getModel().currentPlayer)[0]
 
     return { moveTo, place, getModel,getCurrentPlayer}
 
