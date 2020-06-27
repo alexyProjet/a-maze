@@ -229,7 +229,7 @@ class Vue {
         let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        this.context.arc(coordX * this.halfWidth + this.halfWidth/2, coordY * this.halfHeight + this.halfHeight/2, 100, 0, Math.PI * 2, true);
+        this.context.arc(coordX * this.spriteWidth, coordY * this.spriteHeight, 100, 0, Math.PI * 2, true);
         this.context.fill();
     }
 
@@ -287,7 +287,7 @@ class Vue {
             if(playersArray[i]){
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                this.context.drawImage(this.playerAsset, coordX * this.playerAsset.width, coordY * this.playerAsset.height, this.playerAsset.width, this.playerAsset.height) // Entité bonus
+                this.context.drawImage(this.playerAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.playerAsset.width, this.playerAsset.height)
             }
         }
     }

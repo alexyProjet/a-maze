@@ -50,7 +50,7 @@ let model = {
 } //structure du model
 
 const fuzeTime = 500 //temps d'eplosion piege entre declenchement eet tue
-const thickness = 1.0 // taille joueur et piege, rayon à verifier
+const thickness = 0.5 // taille joueur et piege, rayon à verifier
 
 const roles = {
     explorer: true,
@@ -82,13 +82,12 @@ const plan_explosion = (trap1) => setTimeout(() => {
     })
 },fuzeTime)
 
-//donne 4 coins d'un carré, sert pour le calcu de collision avec map
-//collisons sont ronde entre entité et carré avec maps
-const corners = (pos,size) =>  [
-        position(Math.floor(pos.x - size/2.0), Math.floor(pos.y - size/2.0)),
-        position(Math.floor(pos.x + size/2.0), Math.floor(pos.y - size/2.0)),
-        position(Math.floor(pos.x + size/2.0), Math.floor(pos.y + size/2.0)),
-        position(Math.floor(pos.x - size/2.0), Math.floor(pos.y + size/2.0))
+//donne un tableau des collisions possible autour du joueur
+const collisionMurs = (pos,size) =>  [
+        position(Math.floor(pos.x), Math.floor(pos.y)),// haut gauche
+        position(Math.floor(pos.x + size), Math.floor(pos.y)),// haut droite
+        position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
+        position(Math.floor(pos.x), Math.floor(pos.y + size))// bas gauche
 ]
 
 //donne joueur via id
@@ -106,7 +105,6 @@ app.ws('/', (ws, req) => {
     //quand recoit message client
     ws.on('message', msg => {
         let data = JSON.parse(msg)
-
         //check type de message recu
         if(data.type == "PLACE"){
             trap_instance = trap(model.players[key].id,data.trap) //creer un piege avec les données recu et ce qu'on a deja
@@ -125,22 +123,26 @@ app.ws('/', (ws, req) => {
 
         //si message move
         else if(data.type == "MOVE"){
-            //commenter cette ligne pour voir si collision fonctionne
-            ref.position = data.position //set la pos du joueur à celle envoyé dans moove, pas de cool ducoup
 
-            let trapTrigger = collision(ref.position, model.traps);//vérifie si joueurs col avec piege
+            //vérifie si joueurs collision avec piege
+            let trapTrigger = collision(ref.position, model.traps);
             trapTrigger.forEach(trap1 => {
                 trap1.triggered = Date.now()
                 plan_explosion(trap1);
             })
 
-            //check les blocs les plus proche si ce sotn des murs ou non
-            let cornersInWall = corners(data.position, thickness).filter(v => v.x>=0 && v.y>=0 && v.x<model.map[0].length && v.y<model.map.length).filter(v => model.map[v.x][v.y]).length
-
-            //si un mur, alors collision (en théorie a vori si ca marche)
-            if(cornersInWall === 0) {
+            let isColliding = false
+            collisionMurs(data.position, thickness/2.0).forEach(
+                pos => {
+                    if(model.map[pos.y][pos.x] == 1){ //inversé mais fonctionne 
+                        console.log("collision detecté",pos.x,pos.y,)
+                        isColliding = true
+                    }
+                })
+            
+           if(!isColliding) {
                 ref.position = data.position
-            }
+           }
         }
         updateModels(model)//maj du model
     })
