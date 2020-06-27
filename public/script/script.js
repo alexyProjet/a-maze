@@ -26,7 +26,7 @@ const wsUrl = `ws://localhost:3000`
     const getModel = () => { return model }
     const getCurrentPlayer = () => controller.getModel().players.filter(Boolean).filter(p => p.id == controller.getModel().currentPlayer)[0]
 
-    setInterval(() => ui.renderer.render(),100)
+    setInterval(() => ui.renderer.render(),66)
     return { moveTo, place, getModel,getCurrentPlayer}
 })()
 
