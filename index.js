@@ -64,13 +64,16 @@ const roles = {
 clients = []
 const updateModels = model => clients.forEach((client,i) => client.send(JSON.stringify(Object.assign({currentPlayer:model.players[i].id},model))))
 
-const collision = (posEntity, listEntity) => listEntity.filter(Boolean).map(v => distance(posEntity, v.position)).filter(v => v < 2 * thickness)
+const collision = (posEntity, listEntity) => listEntity.filter(Boolean).map(p => [p,distance(posEntity,p.position)]).filter(v => v[1] < thickness).map(v => v[0])
 const plan_explosion = (trap1) => setTimeout(() => {
-    console.log("collision1")
     collision(trap1.position, model.players).forEach(player1 => {
+        //WARNING: ne pas intervertir les deux lignes suivent, sinon il est possible de ressuçuider™
+        getPlayerFromId(trap1.parentId).role = roles.explorer
         player1.role = roles.trapper
-        model.players.filter(Boolean).filter(player2 => player2.id == trap1.parentId).forEach(killer => killer.score++) //FIXME: donne des points en cas de suicide, mince :)))
-        model.traps = model.traps.filter(candidat => candidat.id != trap1.id)
+
+        getPlayerFromId(trap1.parentId).score++ //FIXME: donne des points en cas de suicide, mince :)))
+        model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
+        updateModels(model)
     })
 },fuzeTime)
 
@@ -81,6 +84,7 @@ const corners = (pos,size) =>  [
         position(Math.floor(pos.x - size/2.0), Math.floor(pos.y + size/2.0))
 ]
 
+const getPlayerFromId = (id) => model.players.filter(Boolean).filter(p => p.id == id)[0]
 
 app.ws('/', (ws, req) => {
     let key = clients.length
@@ -89,8 +93,6 @@ app.ws('/', (ws, req) => {
     let ref = player(position(1,1),roles.explorer)
     model.players[key] = ref
     updateModels(model)
-//    ws.send(JSON.stringify(model))
-
     ws.on('message', msg => {
         let data = JSON.parse(msg)
         if(data.type == "PLACE"){
@@ -100,7 +102,8 @@ app.ws('/', (ws, req) => {
             model.traps.push(trap_instance) // FIXME: mmake sure the reference is not lost
             model.rewards.push(reward_instance)
 
-            if( collision(trap_instance.position, model.players) > 0 ) {
+            if( collision(trap_instance.position, model.players).length > 0 ) {
+                // console.log("been triggered by placing", trap_instance)
                 trap_instance.triggered = Date.now();
                 plan_explosion(trap_instance)
             }
@@ -108,19 +111,19 @@ app.ws('/', (ws, req) => {
 
         else if(data.type == "MOVE"){
 
+            ref.position = data.position
+            let trapTrigger = collision(ref.position, model.traps);
+            trapTrigger.forEach(trap1 => {
+                // console.log("been triggered by moving",trap1)
+                trap1.triggered = Date.now()
+                plan_explosion(trap1);
+            })
+
             let cornersInWall = corners(data.position, thickness).filter(v => model.map[v.x][v.y]).length
 
             if(cornersInWall === 0) {
-
                 ref.position = data.position
-
             }
-
-            // let trapTrigger = collision(ref.position, model.traps);
-            //     trapTrigger.forEach(trap1 => {
-            //     trap1.triggered = Date.now();
-            //     plan_explosion(trap1);
-            // })
         }
         updateModels(model)
     })
