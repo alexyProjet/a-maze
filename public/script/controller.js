@@ -13,7 +13,7 @@ $(() =>{
             map:[[]],
             currentPlayer:''
         }
-        
+        dd
         let ui = new UI()//creer l'ui
     
         try {
