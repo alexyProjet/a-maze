@@ -5,31 +5,7 @@ var zKey = false;
 var sKey = false
 var qKey = false
 var dKey = false
-/*
-function movement(direction){
-    let position = controller.getCurrentPlayer().position //recupere position joueur
-    switch (direction) {
-        case 'up':
-            position.y -= 0.1
-            console.log("z - avancer appuyé",position.x);
-            break;
-         case 'down':
-            position.y += 0.1
-            console.log("s - reculer appuyé",position.x);
-            break;
-         case 'left':
-            position.x -= 0.1
-            console.log("q - gauche appuyé",position.x);
-            break;
-         case 'right':
-            position.x += 0.1
-            console.log("d - droite appuyé",position.x);
-            break;
-        default:
-            console.log(`UNDEFINED DIRECTION`);
-    }
-    controller.moveTo(position) //signale au controller le deplacement
-}*/
+
 var speed = 0.1
 
 function routine(){

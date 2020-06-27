@@ -154,6 +154,7 @@ class Renderer {
                 this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
             }
         }
+        //si envoi
         if(trapIndex != -1 && rewardsIndex != -1){
             controller.place(tempTrapsRewardsArray[trapIndex][1] , tempTrapsRewardsArray[rewardsIndex][1])
             //supprime le trap et reward car plus besoin
@@ -164,7 +165,9 @@ class Renderer {
                 tempTrapsRewardsArray.splice(rewardsIndex, 1)
                 tempTrapsRewardsArray.splice(trapIndex, 1)
             }
-
+            document.getElementById("rewardsList").innerHTML = "";
+            document.getElementById("trapsList").innerHTML = "";
+            this.menus(controller.getCurrentPlayer().inventory)
         }
     }
 
