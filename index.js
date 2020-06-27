@@ -64,6 +64,13 @@ const plan_explosion = (trap1) => setTimeout(() => {
     })
 },fuzeTime)
 
+const corners = (pos,size) =>  [
+        position(Math.floor(pos.x - size/2.0), Math.floor(pos.y - size/2.0)),
+        position(Math.floor(pos.x + size/2.0), Math.floor(pos.y - size/2.0)),
+        position(Math.floor(pos.x + size/2.0), Math.floor(pos.y + size/2.0)),
+        position(Math.floor(pos.x - size/2.0), Math.floor(pos.y + size/2.0))
+]
+
 
 app.ws('/', (ws, req) => {
     let key = clients.length
