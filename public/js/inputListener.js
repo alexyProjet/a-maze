@@ -31,7 +31,7 @@ function routine(){
     }
 }
 
-var interval = setInterval(routine,16)
+var interval = setTimeout(() => setInterval(routine,16),500)
 
 document.body.onkeypress = function(event){
     switch (event.key.toLowerCase()) {
