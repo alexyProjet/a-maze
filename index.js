@@ -97,7 +97,15 @@ app.ws('/', (ws, req) => {
         }
 
         else if(data.type == "MOVE"){
-            ref.position = data.position
+
+            let cornersInWall = corners(data.position, thickness).filter(v => model.map[v.x][v.y]).length
+
+            if(cornersInWall === 0) {
+
+                ref.position = data.position
+
+            }
+
             // let trapTrigger = collision(ref.position, model.traps);
             //     trapTrigger.forEach(trap1 => {
             //     trap1.triggered = Date.now();
