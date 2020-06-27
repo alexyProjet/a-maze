@@ -1,7 +1,7 @@
 document.body.onkeydown = function(event){
     switch (event.key.toLowerCase()) {
         case 'z':
-            //controller.
+            
             console.log("z - avancer appuyé");
 
         break;
