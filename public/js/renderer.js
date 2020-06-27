@@ -1,3 +1,4 @@
+var tempTrapsRewardsArray = []
 class Renderer {
 
     constructor(isShadowed_ = true) {
@@ -93,20 +94,71 @@ class Renderer {
         
         });
 
-
         //séléctionne les pieges et rewards
-        var $traps=$(".traps");
-        var $rewards=$(".rewards");
+        var traps=$(".traps");
+        var rewards=$(".rewards");
 
         //deviennent draggable
-        $traps.draggable({
+        traps.draggable({
             helper:'clone',
         });
-        $rewards.draggable({
+        traps.data("type","trap"); // key-value pair
+
+        rewards.draggable({
             helper:'clone',
         });
+        rewards.data("type","rewards"); // key-value pair
+
+
+        var $canvas=$("#canva");
+        //le canva est droppable
+        $canvas.droppable({
+            drop:dragDrop,
+        });
+
+        let t = this
+        function dragDrop(e,ui){
+            let Offset=$canvas.offset();
+            let offsetX=Offset.left;
+            let offsetY=Offset.top;
+            let x=Math.round( (parseInt(ui.offset.left-offsetX)-1) / t.spriteWidth );
+            let y=Math.round( (parseInt(ui.offset.top-offsetY))/t.spriteHeight );
+            var data=ui.draggable.data("type");
+
+            if(data == "trap"){
+                tempTrapsRewardsArray.push(["trap",{x_:x, y_:y}])
+            } else {
+                tempTrapsRewardsArray.push(["rewards",{x_:x, y_:y}])
+            }
+            //controller.place(x/t.spriteWidth,y/t.spriteHeight)
+        }
+
     }
 
+    /**
+     * Si il ya un piege ou une recompense en corus de placement pas encore validé par controller donc pas sur le serveur
+     * on l'affiche grâce à cette fonction
+     */
+    tempTrapsAndRewards(){
+        for (var i = 0; i < tempTrapsRewardsArray.length; i++) {
+            if (tempTrapsRewardsArray[i][0] == "trap") {
+
+                let x = tempTrapsRewardsArray[i][1].x_ * this.spriteWidth
+                let y = tempTrapsRewardsArray[i][1].y_ * this.spriteWidth
+                console.log("temptrapsrewards  trap",x,y)
+                this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
+            } else {
+                console.log("temptrapsrewards rewards")
+                let x = tempTrapsRewardsArray[i][1].x_ * this.spriteWidth
+                let y = tempTrapsRewardsArray[i][1].y_ * this.spriteWidth
+                this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height) // Entité anonyme 
+            }
+        }
+    }
+
+    /**
+     * Rend visuellement le plateau, les joueurs, bref tout
+     */
     render() {
         this.clearAll()
         this.map(controller.getModel().map) //todo rajouter les paramètres
@@ -115,6 +167,8 @@ class Renderer {
         //console.log("renderer keypressed ", keyPressed)
         this.players(controller.getModel().players) //todo
         if (this.isShadowed) this.darken()
+        this.tempTrapsAndRewards()
+
     }
 
     //recoit un tableau de 0 et 1
