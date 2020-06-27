@@ -130,7 +130,6 @@ class Renderer {
             } else {
                 tempTrapsRewardsArray.push(["rewards",{x_:x, y_:y}])
             }
-            //controller.place(x/t.spriteWidth,y/t.spriteHeight)
         }
 
     }
@@ -140,19 +139,26 @@ class Renderer {
      * on l'affiche grâce à cette fonction
      */
     tempTrapsAndRewards(){
+        let trapIndex =-1
+        let rewardsIndex = -1
         for (var i = 0; i < tempTrapsRewardsArray.length; i++) {
             if (tempTrapsRewardsArray[i][0] == "trap") {
-
+                trapIndex=i//recupere index
                 let x = tempTrapsRewardsArray[i][1].x_ * this.spriteWidth
                 let y = tempTrapsRewardsArray[i][1].y_ * this.spriteWidth
-                console.log("temptrapsrewards  trap",x,y)
                 this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
             } else {
-                console.log("temptrapsrewards rewards")
+                rewardsIndex=i 
                 let x = tempTrapsRewardsArray[i][1].x_ * this.spriteWidth
                 let y = tempTrapsRewardsArray[i][1].y_ * this.spriteWidth
-                this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height) // Entité anonyme 
+                this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
             }
+        }
+        if(trapIndex != -1 && rewardsIndex != -1){
+            controller.place(tempTrapsRewardsArray[trapIndex][1] , tempTrapsRewardsArray[rewardsIndex][1])
+            //supprime le trap et reward car plus besoin
+            tempTrapsRewardsArray.splice(trapIndex, 1)
+            tempTrapsRewardsArray.splice(rewardsIndex, 1)
         }
     }
 
