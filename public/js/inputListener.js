@@ -35,23 +35,23 @@ document.body.onkeydown = function(event){
         case 'z':
             keyPressed = true;
             zKey = true;
-            interval = setInterval(movement('up'), 1000);
+            interval = setInterval(movement('up'), 10);
         break;
         case 's':
             keyPressed = true;
             sKey = true;
-            interval = setInterval(movement('down'), 1000);
+            interval = setInterval(movement('down'), 10);
         break;
         case 'q':
             keyPressed = true;
             qKey = true;
-            interval = setInterval(movement('left'), 1000);
+            interval = setInterval(movement('left'), 10);
             console.log("q - gauche appuyé");
         break;
         case 'd':
             keyPressed = true;
             dKey = true;
-            interval = setInterval(movement('right'), 1000);
+            interval = setInterval(movement('right'), 10);
             console.log("d - droite appuyé");
         break;
         default:

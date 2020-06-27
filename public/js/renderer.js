@@ -1,20 +1,22 @@
 class Renderer {
 
     constructor(isShadowed_ = true) {
-        this.canva = document.getElementById("renderer")
+        this.canva = document.getElementById("canva")
         this.canva.setAttribute('width', window.innerWidth);
         this.canva.setAttribute('height', window.innerHeight); //set à la longueur et largeur de la fenetre    
 
-        this.context = document.getElementById("renderer").getContext("2d")
+        this.context = document.getElementById("canva").getContext("2d")
 
         this.context.imageSmoothingEnabled = false;
         this.context.webkitImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
 
-        this.spriteWidth = Math.floor($("#renderer")[0].clientHeight / 22)
-        this.spriteHeight = Math.floor($("#renderer")[0].clientHeight / 22)
+        this.spriteWidth = Math.floor($("#canva")[0].clientHeight / 22)
+        this.spriteHeight = Math.floor($("#canva")[0].clientHeight / 22)
         this.halfWidth = Math.floor(this.spriteWidth / 2)
         this.halfHeight = Math.floor(this.spriteHeight / 2)
+        this.canva.setAttribute('width', this.spriteWidth * 30);
+        this.canva.setAttribute('height', this.spriteHeight * 20);
 
         this.isAssetLoadingOver = false
 
@@ -24,8 +26,8 @@ class Renderer {
     async loadAssets() {
         this.floorAsset = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_06.png", this.spriteWidth, this.spriteHeight)
         this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
-        this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_03.png", this.spriteWidth, this.spriteHeight)
-        this.bonusAsset = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_04.png", this.spriteWidth, this.spriteHeight)
+        this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_04.png", this.spriteWidth, this.spriteHeight)
+        this.bonusAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_12.png", this.spriteWidth, this.spriteHeight)
         this.playerAsset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight) //FIXME: DELETE DIS
         this.ennemyPlayer_Back1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_02.png", this.halfWidth, this.halfHeight)
@@ -74,17 +76,45 @@ class Renderer {
     clearAll() {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
+    //a appeler par controller ?
+    /**
+     * Affiche les menus et les complete en fonction de 
+     */
+    menus(inventory){
+        this.trapsMenu = document.getElementById("trapsMenu")
+        this.rewardsMenu = document.getElementById("rewardsMenu")
+        //reparti 0 et 1 en piege et recompenses
+        inventory.forEach(element => {
+            if(element == 0){ //c'est une recompenses
+                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+            }else { //c'est un piege
+                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+            }
+        
+        });
 
 
+        //séléctionne les pieges et rewards
+        var $traps=$(".traps");
+        var $rewards=$(".rewards");
+
+        //deviennent draggable
+        $traps.draggable({
+            helper:'clone',
+        });
+        $rewards.draggable({
+            helper:'clone',
+        });
+    }
 
     render() {
         this.clearAll()
-        //this.map(controller.getModel().map) //todo rajouter les paramètres
+        this.map(controller.getModel().map) //todo rajouter les paramètres
         //this.traps(controller.getModel().traps) //todo
        // this.bonus(controller.getModel().rewards) //todo
         //console.log("renderer keypressed ", keyPressed)
         this.players(controller.getModel().players) //todo
-       // if (this.isShadowed) this.darken()
+        if (this.isShadowed) this.darken()
     }
 
     //recoit un tableau de 0 et 1
