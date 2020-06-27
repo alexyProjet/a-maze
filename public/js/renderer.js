@@ -172,7 +172,7 @@ class Renderer {
         this.bonus(controller.getModel().rewards) //todo
         //console.log("renderer keypressed ", keyPressed)
         this.players(controller.getModel().players) //todo
-        //if (this.isShadowed) this.darken()
+        if (this.isShadowed) this.darken()
         this.tempTrapsAndRewards()
 
     }
@@ -196,7 +196,7 @@ class Renderer {
         let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        this.context.arc(coordX * this.halfWidth, coordY * this.halfHeight, 55, 0, Math.PI * 2, true);
+        this.context.arc(coordX * this.halfWidth + this.halfWidth/2, coordY * this.halfHeight + this.halfHeight/2, 55, 0, Math.PI * 2, true);
         this.context.fill();
     }
 
