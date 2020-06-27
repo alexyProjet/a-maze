@@ -53,8 +53,8 @@ const fuzeTime = 500 //temps d'eplosion piege entre declenchement eet tue
 const thickness = 0.5 // taille joueur et piege, rayon à verifier
 
 const roles = {
-    explorer: true,
-    trapper: false
+    explorer: "explorer",
+    trapper: "trapper"
 }
 
 clients = []// structure contient tous clients
@@ -65,13 +65,26 @@ const updateModels = (model,withmap=false) => clients.forEach((client,i) =>
     )))
 ) // prend un model et le met à jour et inclu ou non map et renvoi à tous clients, objet assign rajoute current player
 
-//avec une pos et liste entité, check les entités en collision avec position, renvoie toute celle dont distance inferieur a thickness
-const collision = (posEntity, listEntity) => listEntity.filter(Boolean).map(p => [p,distance(posEntity,p.position)]).filter(v => v[1] < thickness).map(v => v[0])
-
 //quand piege declenché, appelé pour exploser
 //tue le ou les joeurus touchés et recompense l'auteur du piege
 //supprime les pieges usés
-const plan_explosion = (trap1) => setTimeout(() => {
+const plan_explosion = (trap1,player) => setTimeout(() => {
+    getPlayerFromId(trap1.parentId).role = roles.explorer
+    player.role = roles.trapper
+    getPlayerFromId(trap1.parentId).score++
+    model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
+    updateModels(model)
+    /*collision(trap1.position, model.players).forEach(player1 => {
+        //WARNING: ne pas intervertir les deux lignes suivent, sinon il est possible de ressuçuider™
+        getPlayerFromId(trap1.parentId).role = roles.explorer
+        player1.role = roles.trapper
+        getPlayerFromId(trap1.parentId).score++ //FIXME: donne des points en cas de suicide, mince :)))
+        model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
+        updateModels(model)
+    })*/
+},fuzeTime)
+/*
+const rewards = () => setTimeout(() => {
     collision(trap1.position, model.players).forEach(player1 => {
         //WARNING: ne pas intervertir les deux lignes suivent, sinon il est possible de ressuçuider™
         getPlayerFromId(trap1.parentId).role = roles.explorer
@@ -80,10 +93,10 @@ const plan_explosion = (trap1) => setTimeout(() => {
         model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
         updateModels(model)
     })
-},fuzeTime)
+},fuzeTime)*/
 
 //donne un tableau des collisions possible autour du joueur
-const collisionMurs = (pos,size) =>  [
+const collision = (pos,size) =>  [
         position(Math.floor(pos.x), Math.floor(pos.y)),// haut gauche
         position(Math.floor(pos.x + size), Math.floor(pos.y)),// haut droite
         position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
@@ -109,36 +122,62 @@ app.ws('/', (ws, req) => {
         if(data.type == "PLACE"){
             trap_instance = trap(model.players[key].id,data.trap) //creer un piege avec les données recu et ce qu'on a deja
             reward_instance = reward(data.reward)
-            
             //ajoute au model
             model.traps.push(trap_instance)
             model.rewards.push(reward_instance)
 
-            //si piege est en collision avec un joueur, si oui, piege explose
+           /* //si piege est en collision avec un joueur, si oui, piege explose
             if( collision(trap_instance.position, model.players).length > 0 ) {
+
                 trap_instance.triggered = Date.now();//savoir si ca a ezte trigger ou null si pas trigger du tout
                 plan_explosion(trap_instance)
-            }
+            }*/
         }
 
         //si message move
         else if(data.type == "MOVE"){
+            //permet de savoir quel joueur
+            let player = model.players.filter(pl => Math.floor(pl.position.x) == Math.floor(data.position.x) && Math.floor(pl.position.y) == (data.position.y));
 
-            //vérifie si joueurs collision avec piege
-            let trapTrigger = collision(ref.position, model.traps);
-            trapTrigger.forEach(trap1 => {
-                trap1.triggered = Date.now()
-                plan_explosion(trap1);
-            })
-
+            //Collisions avec pieges/recompenses
             let isColliding = false
-            collisionMurs(data.position, thickness/2.0).forEach(
+                    collision(data.position, thickness/2.0).some(function(pos, ind) {    
+                        if(isColliding){
+                            return false
+                        }
+                        model.traps.some(function(trap, index) {
+                            if(trap.position.x_ == pos.x && trap.position.y_ == pos.y){
+                                isColliding = true
+                                if(trap.triggered == null){
+                                    trap.triggered = Date.now()
+                                    plan_explosion(trap,player);
+                                }                                
+                                return false
+                            } else {
+                                return true
+                            }
+                          })  
+                          /*model.rewards.some(function(element, index) {
+                            if(element.position.x_ == pos.x && element.position.y_ == pos.y){
+                                isColliding = true
+
+                                return false
+                            } else {
+                                return true
+                            }
+                          })  */
+                          return true                    
+                    })
+
+            //collisions avec murs
+            isColliding = false
+            collision(data.position, thickness/2.0).forEach(
                 pos => {
                     if(model.map[pos.y][pos.x] == 1){ //inversé mais fonctionne 
                         isColliding = true
+                        
                     }
                 })
-            
            if(!isColliding) {
                 ref.position = data.position
            }

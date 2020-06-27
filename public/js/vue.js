@@ -3,7 +3,7 @@ var tempTrapsRewardsArray = []
 
 class Vue {
 
-    constructor(isShadowed_ = true) {
+    constructor() {
         this.canva = document.getElementById("canva")
         this.canva.setAttribute('width', window.innerWidth);
         this.canva.setAttribute('height', window.innerHeight); //set à la longueur et largeur de la fenetre    
@@ -18,7 +18,6 @@ class Vue {
         this.canva.setAttribute('width', this.spriteWidth * 30);
         this.canva.setAttribute('height', this.spriteHeight * 20);
         this.isAssetLoadingOver = false
-        this.isShadowed = isShadowed_
         this.biais = 3.0
     }
 
@@ -91,9 +90,10 @@ class Vue {
         this.traps(controller.getModel().traps) //todo
         this.bonus(controller.getModel().rewards) //todo
         this.players(controller.getModel().players) //todo
-        if (this.isShadowed) this.darken()
+        if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards()
         this.score(controller.getCurrentPlayer().score)
+        console.log(controller.getCurrentPlayer())
     }
 
     clearAll() {
@@ -277,7 +277,6 @@ class Vue {
                 this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             } else {
                 this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus
-
             }
         }
     }
