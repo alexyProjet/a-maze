@@ -13,12 +13,13 @@ class Vue {
         this.context.msImageSmoothingEnabled = false;
         this.spriteWidth = Math.floor($("#canva")[0].clientHeight / 22)
         this.spriteHeight = Math.floor($("#canva")[0].clientHeight / 22)
-        this.halfWidth = Math.floor(this.spriteWidth / 2)
-        this.halfHeight = Math.floor(this.spriteHeight / 2)
+        this.halfWidth = this.spriteWidth / 2.0
+        this.halfHeight = this.spriteHeight / 2.0
         this.canva.setAttribute('width', this.spriteWidth * 30);
         this.canva.setAttribute('height', this.spriteHeight * 20);
         this.isAssetLoadingOver = false
         this.isShadowed = isShadowed_
+        this.biais = 3.0
     }
 
     /**
@@ -60,6 +61,7 @@ class Vue {
         this.mainPlayer_Left3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_18.png", this.halfWidth, this.halfHeight)
 
         this.isAssetLoadingOver = true
+        this.menus(controller.getCurrentPlayer().inventory)
     }
 
     /**
@@ -92,13 +94,10 @@ class Vue {
         if (this.isShadowed) this.darken()
         this.tempTrapsAndRewards()
         this.score(controller.getCurrentPlayer().score)
-        this.menus(controller.getCurrentPlayer().inventory)
     }
 
     clearAll() {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
-        document.getElementById("rewardsList").innerHTML = "";
-        document.getElementById("trapsList").innerHTML = "";
     }
 
     //a appeler par controller ?
@@ -167,6 +166,7 @@ class Vue {
                 tempTrapsRewardsArray.push(["rewards",{x_:x, y_:y}])
             }
         }
+        
     }
 
     /**
@@ -200,6 +200,9 @@ class Vue {
                 tempTrapsRewardsArray.splice(rewardsIndex, 1)
                 tempTrapsRewardsArray.splice(trapIndex, 1)
             }
+            document.getElementById("rewardsList").innerHTML = "";
+            document.getElementById("trapsList").innerHTML = "";
+            console.log("effacé menus")
             this.menus(controller.getCurrentPlayer().inventory)
         }
     }
@@ -229,7 +232,7 @@ class Vue {
         let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        this.context.arc(coordX * this.spriteWidth, coordY * this.spriteHeight, 100, 0, Math.PI * 2, true);
+        this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
         this.context.fill();
     }
 
@@ -248,13 +251,13 @@ class Vue {
     traps(trapArray) {
         for (var i = 0; i < trapArray.length; i++) {
             if(trapArray[i]){
-                let coordX = trapArray[i].position.x
-                let coordY = trapArray[i].position.y
+                let coordX = trapArray[i].position.x_
+                let coordY = trapArray[i].position.y_
                 let myPlayer = controller.getCurrentPlayer()
                 if (myPlayer.role == true) {
-                    this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
+                    this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
                 } else {
-                    this.context.drawImage(this.trapAsset, coordX * this.trapAsset.width, coordY * this.trapAsset.height, this.trapAsset.width, this.trapAsset.height) // Entité piège
+                    this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
                 }
             }
         }
@@ -265,9 +268,10 @@ class Vue {
      * @param {*} bonusArray 
      */
     bonus(bonusArray) {
+        console.log(bonusArray)
         for (var i = 0; i < bonusArray.length; i++) {
-            let coordX = bonusArray[i].x
-            let coordY = bonusArray[i].y
+            let coordX = bonusArray[i].position.x_
+            let coordY = bonusArray[i].position.y_
             let myPlayer = controller.getCurrentPlayer()
             if (myPlayer.role == true) {
                 this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
@@ -287,7 +291,7 @@ class Vue {
             if(playersArray[i]){
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                this.context.drawImage(this.playerAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.playerAsset.width, this.playerAsset.height)
+                this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight-this.biais, this.playerAsset.width, this.playerAsset.height)
             }
         }
     }

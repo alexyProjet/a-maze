@@ -15,6 +15,7 @@ $(() =>{
         }
         
         let ui = new UI()//creer l'ui
+        //ui.createGame()
     
         try {
             ws = new WebSocket(wsUrl)
@@ -26,7 +27,7 @@ $(() =>{
         }
     
     const moveTo = (position) => ws.send(JSON.stringify({ type : "MOVE", position: position })) //send la position
-
+    const start = () => ws.send(JSON.stringify({ type : "START" })) //SIGNIFI QUE PERSONNE PEUT REJOINDRE
     const place = (trapPosition, rewardPosition) => ws.send(JSON.stringify({ type : "PLACE", trap: trapPosition, reward: rewardPosition })) //place un piege ou recompense
 
     const getModel = () => model //renvoi le model

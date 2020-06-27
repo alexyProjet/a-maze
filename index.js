@@ -98,7 +98,7 @@ app.ws('/', (ws, req) => {
     let key = clients.length
     clients.push(ws)
     
-    let ref = player(position(1,1),roles.explorer) // construit nouveau joeur a position 11 et role explorer
+    let ref = player(position(1,1),roles.explorer,0,[0,0,1,1]) // construit nouveau joeur a position 11 et role explorer
     model.players[key] = ref //ajoute joueur au model, garde indice peu importe
     updateModels(model,withmap=true) //met a jour model car nouveau joeur
 
@@ -109,7 +109,7 @@ app.ws('/', (ws, req) => {
         if(data.type == "PLACE"){
             trap_instance = trap(model.players[key].id,data.trap) //creer un piege avec les données recu et ce qu'on a deja
             reward_instance = reward(data.reward)
-
+            
             //ajoute au model
             model.traps.push(trap_instance)
             model.rewards.push(reward_instance)
@@ -135,7 +135,6 @@ app.ws('/', (ws, req) => {
             collisionMurs(data.position, thickness/2.0).forEach(
                 pos => {
                     if(model.map[pos.y][pos.x] == 1){ //inversé mais fonctionne 
-                        console.log("collision detecté",pos.x,pos.y,)
                         isColliding = true
                     }
                 })
@@ -145,6 +144,7 @@ app.ws('/', (ws, req) => {
            }
         }
         updateModels(model)//maj du model
+        console.log("traps",model.traps)
     })
     //quand client ferme connection, on le delete et son player et update model
     ws.on('close',() => {
