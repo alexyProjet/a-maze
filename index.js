@@ -118,7 +118,7 @@ app.ws('/', (ws, req) => {
                 plan_explosion(trap1);
             })
 
-            let cornersInWall = corners(data.position, thickness).filter(v => model.map[v.x][v.y]).length
+            let cornersInWall = corners(data.position, thickness).filter(v => v.x>=0 && v.y>=0 && v.x<model.map[0].length && v.y<model.map.length).filter(v => model.map[v.x][v.y]).length
 
             if(cornersInWall === 0) {
                 ref.position = data.position
