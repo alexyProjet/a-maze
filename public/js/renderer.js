@@ -122,11 +122,11 @@ class Renderer {
         
         });
 
-        for(var i = rewardSlotUsed; i <= 6; i++ ){
+        for(var i = rewardSlotUsed; i < 3; i++ ){
             $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
         }
 
-        for(var i = trapSlotUsed; i <= 6; i++ ){
+        for(var i = trapSlotUsed; i < 3; i++ ){
             $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
         }
 
