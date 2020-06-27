@@ -20,7 +20,7 @@ class Renderer {
         this.isAssetLoadingOver = false
         this.isShadowed = isShadowed_
     }
-    
+
     /**
      * Fait correspondre les images à des noms pour le canva
      */
@@ -30,6 +30,9 @@ class Renderer {
         this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_04.png", this.spriteWidth, this.spriteHeight)
         this.bonusAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_12.png", this.spriteWidth, this.spriteHeight)
         this.playerAsset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight) //FIXME: DELETE DIS
+        this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_16.png", this.spriteWidth, this.spriteHeight)
+        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
+
         this.ennemyPlayer_Back1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_02.png", this.halfWidth, this.halfHeight)
         this.ennemyPlayer_Back3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_24.png", this.halfWidth, this.halfHeight)
@@ -56,8 +59,6 @@ class Renderer {
         this.mainPlayer_Left2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_20.png", this.halfWidth, this.halfHeight)
         this.mainPlayer_Left3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_18.png", this.halfWidth, this.halfHeight)
 
-        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default%20size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
-
         this.isAssetLoadingOver = true
     }
 
@@ -79,8 +80,25 @@ class Renderer {
         }).catch(error => console.log(error))
     }
 
+    /**
+     * Rend visuellement le plateau, les joueurs, bref tout
+     */
+    render() {
+        this.clearAll()
+        this.map(controller.getModel().map) //todo rajouter les paramètres
+        this.traps(controller.getModel().traps) //todo
+        this.bonus(controller.getModel().rewards) //todo
+        this.players(controller.getModel().players) //todo
+        if (this.isShadowed) this.darken()
+        this.tempTrapsAndRewards()
+        this.score(controller.getCurrentPlayer().score)
+        this.menus(controller.getCurrentPlayer().inventory)
+    }
+
     clearAll() {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
+        document.getElementById("rewardsList").innerHTML = "";
+        document.getElementById("trapsList").innerHTML = "";
     }
 
     //a appeler par controller ?
@@ -90,15 +108,27 @@ class Renderer {
     menus(inventory){
         this.trapsMenu = document.getElementById("trapsMenu")
         this.rewardsMenu = document.getElementById("rewardsMenu")
-        //reparti 0 et 1 en piege et recompenses
-        inventory.forEach(element => {
+
+        let trapSlotUsed = 0;
+        let rewardSlotUsed = 0;
+        inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
             if(element == 0){ //c'est une recompenses
+                rewardSlotUsed++
                 $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
             }else { //c'est un piege
+                trapSlotUsed++
                 $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
             }
         
         });
+
+        for(var i = rewardSlotUsed; i <= 6; i++ ){
+            $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+        }
+
+        for(var i = trapSlotUsed; i <= 6; i++ ){
+            $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+        }
 
         //séléctionne les pieges et rewards
         var traps=$(".traps");
@@ -170,25 +200,10 @@ class Renderer {
                 tempTrapsRewardsArray.splice(rewardsIndex, 1)
                 tempTrapsRewardsArray.splice(trapIndex, 1)
             }
-            document.getElementById("rewardsList").innerHTML = "";
-            document.getElementById("trapsList").innerHTML = "";
             this.menus(controller.getCurrentPlayer().inventory)
         }
     }
 
-    /**
-     * Rend visuellement le plateau, les joueurs, bref tout
-     */
-    render() {
-        this.clearAll()
-        //this.map(controller.getModel().map) //todo rajouter les paramètres
-        this.traps(controller.getModel().traps) //todo
-        this.bonus(controller.getModel().rewards) //todo
-        this.players(controller.getModel().players) //todo
-        if (this.isShadowed) this.darken()
-        this.tempTrapsAndRewards()
-        this.score(controller.getCurrentPlayer().score)
-    }
 
     /**
      * Dessine la map
@@ -225,6 +240,7 @@ class Renderer {
     score(score){
         document.getElementById("score").innerText = score
     }
+
     /**
      * Dessine les pièges sur le plateau
      * @param {*} trapArray 
@@ -243,6 +259,7 @@ class Renderer {
             }
         }
     }
+
     /**
      * Dessine les recompenses
      * @param {*} bonusArray 
@@ -260,10 +277,11 @@ class Renderer {
             }
         }
     }
-/**
- * Dessine tous les joueurs sur les plateau de jeu
- * @param {*} playersArray 
- */
+
+    /**
+     * Dessine tous les joueurs sur les plateau de jeu
+     * @param {*} playersArray 
+     */
     players(playersArray) {
         for (var i = 0; i < playersArray.length; i++) {
             if(playersArray[i]){
