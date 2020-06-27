@@ -1,4 +1,3 @@
-//alexy
 class Renderer {
 
     constructor(isShadowed_ = true) {
@@ -76,14 +75,16 @@ class Renderer {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
 
-    render() {
-        this.map(controller.getModel().map) //todo rajouter les paramètres
-        this.traps(controller.getModel().traps) //todo
-        this.bonus(controller.getModel().rewards) //todo
-        this.players(controller.getModel().players) //todo
-        if (this.isShadowed) this.darken()
-        //window.requestAnimationFrame(this.render)
 
+
+    render() {
+        this.clearAll()
+        //this.map(controller.getModel().map) //todo rajouter les paramètres
+        //this.traps(controller.getModel().traps) //todo
+       // this.bonus(controller.getModel().rewards) //todo
+        //console.log("renderer keypressed ", keyPressed)
+        this.players(controller.getModel().players) //todo
+       // if (this.isShadowed) this.darken()
     }
 
     //recoit un tableau de 0 et 1
@@ -105,7 +106,6 @@ class Renderer {
         let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        console.log("renderer.darken()",myPlayer,coordX,coordY)
         this.context.arc(coordX * this.spriteWidth, coordY * this.spriteHeight, 55, 0, Math.PI * 2, true);
         this.context.fill();
     }
@@ -113,14 +113,15 @@ class Renderer {
 
     traps(trapArray) {
         for (var i = 0; i < trapArray.length; i++) {
-            let coordX = trapArray[i].position.x
-            let coordY = trapArray[i].position.y
-            console.log("renderer.traps()",coordX,coordY)
-            let myPlayer = controller.getCurrentPlayer()
-            if (myPlayer.role == true) {
-                this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
-            } else {
-                this.context.drawImage(this.trapAsset, coordX * this.trapAsset.width, coordY * this.trapAsset.height, this.trapAsset.width, this.trapAsset.height) // Entité piège
+            if(trapArray[i]){
+                let coordX = trapArray[i].position.x
+                let coordY = trapArray[i].position.y
+                let myPlayer = controller.getCurrentPlayer()
+                if (myPlayer.role == true) {
+                    this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
+                } else {
+                    this.context.drawImage(this.trapAsset, coordX * this.trapAsset.width, coordY * this.trapAsset.height, this.trapAsset.width, this.trapAsset.height) // Entité piège
+                }
             }
         }
     }
@@ -144,8 +145,7 @@ class Renderer {
             if(playersArray[i]){
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-
-                this.context.drawImage(this.playerAsset, coordX * this.playerAsset.halfWidth, coordY * this.playerAsset.halfHeight, this.playerAsset.halfWidth, this.playerAsset.halfHeight) // Entité bonus
+                this.context.drawImage(this.playerAsset, coordX * this.playerAsset.width, coordY * this.playerAsset.height, this.playerAsset.width, this.playerAsset.height) // Entité bonus
             }
         }
     }
