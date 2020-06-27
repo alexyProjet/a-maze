@@ -1,29 +1,29 @@
+//variables Globales
 var tempTrapsRewardsArray = []
+
 class Renderer {
 
     constructor(isShadowed_ = true) {
         this.canva = document.getElementById("canva")
         this.canva.setAttribute('width', window.innerWidth);
         this.canva.setAttribute('height', window.innerHeight); //set à la longueur et largeur de la fenetre    
-
         this.context = document.getElementById("canva").getContext("2d")
-
         this.context.imageSmoothingEnabled = false;
         this.context.webkitImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
-
         this.spriteWidth = Math.floor($("#canva")[0].clientHeight / 22)
         this.spriteHeight = Math.floor($("#canva")[0].clientHeight / 22)
         this.halfWidth = Math.floor(this.spriteWidth / 2)
         this.halfHeight = Math.floor(this.spriteHeight / 2)
         this.canva.setAttribute('width', this.spriteWidth * 30);
         this.canva.setAttribute('height', this.spriteHeight * 20);
-
         this.isAssetLoadingOver = false
-
         this.isShadowed = isShadowed_
     }
-
+    
+    /**
+     * Fait correspondre les images à des noms pour le canva
+     */
     async loadAssets() {
         this.floorAsset = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_06.png", this.spriteWidth, this.spriteHeight)
         this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
@@ -61,7 +61,12 @@ class Renderer {
         this.isAssetLoadingOver = true
     }
 
-
+    /**
+     * Sous-fonction de loadAssets qui charge une image
+     * @param {*} src_ 
+     * @param {*} width_ 
+     * @param {*} height_ 
+     */
     async _syncedLoadImg(src_, width_, height_) {
         let ctx = this.context
         return await new Promise((resolve, reject) => {
@@ -77,6 +82,7 @@ class Renderer {
     clearAll() {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
+
     //a appeler par controller ?
     /**
      * Affiche les menus et les complete en fonction de 
@@ -102,12 +108,11 @@ class Renderer {
         traps.draggable({
             helper:'clone',
         });
-        traps.data("type","trap"); // key-value pair
-
+        traps.data("type","trap");
         rewards.draggable({
             helper:'clone',
         });
-        rewards.data("type","rewards"); // key-value pair
+        rewards.data("type","rewards");
 
 
         var $canvas=$("#canva");
@@ -117,6 +122,7 @@ class Renderer {
         });
 
         let t = this
+
         function dragDrop(e,ui){
             let Offset=$canvas.offset();
             let offsetX=Offset.left;
@@ -131,11 +137,10 @@ class Renderer {
                 tempTrapsRewardsArray.push(["rewards",{x_:x, y_:y}])
             }
         }
-
     }
 
     /**
-     * Si il ya un piege ou une recompense en corus de placement pas encore validé par controller donc pas sur le serveur
+     * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
      * on l'affiche grâce à cette fonction
      */
     tempTrapsAndRewards(){
@@ -179,15 +184,16 @@ class Renderer {
         //this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
         this.bonus(controller.getModel().rewards) //todo
-        //console.log("renderer keypressed ", keyPressed)
         this.players(controller.getModel().players) //todo
         if (this.isShadowed) this.darken()
         this.tempTrapsAndRewards()
         this.score(controller.getCurrentPlayer().score)
     }
 
-    //recoit un tableau de 0 et 1
-    //1 est un mur, 0 est du sol
+    /**
+     * Dessine la map
+     * @param {*} mapArray de 0 et 1
+     */
     map(mapArray) {
         for (var i = 0; i < mapArray.length; i++) {
             for (var j = 0; j < mapArray[i].length; j++) {
@@ -198,7 +204,10 @@ class Renderer {
             }
         }
     }
-    //rend sombre tout autour du joueur
+
+    /**
+     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
+     */
     darken() {
         let myPlayer = controller.getCurrentPlayer()
         let coordX = myPlayer.position.x
@@ -209,10 +218,17 @@ class Renderer {
         this.context.fill();
     }
 
+    /**
+     * Dessine le score, A IMPLEMENTER : liste des scores
+     * @param {Dessine le} score 
+     */
     score(score){
         document.getElementById("score").innerText = score
     }
-
+    /**
+     * Dessine les pièges sur le plateau
+     * @param {*} trapArray 
+     */
     traps(trapArray) {
         for (var i = 0; i < trapArray.length; i++) {
             if(trapArray[i]){
@@ -227,7 +243,10 @@ class Renderer {
             }
         }
     }
-    
+    /**
+     * Dessine les recompenses
+     * @param {*} bonusArray 
+     */
     bonus(bonusArray) {
         for (var i = 0; i < bonusArray.length; i++) {
             let coordX = bonusArray[i].x
@@ -241,7 +260,10 @@ class Renderer {
             }
         }
     }
-
+/**
+ * Dessine tous les joueurs sur les plateau de jeu
+ * @param {*} playersArray 
+ */
     players(playersArray) {
         for (var i = 0; i < playersArray.length; i++) {
             if(playersArray[i]){

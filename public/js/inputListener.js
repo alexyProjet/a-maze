@@ -6,7 +6,7 @@ var sKey = false
 var qKey = false
 var dKey = false
 
-var speed = 0.2
+var speed = 0.13
 
 function routine(){
     let position = controller.getCurrentPlayer().position
