@@ -81,12 +81,12 @@ class Renderer {
     }
 
     render() {
-        this.map() //todo rajouter les paramètres
-        this.traps() //todo
-        this.bonus() //todo
-        this.players() //todo
+        this.map(controller.getModel().map) //todo rajouter les paramètres
+        this.traps(controller.getModel().traps) //todo
+        this.bonus(controller.getModel().rewards) //todo
+        this.players(controller.getModel().players) //todo
         if (this.isShadowed) this.darken()
-        window.requestAnimationFrame(this.render)
+        //window.requestAnimationFrame(this.render)
     }
 
     //recoit un tableau de 0 et 1
