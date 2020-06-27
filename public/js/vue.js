@@ -1,7 +1,7 @@
 //variables Globales
 var tempTrapsRewardsArray = []
 
-class Renderer {
+class Vue {
 
     constructor(isShadowed_ = true) {
         this.canva = document.getElementById("canva")

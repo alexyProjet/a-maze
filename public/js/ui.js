@@ -3,8 +3,8 @@ class UI {
     constructor() {
         this.mainPlayerID = null
         this.allPlayerIDs = new Set()
-        this.renderer = new Renderer()
-        this.renderer.loadAssets()
+        this.vue = new Vue()
+        this.vue.loadAssets()
     }
 
     /** */
