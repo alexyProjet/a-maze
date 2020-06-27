@@ -1,12 +1,26 @@
-html
-    head
-        link(rel="stylesheet", href="/css/game.css")
-        script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js")
-        script(src="/js/ui.js")
-        script(src="/js/renderer.js")
-        script(src="/script/script.js")
-        
-    body
-        canvas(id="renderer")
-    script(src="/js/inputListener.js")
-    
+head
+  link(rel='stylesheet', href='/css/game.css')
+  link(href='https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap', rel='stylesheet')
+  script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js')
+  script(src='https://code.jquery.com/ui/1.12.0/jquery-ui.js')
+  script(src='/js/ui.js')
+  script(src='/js/renderer.js')
+  script(src='/script/script.js')
+#container
+  #trapsRewardsMenu
+    #timer
+      h2 Temps restant
+      p --:--
+    #trapsMenu
+      h2 Pieges
+      li#trapsList
+    #rewardsMenu
+      h2 Recompenses
+      li#rewardsList
+  #scoreList
+    h2
+      | Scores
+      p(id='score')
+      li#scoreList
+  canvas#canva
+script(src='/js/inputListener.js')
