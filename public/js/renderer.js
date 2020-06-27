@@ -75,12 +75,16 @@ class Renderer {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
 
+
+
     render() {
-        this.map(controller.getModel().map) //todo rajouter les paramètres
-        this.traps(controller.getModel().traps) //todo
-        this.bonus(controller.getModel().rewards) //todo
+        this.clearAll()
+        //this.map(controller.getModel().map) //todo rajouter les paramètres
+        //this.traps(controller.getModel().traps) //todo
+       // this.bonus(controller.getModel().rewards) //todo
+        //console.log("renderer keypressed ", keyPressed)
         this.players(controller.getModel().players) //todo
-        if (this.isShadowed) this.darken()
+       // if (this.isShadowed) this.darken()
     }
 
     //recoit un tableau de 0 et 1
@@ -102,7 +106,6 @@ class Renderer {
         let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        console.log("renderer.darken()",myPlayer,coordX,coordY)
         this.context.arc(coordX * this.spriteWidth, coordY * this.spriteHeight, 55, 0, Math.PI * 2, true);
         this.context.fill();
     }
@@ -113,7 +116,6 @@ class Renderer {
             if(trapArray[i]){
                 let coordX = trapArray[i].position.x
                 let coordY = trapArray[i].position.y
-                console.log("renderer.traps()",coordX,coordY)
                 let myPlayer = controller.getCurrentPlayer()
                 if (myPlayer.role == true) {
                     this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
