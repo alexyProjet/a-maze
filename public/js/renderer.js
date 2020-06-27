@@ -130,6 +130,7 @@ class Renderer {
             }
         }
     }
+    
     bonus(bonusArray) {
         for (var i = 0; i < bonusArray.length; i++) {
             let coordX = bonusArray[i].x
@@ -149,7 +150,6 @@ class Renderer {
             if(playersArray[i]){
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                console.log("ackackackacacacacac",coordX,coordY,this.player)
 
                 this.context.drawImage(this.player, coordX * this.player.halfWidth, coordY * this.player.halfHeight, this.player.halfWidth, this.player.halfHeight) // Entité bonus
             }

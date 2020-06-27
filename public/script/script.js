@@ -1,13 +1,15 @@
-$(() => {
-    const wsUrl = `ws://localhost:3000`
+let controller = null
 
-    const controller = (() => {
+$(() =>{
+const wsUrl = `ws://localhost:3000`
+
+    controller = (() => {
 
     let ws
     let model
 
     let ui = new UI()
-    
+
     try {
         ws = new WebSocket(wsUrl)
         ws.onmessage = (event) => {
@@ -24,7 +26,8 @@ $(() => {
     const getModel = () => { return model }
     const getCurrentPlayer = () => controller.getModel().players.filter(Boolean).filter(p => p.id == controller.getModel().currentPlayer)[0]
 
-    setInterval(ui.renderer.render,100)
+    setInterval(() => ui.renderer.render(),100)
     return { moveTo, place, getModel,getCurrentPlayer}
 })()
+
 })
