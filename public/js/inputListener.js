@@ -1,6 +1,3 @@
-var keyPressed = false;
-
-var interval;
 var zKey = false;
 var sKey = false
 var qKey = false
@@ -42,17 +39,13 @@ document.body.onkeypress = function(event){
             zKey = true;
         break;
         case 's':
-            keyPressed = true;
             sKey = true;
-
         break;
         case 'q':
-            keyPressed = true;
             qKey = true;
 
         break;
         case 'd':
-            keyPressed = true;
             dKey = true;
         break;
         default:
@@ -65,25 +58,17 @@ document.body.onkeyup = function(event){
     switch (event.key.toLowerCase()) {
         case 'z':
             zKey = false;
-            console.log("z - avancer RELEVE");
         break;
         case 's':
             sKey = false;
-            keyPressed = false;
-            console.log("s - reculer RELEVE");
         break;
         case 'q':
             qKey = false;
-            keyPressed = false;
-            console.log("q - gauche RELEVE");
         break;
         case 'd':
             dKey = false;
-            keyPressed = false;
-            console.log("d - droite RELEVE");
         break;
         default:
         break;
-      }
-      
+      }    
 };
