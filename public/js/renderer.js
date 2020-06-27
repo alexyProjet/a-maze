@@ -157,8 +157,14 @@ class Renderer {
         if(trapIndex != -1 && rewardsIndex != -1){
             controller.place(tempTrapsRewardsArray[trapIndex][1] , tempTrapsRewardsArray[rewardsIndex][1])
             //supprime le trap et reward car plus besoin
-            tempTrapsRewardsArray.splice(trapIndex, 1)
-            tempTrapsRewardsArray.splice(rewardsIndex, 1)
+            if(trapIndex > rewardsIndex){ //si index plus grand, faut supprimer le plus grand en premier pour pas avori de bug
+                tempTrapsRewardsArray.splice(trapIndex, 1)
+                tempTrapsRewardsArray.splice(rewardsIndex, 1)
+            } else {
+                tempTrapsRewardsArray.splice(rewardsIndex, 1)
+                tempTrapsRewardsArray.splice(trapIndex, 1)
+            }
+
         }
     }
 
@@ -174,7 +180,7 @@ class Renderer {
         this.players(controller.getModel().players) //todo
         if (this.isShadowed) this.darken()
         this.tempTrapsAndRewards()
-
+        this.score(controller.getCurrentPlayer().score)
     }
 
     //recoit un tableau de 0 et 1
@@ -200,6 +206,9 @@ class Renderer {
         this.context.fill();
     }
 
+    score(score){
+        document.getElementById("score").innerText = score
+    }
 
     traps(trapArray) {
         for (var i = 0; i < trapArray.length; i++) {
