@@ -139,7 +139,7 @@ class Renderer {
      * on l'affiche grâce à cette fonction
      */
     tempTrapsAndRewards(){
-        let trapIndex =-1
+        let trapIndex = -1
         let rewardsIndex = -1
         for (var i = 0; i < tempTrapsRewardsArray.length; i++) {
             if (tempTrapsRewardsArray[i][0] == "trap") {
@@ -167,12 +167,12 @@ class Renderer {
      */
     render() {
         this.clearAll()
-        this.map(controller.getModel().map) //todo rajouter les paramètres
-        //this.traps(controller.getModel().traps) //todo
-       // this.bonus(controller.getModel().rewards) //todo
+        //this.map(controller.getModel().map) //todo rajouter les paramètres
+        this.traps(controller.getModel().traps) //todo
+        this.bonus(controller.getModel().rewards) //todo
         //console.log("renderer keypressed ", keyPressed)
         this.players(controller.getModel().players) //todo
-        if (this.isShadowed) this.darken()
+        //if (this.isShadowed) this.darken()
         this.tempTrapsAndRewards()
 
     }

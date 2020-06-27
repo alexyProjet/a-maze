@@ -1,10 +1,11 @@
 var keyPressed = false;
-var interval;
-let sKey = false;
-let zKey = false;
-let qKey = false;
-let dKey = false;
 
+var interval;
+var zKey = false;
+var sKey = false
+var qKey = false
+var dKey = false
+/*
 function movement(direction){
     let position = controller.getCurrentPlayer().position //recupere position joueur
     switch (direction) {
@@ -28,31 +29,48 @@ function movement(direction){
             console.log(`UNDEFINED DIRECTION`);
     }
     controller.moveTo(position) //signale au controller le deplacement
+}*/
+
+function routine(){
+    console.log("routine")
+    let position = controller.getCurrentPlayer().position
+    if(zKey){
+        console.log("zkey true")
+        position.y -= 0.03
+        controller.moveTo(position) //signale au controller le deplacement*/
+    }else if(sKey){
+        position.y += 0.03
+        controller.moveTo(position) //signale au controller le deplacement*/
+    }
+    if(qKey){
+        position.x -= 0.03
+        controller.moveTo(position) //signale au controller le deplacement*/
+    }else if(dKey){
+        position.x += 0.03
+        controller.moveTo(position) //signale au controller le deplacement*/
+    }
 }
 
-document.body.onkeydown = function(event){
+var interval = setInterval(routine,10)
+
+document.body.onkeypress = function(event){
     switch (event.key.toLowerCase()) {
         case 'z':
-            keyPressed = true;
             zKey = true;
-            interval = setInterval(movement('up'), 10);
         break;
         case 's':
             keyPressed = true;
             sKey = true;
-            interval = setInterval(movement('down'), 10);
+
         break;
         case 'q':
             keyPressed = true;
             qKey = true;
-            interval = setInterval(movement('left'), 10);
-            console.log("q - gauche appuyé");
+
         break;
         case 'd':
             keyPressed = true;
             dKey = true;
-            interval = setInterval(movement('right'), 10);
-            console.log("d - droite appuyé");
         break;
         default:
         break;
@@ -64,38 +82,21 @@ document.body.onkeyup = function(event){
     switch (event.key.toLowerCase()) {
         case 'z':
             zKey = false;
-            keyPressed = false;
-
-            if(zKey = false){
-                clearInterval(interval);
-            }
             console.log("z - avancer RELEVE");
         break;
         case 's':
             sKey = false;
             keyPressed = false;
-
-            if(sKey = false){
-                clearInterval(interval);
-            }
             console.log("s - reculer RELEVE");
         break;
         case 'q':
             qKey = false;
             keyPressed = false;
-
-            if(qKey = false){
-                clearInterval(interval);
-            }
             console.log("q - gauche RELEVE");
         break;
         case 'd':
             dKey = false;
             keyPressed = false;
-
-            if(dKey = false){
-                clearInterval(interval);
-            }
             console.log("d - droite RELEVE");
         break;
         default:
