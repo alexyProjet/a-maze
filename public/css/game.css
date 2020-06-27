@@ -1,7 +1,3 @@
-#renderer{
-
-}
-
 canvas {
     padding-left: 0;
     padding-right: 0;
@@ -10,10 +6,31 @@ canvas {
     display: block;
 }
 
-#trapsRewardsMenu {
-    padding-left: 0;
-    padding-right: 0;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
+li{
+	list-style-type: none;
+}
+
+h2{
+	color: #F96E46;
+	font-family: 'Roboto', sans-serif;
+}
+
+#trapsRewardsMenu{
+	float: left;
+	margin-left: 3%;
+}
+
+#scoreList{
+	float: right;
+	margin-right: 3%;
+}
+
+body{
+  background-color: #26272C;
+}
+
+#container{
+	margin-left: 3%;
+	margin-right: 3%;
+	background-color: #F9C846;
 }

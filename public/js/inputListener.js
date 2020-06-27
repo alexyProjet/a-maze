@@ -30,7 +30,7 @@ function movement(direction){
     }
     controller.moveTo(position) //signale au controller le deplacement
 }*/
-var speed = 0.05
+var speed = 0.1
 
 function routine(){
     console.log("routine")
