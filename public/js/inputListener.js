@@ -30,28 +30,29 @@ function movement(direction){
     }
     controller.moveTo(position) //signale au controller le deplacement
 }*/
+var speed = 0.05
 
 function routine(){
     console.log("routine")
     let position = controller.getCurrentPlayer().position
     if(zKey){
         console.log("zkey true")
-        position.y -= 0.03
+        position.y -= speed
         controller.moveTo(position) //signale au controller le deplacement*/
     }else if(sKey){
-        position.y += 0.03
+        position.y += speed
         controller.moveTo(position) //signale au controller le deplacement*/
     }
     if(qKey){
-        position.x -= 0.03
+        position.x -= speed
         controller.moveTo(position) //signale au controller le deplacement*/
     }else if(dKey){
-        position.x += 0.03
+        position.x += speed
         controller.moveTo(position) //signale au controller le deplacement*/
     }
 }
 
-var interval = setInterval(routine,10)
+var interval = setInterval(routine,16)
 
 document.body.onkeypress = function(event){
     switch (event.key.toLowerCase()) {
