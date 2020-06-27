@@ -6,35 +6,27 @@ var sKey = false
 var qKey = false
 var dKey = false
 
-var speed = 0.1
+var speed = 0.2
 
 function routine(){
     let position = controller.getCurrentPlayer().position
     if(zKey){
-        if(qKey == true || dKey == true){
-            position.y -= speed/2
-        } else {
-            position.y -= speed
-        }
+        position.y -= speed
         controller.moveTo(position) //signale au controller le deplacement*/
     }else if(sKey){
-        if(qKey == true || dKey == true){
-            position.y += speed/2
-        } else {
-            position.y += speed
-        }
+        position.y += speed
         controller.moveTo(position) //signale au controller le deplacement*/
     }
     if(qKey){
         if(zKey == true || sKey == true){
-            position.x -= speed/2
+            position.x -= speed/2.0
         } else {
             position.x -= speed
         }
         controller.moveTo(position) //signale au controller le deplacement*/
     }else if(dKey){
         if(zKey == true || sKey == true){
-            position.x += speed/2
+            position.x += speed/2.0
         } else {
             position.x += speed
         }
