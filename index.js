@@ -3,12 +3,11 @@ const expressWS = require('express-ws')
 const path = require('path')
 var app = expressWS(express()).app
 const port = 3000
-const slog = (f,m) => {
-    console.log(m)
-    return f()
-}
-const ignoreFavicon = (req, res, next) => (req.originalUrl === '/favicon.ico') ? res.status(204).end() : next()
 
+
+
+const ignoreFavicon = (req, res, next) => (req.originalUrl === '/favicon.ico') ? res.status(204).end() : next()
+const filterField = (object,fieldname) => Object.fromEntries(Object.entries(object).filter(kv => kv[0] != fieldname))
 app.set('view engine', 'pug')
 app.use(express.static(path.join(__dirname, '/public')))
 app.use(ignoreFavicon)
@@ -16,8 +15,6 @@ app.use(ignoreFavicon)
 const newId = () => Math.floor(Math.random()*1000000000)
 const distance = (a,b) => Math.sqrt( (b.x - a.x)**2 + (b.y - a.y)**2)
 // const fs = require('fs')
-
-
 
 const position = (x,y) => Object({x,y})
 const player = (position,role,score=0,inventory=[],id=newId()) => Object({id,position,role,score,inventory})
@@ -62,7 +59,12 @@ const roles = {
 }
 
 clients = []
-const updateModels = model => clients.forEach((client,i) => client.send(JSON.stringify(Object.assign({currentPlayer:model.players[i].id},model))))
+const updateModels = (model,withmap=false) => clients.forEach((client,i) => 
+    client.send(JSON.stringify(Object.assign(
+            {currentPlayer:model.players[i].id},
+            withmap ? model : filterField(model,'map')
+    )))
+)
 
 const collision = (posEntity, listEntity) => listEntity.filter(Boolean).map(p => [p,distance(posEntity,p.position)]).filter(v => v[1] < thickness).map(v => v[0])
 const plan_explosion = (trap1) => setTimeout(() => {
@@ -70,7 +72,6 @@ const plan_explosion = (trap1) => setTimeout(() => {
         //WARNING: ne pas intervertir les deux lignes suivent, sinon il est possible de ressuçuider™
         getPlayerFromId(trap1.parentId).role = roles.explorer
         player1.role = roles.trapper
-
         getPlayerFromId(trap1.parentId).score++ //FIXME: donne des points en cas de suicide, mince :)))
         model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
         updateModels(model)
@@ -92,7 +93,7 @@ app.ws('/', (ws, req) => {
     
     let ref = player(position(1,1),roles.explorer)
     model.players[key] = ref
-    updateModels(model)
+    updateModels(model,withmap=true)
     ws.on('message', msg => {
         let data = JSON.parse(msg)
         if(data.type == "PLACE"){
@@ -103,7 +104,6 @@ app.ws('/', (ws, req) => {
             model.rewards.push(reward_instance)
 
             if( collision(trap_instance.position, model.players).length > 0 ) {
-                // console.log("been triggered by placing", trap_instance)
                 trap_instance.triggered = Date.now();
                 plan_explosion(trap_instance)
             }
@@ -114,7 +114,6 @@ app.ws('/', (ws, req) => {
             ref.position = data.position
             let trapTrigger = collision(ref.position, model.traps);
             trapTrigger.forEach(trap1 => {
-                // console.log("been triggered by moving",trap1)
                 trap1.triggered = Date.now()
                 plan_explosion(trap1);
             })
@@ -135,4 +134,3 @@ app.ws('/', (ws, req) => {
 })
 app.get('*', (req, resp) => resp.render('game'))
 app.listen(port)
-//JSON.stringify(trap(0,))
