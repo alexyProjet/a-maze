@@ -6,14 +6,14 @@ const wsUrl = `ws://localhost:3000`
     controller = (() => {
 
     let ws
-    let model
+    let model = {}
 
     let ui = new UI()
 
     try {
         ws = new WebSocket(wsUrl)
         ws.onmessage = (event) => {
-            model = JSON.parse(event.data)
+            Object.assign(model,JSON.parse(event.data))
         }
     } catch(e) {
         console.error(e)
