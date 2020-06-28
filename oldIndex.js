@@ -2,15 +2,159 @@ const express = require('express')
 const expressWS = require('express-ws') //pour utiliser web socket pas juste http
 const path = require('path')
 var app = expressWS(express()).app
+const server = require('http').Server(app)
 const port = 3000
 const trapperInventory = [0,1,0,1,0,1,0,1]
 
-
 const ignoreFavicon = (req, res, next) => (req.originalUrl === '/favicon.ico') ? res.status(204).end() : next() //eviter afficher erreur navigateur 
 const filterField = (object,fieldname) => Object.fromEntries(Object.entries(object).filter(kv => kv[0] != fieldname)) // filtrer champs d'un objet, pour ne pas renvoyer map systematiquement
+app.set('views','./views')
 app.set('view engine', 'pug')
 app.use(express.static(path.join(__dirname, '/public')))
 app.use(ignoreFavicon)
+app.use(express.urlencoded({extended:true}))
+
+const rooms = { name : {}}
+
+app.get('/', (req,res) => {
+    console.log("/")
+    res.render('lobby', {rooms : rooms})
+})
+
+app.post('/room', (req, res) => {
+    console.log("/room")
+    if(rooms[req.body.room] != null){
+        return res.redirect('/')
+    }
+    rooms[req.body.room] = { users: {}}
+    res.redirect(req.body.room)
+    //send message that new room is created
+})
+
+app.get('/:room', (req,res) => {
+    console.log("/autre")
+    if(rooms[req.params.room] == null){
+        return res.redirect('/')
+    }
+    res.render('game', {roomName : req.params.room})
+    
+})
+
+
+
+//websocket, push dans le tableau clients
+app.ws('/gameEngine', (ws, req) => {
+    let starte=false;
+
+    console.log("/dans le jeu")
+    let key = clients.length
+    clients.push(ws)
+    
+    let ref
+    if(model.players.filter(pl => pl.role == "trapper").length == 0){
+        ref = player(position(-10,1),roles.trapper,0,trapperInventory) // construit nouveau joeur a position 11 et role explorer
+    } else {
+        ref = player(randomPosition(),roles.explorer,0,[]) // construit nouveau joeur a position 11 et role explore
+    }
+
+    model.players[key] = ref //ajoute joueur au model, garde indice peu importe
+    updateModels(model,withmap=true) //met a jour model car nouveau joeur
+
+    //quand recoit message client
+    ws.on('message', msg => {
+        let data = JSON.parse(msg)
+
+        if(data.type == "START"){
+            started=true;
+        }
+        /**
+         * Recoit un message PLACE, joueur place un piege et une recompense
+         */
+        if(data.type == "PLACE"){
+            trap_instance = trap(model.players[key].id,data.trap) //creer un piege avec les données recu et ce qu'on a deja
+            reward_instance = reward(data.reward)
+
+            if(isAValidPosition(trap_instance.position.x_, trap_instance.position.y_) &&  isAValidPosition(reward_instance.position.x_, reward_instance.position.y_)){//si placement possible TODO
+                console.log("trap et reward placés valides")
+                model.traps.push(trap_instance)
+                model.rewards.push(reward_instance)
+                getPlayerFromId(model.players[key].id).inventory.pop()
+                getPlayerFromId(model.players[key].id).inventory.pop()
+            }else{
+                console.log("trap et reward placés NON valides")
+            }
+        }
+
+        /**
+         * Recoit un message MOVE, joeur souhaite se déplacer
+         * Vérifie si move correct et ne rentre pas dans piege ou collisions ou mur
+         */
+        else if(data.type == "MOVE"){
+            //si trapper, pas de mouvement
+            if(data.player.role == "trapper"){
+
+            }else {
+                let isColliding = false
+                    collision(data.position, thickness/2.0).some(function(pos, ind) {   //regarde si il y a une collision à la nouvelle position avec...
+                        if(isColliding){
+                            return false
+                        }
+                        //... des pièges
+                        model.traps.some(function(trap, index) {
+                            if(trap.position.x_ == pos.x && trap.position.y_ == pos.y){
+                                isColliding = true
+                                if(trap.triggered == null){
+                                    trap.triggered = Date.now()
+                                    console.log("player : ", data.player.id, " walk on trap : ",trap)
+                                    plan_explosion(trap,data.player);
+                                    isColliding=false
+                                }                                
+                                return false
+                            } else {
+                                return true
+                            }
+                          })  
+                          //...des recompenses
+                          model.rewards.some(function(rew, index) {
+                            if(rew.position.x_ == pos.x && rew.position.y_ == pos.y){
+                                isColliding = true
+                                if(rew.triggered == null){
+                                    rew.triggered = Date.now()
+                                    console.log("player : ", data.player.id, " walk on reward : ",rew)
+                                    rewardPlayer(rew,data.player)
+                                    isColliding=false
+                                }
+                                return false
+                            } else {
+                                return true
+                            }
+                          })
+                          return true                    
+                    })
+
+                //check collisions avec mur
+                isColliding = false
+                collision(data.position, thickness/2.0).forEach(
+                    pos => {
+                        if(model.map[pos.y][pos.x] == 1){ //inversé mais fonctionne 
+                            isColliding = true 
+                        }
+                    })
+                if(!isColliding) {
+                        ref.position = data.position
+                }
+            }
+        }
+        updateModels(model)//maj du model
+    })
+    //quand client ferme connection, on le delete et son player et update model
+    ws.on('close',() => {
+        delete clients[key];
+        delete model.players[key];
+        updateModels(model);
+    })
+})
+//pug
 
 
 const newId = () => Math.floor(Math.random()*1000000000)//génère un id aléatoire
@@ -47,7 +191,8 @@ let model = {
     players: [],
     traps: [],
     rewards:[],
-    map:map()
+    map:map(),
+    roomID: 0
 } //structure du model
 
 const fuzeTime = 500 //temps de suspense
@@ -157,112 +302,5 @@ const collision = (pos,size) =>  [
  */
 const getPlayerFromId = (id) => model.players.filter(Boolean).filter(p => p.id == id)[0]
 
-//websocket, push dans le tableau clients
-app.ws('/', (ws, req) => {
-    let key = clients.length
-    clients.push(ws)
-    
-    let ref
-    if(model.players.filter(pl => pl.role == "trapper").length == 0){
-        ref = player(position(-10,1),roles.trapper,0,trapperInventory) // construit nouveau joeur a position 11 et role explorer
-    } else {
-        ref = player(randomPosition(),roles.explorer,0,[]) // construit nouveau joeur a position 11 et role explorer
-        console.log(ref)
-    }
-
-    model.players[key] = ref //ajoute joueur au model, garde indice peu importe
-    updateModels(model,withmap=true) //met a jour model car nouveau joeur
-
-    //quand recoit message client
-    ws.on('message', msg => {
-        let data = JSON.parse(msg)
-        /**
-         * Recoit un message PLACE, joueur place un piege et une recompense
-         */
-        if(data.type == "PLACE"){
-            trap_instance = trap(model.players[key].id,data.trap) //creer un piege avec les données recu et ce qu'on a deja
-            reward_instance = reward(data.reward)
-
-            if(isAValidPosition(trap_instance.position.x_, trap_instance.position.y_) &&  isAValidPosition(reward_instance.position.x_, reward_instance.position.y_)){//si placement possible TODO
-                console.log("trap et reward placés valides")
-                model.traps.push(trap_instance)
-                model.rewards.push(reward_instance)
-                getPlayerFromId(model.players[key].id).inventory.pop()
-                getPlayerFromId(model.players[key].id).inventory.pop()
-            }else{
-                console.log("trap et reward placés NON valides")
-            }
-        }
-
-        /**
-         * Recoit un message MOVE, joeur souhaite se déplacer
-         * Vérifie si move correct et ne rentre pas dans piege ou collisions ou mur
-         */
-        else if(data.type == "MOVE"){
-            //si trapper, pas de mouvement
-            if(data.player.role == "trapper"){
-
-            }else {
-                let isColliding = false
-                    collision(data.position, thickness/2.0).some(function(pos, ind) {   //regarde si il y a une collision à la nouvelle position avec...
-                        if(isColliding){
-                            return false
-                        }
-                        //... des pièges
-                        model.traps.some(function(trap, index) {
-                            if(trap.position.x_ == pos.x && trap.position.y_ == pos.y){
-                                isColliding = true
-                                if(trap.triggered == null){
-                                    trap.triggered = Date.now()
-                                    console.log("player : ", data.player.id, " walk on trap : ",trap)
-                                    plan_explosion(trap,data.player);
-                                    isColliding=false
-                                }                                
-                                return false
-                            } else {
-                                return true
-                            }
-                          })  
-                          //...des recompenses
-                          model.rewards.some(function(rew, index) {
-                            if(rew.position.x_ == pos.x && rew.position.y_ == pos.y){
-                                isColliding = true
-                                if(rew.triggered == null){
-                                    rew.triggered = Date.now()
-                                    console.log("player : ", data.player.id, " walk on reward : ",rew)
-                                    rewardPlayer(rew,data.player)
-                                    isColliding=false
-                                }
-                                return false
-                            } else {
-                                return true
-                            }
-                          })
-                          return true                    
-                    })
-
-                //check collisions avec mur
-                isColliding = false
-                collision(data.position, thickness/2.0).forEach(
-                    pos => {
-                        if(model.map[pos.y][pos.x] == 1){ //inversé mais fonctionne 
-                            isColliding = true 
-                        }
-                    })
-                if(!isColliding) {
-                        ref.position = data.position
-                }
-            }
-        }
-        updateModels(model)//maj du model
-    })
-    //quand client ferme connection, on le delete et son player et update model
-    ws.on('close',() => {
-        delete clients[key];
-        delete model.players[key];
-        updateModels(model);
-    })
-})
-//pug
 app.get('*', (req, resp) => resp.render('game'))
 app.listen(port)

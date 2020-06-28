@@ -1,38 +1,55 @@
-let controller = null
-
+let controller = null;
+var self = this;
+const roomContainer = document.getElementById('room-container')
 //pour être sur dom chargé
-$(() =>{
-    const wsUrl = `ws://localhost:3000` //a changer si multi
+$(() => {
     controller = (() => {
-        let ws //objet ws du client
+
         let model = { //init model
             players: [],
             traps: [],
-            rewards:[],
-            map:[[]],
-            currentPlayer:''
+            rewards: [],
+            map: [[]],
+            currentPlayer: ''
         }
-        
         let ui = new UI()//creer l'ui
         //ui.createGame()
-    
-        try {
-            ws = new WebSocket(wsUrl)
-            ws.onmessage = (event) => {
-                Object.assign(model,JSON.parse(event.data)) //met ce que tu as recu dans le model (met à jour droite dans gauche) grave cool
-            }
-        } catch(e) {
-            console.error(e)
-        }
-    
-    const moveTo = (position,actualPlayer) => ws.send(JSON.stringify({ type : "MOVE", position: position, player: actualPlayer})) //send la position
 
-    const place = (trapPosition, rewardPosition, actualplayer) => ws.send(JSON.stringify({ type : "PLACE", trap: trapPosition, reward: rewardPosition, player: actualplayer })) //place un piege ou recompense
+        self.socket = io();
 
-    const getModel = () => model //renvoi le model
-    const getCurrentPlayer = () => controller.getModel().players.filter(Boolean).filter(p => p.id == controller.getModel().currentPlayer)[0] //renvoi le current player
-    setTimeout(setInterval(() => ui.vue.render(),66),200) //attend un peu puis lance le set interval pour être sur que tout pret
-    return { moveTo, place, getModel,getCurrentPlayer} //
-})()
+        //quand socket deconnecté, enleve de la liste
+        self.socket.on('disconnect', function (playerId) {
+            self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+                if (playerId === otherPlayer.playerId) {
+                    otherPlayer.destroy();
+                }
+            });
+        })
 
+        self.socket.on('modelUpdate', function (data) {
+            Object.assign(model, JSON.parse(data))
+            model.actualPlayer = model.players.find(pl => pl.socketID == self.socket.id)
+            console.log("UpdateModel recu",model)
+        })
+
+        self.socket.on('newRoom', room => {
+            const roomElement = document.createElement('div')
+            roomElement.innerText = room
+            const roomLink = document.createElement('a')
+            roomLink.href = `/${room}`
+            roomLink.innerText = 'join'
+            roomContainer.append(roomLink)
+            console.log("nouvelle room creee",room)
+        })
+
+
+        const moveTo = (position, actualPlayer) => self.socket.emit("MOVE",JSON.stringify({ position: position, player: actualPlayer })) //send la position
+
+        const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE",JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
+
+        const getModel = () => model //renvoi le model
+        const getCurrentPlayer = () => model.actualPlayer //renvoi le current player
+        setTimeout(setInterval(() => ui.vue.render(), 66), 200) //attend un peu puis lance le set interval pour être sur que tout pret
+        return { moveTo, place, getModel, getCurrentPlayer } //
+    })()
 })
