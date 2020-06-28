@@ -129,11 +129,11 @@ class Vue {
         
         });
 
-        for(var i = rewardSlotUsed; i < 3; i++ ){
+        for(var i = rewardSlotUsed; i < 4; i++ ){
             $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
         }
 
-        for(var i = trapSlotUsed; i < 3; i++ ){
+        for(var i = trapSlotUsed; i < 4; i++ ){
             $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
         }
 
@@ -199,7 +199,7 @@ class Vue {
         }
         //si envoi
         if(trapIndex != -1 && rewardsIndex != -1){
-            controller.place(tempTrapsRewardsArray[trapIndex][1] , tempTrapsRewardsArray[rewardsIndex][1])
+            controller.place(tempTrapsRewardsArray[trapIndex][1] , tempTrapsRewardsArray[rewardsIndex][1], controller.getCurrentPlayer())
             //supprime le trap et reward car plus besoin
             if(trapIndex > rewardsIndex){ //si index plus grand, faut supprimer le plus grand en premier pour pas avori de bug
                 tempTrapsRewardsArray.splice(trapIndex, 1)
@@ -297,7 +297,7 @@ class Vue {
             if(playersArray[i]){
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight-this.biais, this.playerAsset.width, this.playerAsset.height)
+                if(coordX >=0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight-this.biais, this.playerAsset.width, this.playerAsset.height)
             }
         }
     }

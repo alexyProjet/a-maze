@@ -1,0 +1,6 @@
+-lobby
+-pas de joueur physique quand est trapper
+-list scores
+-nom autres joueur affichés
+
+-bruit et phrase pour relancer jeu genre le loud nigra

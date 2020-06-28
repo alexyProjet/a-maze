@@ -25,9 +25,9 @@ $(() =>{
             console.error(e)
         }
     
-    const moveTo = (position) => ws.send(JSON.stringify({ type : "MOVE", position: position })) //send la position
+    const moveTo = (position,actualPlayer) => ws.send(JSON.stringify({ type : "MOVE", position: position, player: actualPlayer})) //send la position
 
-    const place = (trapPosition, rewardPosition) => ws.send(JSON.stringify({ type : "PLACE", trap: trapPosition, reward: rewardPosition })) //place un piege ou recompense
+    const place = (trapPosition, rewardPosition, actualplayer) => ws.send(JSON.stringify({ type : "PLACE", trap: trapPosition, reward: rewardPosition, player: actualplayer })) //place un piege ou recompense
 
     const getModel = () => model //renvoi le model
     const getCurrentPlayer = () => controller.getModel().players.filter(Boolean).filter(p => p.id == controller.getModel().currentPlayer)[0] //renvoi le current player
