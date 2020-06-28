@@ -72,7 +72,7 @@ const plan_explosion = (trap1) => setTimeout(() => {
     getPlayerFromId(trap1.parentId).role = roles.explorer
     let player = model.players.filter(pl => Math.floor(pl.position.x) == Math.floor(trap1.position.x_) && Math.floor(pl.position.y) == (trap1.position.y_));
     player[0].role = "trapper"
-    player[0].inventory = [0,0,1,1]
+    player[0].inventory = [0,1,0,1] //l'ordre est important
     let trapAuthor = getPlayerFromId(trap1.parentId)
     trapAuthor.score++
     trapAuthor.inventory = []
@@ -109,7 +109,7 @@ app.ws('/', (ws, req) => {
     
     let ref
     if(model.players.filter(pl => pl.role == "trapper").length == 0){
-        ref = player(position(1,1),roles.trapper,0,[0,0,1,1]) // construit nouveau joeur a position 11 et role explorer
+        ref = player(position(1,1),roles.trapper,0,[0,1,0,1]) // construit nouveau joeur a position 11 et role explorer
     } else {
         ref = player(position(1,1),roles.explorer,0,[]) // construit nouveau joeur a position 11 et role explorer
     }
@@ -124,16 +124,13 @@ app.ws('/', (ws, req) => {
         if(data.type == "PLACE"){
             trap_instance = trap(model.players[key].id,data.trap) //creer un piege avec les données recu et ce qu'on a deja
             reward_instance = reward(data.reward)
-            //ajoute au model
-            model.traps.push(trap_instance)
-            model.rewards.push(reward_instance)
 
-           /* //si piege est en collision avec un joueur, si oui, piege explose
-            if( collision(trap_instance.position, model.players).length > 0 ) {
-
-                trap_instance.triggered = Date.now();//savoir si ca a ezte trigger ou null si pas trigger du tout
-                plan_explosion(trap_instance)
-            }*/
+            if(true){//si placement possible TODO
+                model.traps.push(trap_instance)
+                model.rewards.push(reward_instance)
+                getPlayerFromId(model.players[key].id).inventory.pop()
+                getPlayerFromId(model.players[key].id).inventory.pop()
+            }
         }
 
         //si message move

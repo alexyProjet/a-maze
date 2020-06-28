@@ -1,6 +1,7 @@
 //variables Globales
 var tempTrapsRewardsArray = []
 var lastRole
+var lastInventoryCount
 
 class Vue {
 
@@ -86,7 +87,9 @@ class Vue {
      * Rend visuellement le plateau, les joueurs, bref tout
      */
     render() {
-        if(lastRole != controller.getCurrentPlayer().role && lastRole != null) this.menus(controller.getCurrentPlayer().inventory)
+        if( ( lastRole != controller.getCurrentPlayer().role && lastRole != null ) || lastInventoryCount != controller.getCurrentPlayer().inventory.length){
+            this.menus(controller.getCurrentPlayer().inventory)
+        } 
         this.clearAll()
         this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
@@ -96,6 +99,7 @@ class Vue {
         this.tempTrapsAndRewards()
         this.score(controller.getCurrentPlayer().score)
         lastRole = controller.getCurrentPlayer().role
+        lastInventoryCount = controller.getCurrentPlayer().inventory.length
     }
 
     clearAll() {
@@ -126,11 +130,11 @@ class Vue {
         });
 
         for(var i = rewardSlotUsed; i < 3; i++ ){
-            $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
         }
 
         for(var i = trapSlotUsed; i < 3; i++ ){
-            $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
         }
 
         //séléctionne les pieges et rewards
