@@ -5,6 +5,7 @@ var io = require('socket.io').listen(server);
 app.set('views', './views')
 app.set('view engine', 'pug')
 app.use(express.static(__dirname + '/public'));
+app.use(express.urlencoded({extended: true}))
 
 const rooms = { name: {} }
 var players = {};
@@ -23,11 +24,15 @@ app.post('/room', (req, res) => {
     rooms[req.body.room] = { users: {} }
     res.redirect(req.body.room)
     //send message that new room is created
+    console.log("creation room signalée", req.body.room)
     io.emit("newRoom", req.body.room)
 })
 
 app.get('/:room', (req, res) => {
     console.log("/autre")
+    if (rooms[req.body.room] != null) {
+        return res.redirect('/')
+    }
     res.render('game', { roomName: req.params.room })
 })
 
@@ -36,7 +41,8 @@ server.listen(3000, function () {
 
     io.on('connection', function (socket) {
         console.log('Nouvelle utilisateur connecté');
-
+        io.emit('connect', socket.id);
+        
         socket.on('disconnect', function () {
             console.log('Utilisateur deconnecté');
             // remove this player from our players object
