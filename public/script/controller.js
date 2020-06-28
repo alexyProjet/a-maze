@@ -3,7 +3,6 @@ let controller = null
 //pour être sur dom chargé
 $(() =>{
     const wsUrl = `ws://localhost:3000` //a changer si multi
-    
     controller = (() => {
         let ws //objet ws du client
         let model = { //init model
@@ -27,7 +26,7 @@ $(() =>{
         }
     
     const moveTo = (position) => ws.send(JSON.stringify({ type : "MOVE", position: position })) //send la position
-    const start = () => ws.send(JSON.stringify({ type : "START" })) //SIGNIFI QUE PERSONNE PEUT REJOINDRE
+
     const place = (trapPosition, rewardPosition) => ws.send(JSON.stringify({ type : "PLACE", trap: trapPosition, reward: rewardPosition })) //place un piege ou recompense
 
     const getModel = () => model //renvoi le model

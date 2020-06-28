@@ -1,5 +1,6 @@
 //variables Globales
 var tempTrapsRewardsArray = []
+var lastRole
 
 class Vue {
 
@@ -85,6 +86,7 @@ class Vue {
      * Rend visuellement le plateau, les joueurs, bref tout
      */
     render() {
+        if(lastRole != controller.getCurrentPlayer().role && lastRole != null) this.menus(controller.getCurrentPlayer().inventory)
         this.clearAll()
         this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
@@ -93,7 +95,7 @@ class Vue {
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards()
         this.score(controller.getCurrentPlayer().score)
-        console.log(controller.getCurrentPlayer())
+        lastRole = controller.getCurrentPlayer().role
     }
 
     clearAll() {
@@ -105,6 +107,8 @@ class Vue {
      * Affiche les menus et les complete en fonction de 
      */
     menus(inventory){
+        document.getElementById("rewardsList").innerHTML = "";
+        document.getElementById("trapsList").innerHTML = "";
         this.trapsMenu = document.getElementById("trapsMenu")
         this.rewardsMenu = document.getElementById("rewardsMenu")
 
@@ -254,7 +258,7 @@ class Vue {
                 let coordX = trapArray[i].position.x_
                 let coordY = trapArray[i].position.y_
                 let myPlayer = controller.getCurrentPlayer()
-                if (myPlayer.role == true) {
+                if (myPlayer.role == "explorer") {
                     this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
                 } else {
                     this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
@@ -268,12 +272,11 @@ class Vue {
      * @param {*} bonusArray 
      */
     bonus(bonusArray) {
-        console.log(bonusArray)
         for (var i = 0; i < bonusArray.length; i++) {
             let coordX = bonusArray[i].position.x_
             let coordY = bonusArray[i].position.y_
             let myPlayer = controller.getCurrentPlayer()
-            if (myPlayer.role == true) {
+            if (myPlayer.role == "explorer") {
                 this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             } else {
                 this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus

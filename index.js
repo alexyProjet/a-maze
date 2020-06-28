@@ -68,20 +68,16 @@ const updateModels = (model,withmap=false) => clients.forEach((client,i) =>
 //quand piege declenché, appelé pour exploser
 //tue le ou les joeurus touchés et recompense l'auteur du piege
 //supprime les pieges usés
-const plan_explosion = (trap1,player) => setTimeout(() => {
+const plan_explosion = (trap1) => setTimeout(() => {
     getPlayerFromId(trap1.parentId).role = roles.explorer
-    player.role = roles.trapper
-    getPlayerFromId(trap1.parentId).score++
+    let player = model.players.filter(pl => Math.floor(pl.position.x) == Math.floor(trap1.position.x_) && Math.floor(pl.position.y) == (trap1.position.y_));
+    player[0].role = "trapper"
+    player[0].inventory = [0,0,1,1]
+    let trapAuthor = getPlayerFromId(trap1.parentId)
+    trapAuthor.score++
+    trapAuthor.inventory = []
     model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
     updateModels(model)
-    /*collision(trap1.position, model.players).forEach(player1 => {
-        //WARNING: ne pas intervertir les deux lignes suivent, sinon il est possible de ressuçuider™
-        getPlayerFromId(trap1.parentId).role = roles.explorer
-        player1.role = roles.trapper
-        getPlayerFromId(trap1.parentId).score++ //FIXME: donne des points en cas de suicide, mince :)))
-        model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
-        updateModels(model)
-    })*/
 },fuzeTime)
 /*
 const rewards = () => setTimeout(() => {
@@ -111,7 +107,13 @@ app.ws('/', (ws, req) => {
     let key = clients.length
     clients.push(ws)
     
-    let ref = player(position(1,1),roles.explorer,0,[0,0,1,1]) // construit nouveau joeur a position 11 et role explorer
+    let ref
+    if(model.players.filter(pl => pl.role == "trapper").length == 0){
+        ref = player(position(1,1),roles.trapper,0,[0,0,1,1]) // construit nouveau joeur a position 11 et role explorer
+    } else {
+        ref = player(position(1,1),roles.explorer,0,[]) // construit nouveau joeur a position 11 et role explorer
+    }
+
     model.players[key] = ref //ajoute joueur au model, garde indice peu importe
     updateModels(model,withmap=true) //met a jour model car nouveau joeur
 
@@ -137,8 +139,6 @@ app.ws('/', (ws, req) => {
         //si message move
         else if(data.type == "MOVE"){
             //permet de savoir quel joueur
-            let player = model.players.filter(pl => Math.floor(pl.position.x) == Math.floor(data.position.x) && Math.floor(pl.position.y) == (data.position.y));
-
             //Collisions avec pieges/recompenses
             let isColliding = false
                     collision(data.position, thickness/2.0).some(function(pos, ind) {    
@@ -150,7 +150,7 @@ app.ws('/', (ws, req) => {
                                 isColliding = true
                                 if(trap.triggered == null){
                                     trap.triggered = Date.now()
-                                    plan_explosion(trap,player);
+                                    plan_explosion(trap);
                                 }                                
                                 return false
                             } else {
@@ -183,7 +183,6 @@ app.ws('/', (ws, req) => {
            }
         }
         updateModels(model)//maj du model
-        console.log("traps",model.traps)
     })
     //quand client ferme connection, on le delete et son player et update model
     ws.on('close',() => {
