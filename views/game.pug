@@ -11,6 +11,7 @@ head
   script(src='/js/vue.js')
 #container
   #startGameButton
+  #nameContainer
   #trapsRewardsMenu
     #timer
       h2 Temps restant
@@ -21,10 +22,8 @@ head
     #rewardsMenu
       h2 Recompenses
       li#rewardsList
-  #scoreList
-    h2
-      | Scores
-      p(id='score')
+  #scoreListContainer
+    h3
       li#scoreList
   canvas#canva
 script(src='/script/controller.js')

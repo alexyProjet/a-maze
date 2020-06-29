@@ -1,7 +1,8 @@
 let controller = null;
+var gameStarted = false;
 
 $(() => {
-    var gameStarted = false;
+
     var name = "invité"
     var self = this;
     self.socket = io();
@@ -12,14 +13,25 @@ $(() => {
         const roomElement = document.createElement('li')
         roomElement.innerText = room
         const roomLink = document.createElement('a')
+        
         roomLink.href = `/${room}`
         roomLink.innerText = 'join'
-        roomContainer.append(roomElement)
-        roomContainer.append(roomLink)
+
+        var div = document.createElement("div");
+        div.setAttribute("id", room);
+
+        div.append(roomLink)
+        div.append(roomElement)
+        roomContainer.append(div)
     })
 
     this.socket.on('already-in-game', () => {
         window.location.replace("/");
+    })
+
+    this.socket.on('update-lobbyMenu', (room) => {
+        console.log("delete room from menu", room)
+        document.getElementById(room).parentNode.removeChild(document.getElementById(room));
     })
     
     
@@ -71,6 +83,12 @@ $(() => {
             self.socket.emit("START",roomName)
         }
 
+        const setName =(name) => {
+            console.log("controller : changement de nom")
+            self.socket.emit("setName",roomName,name)
+        }
+
+
         /**
          * signale que le jeu est prêt
          */
@@ -88,7 +106,8 @@ $(() => {
             console.log("CONTROLLER ON : loading game itnerface....")
             ui.loadGameInterface()
             setTimeout(setInterval(() => ui.vue.renderGame(), 66), 200)
-            document.getElementById('startGameButton').style.display = 'none';
+            document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));
+            document.getElementById('nameContainer').parentNode.removeChild(document.getElementById('nameContainer'));
         })
         
         const moveTo = (position, actualPlayer) => self.socket.emit("MOVE",roomName,JSON.stringify({ position: position, player: actualPlayer})) //send la position
@@ -96,6 +115,6 @@ $(() => {
         const getModel = () => model //renvoi le model
         const getCurrentPlayer = () => Object.assign({},model.currentPlayer) //renvoi le current player
         //attend un peu puis lance le set interval pour être sur que tout pret
-        return { moveTo, place, getModel, getCurrentPlayer,startButtonClicked} //
+        return { moveTo, place, getModel, getCurrentPlayer,startButtonClicked,setName} //
     })()
 })

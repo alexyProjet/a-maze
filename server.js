@@ -69,6 +69,12 @@ server.listen(3000, function () {
          
         });
 
+        socket.on('setName', function (room,name) {
+            console.log("SERVEUR ON setName old : ",rooms[room].users[socket.id])
+            rooms[room].users[socket.id] = name
+            console.log("SERVEUR ON setName new : ",rooms[room].users[socket.id])
+        })
+
         // si un joueur part
         socket.on('disconnect', function () {
             getUserRooms(socket).forEach(room => {
@@ -107,6 +113,7 @@ server.listen(3000, function () {
                 ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
             }
             ref.socketID = socket.id
+            ref.name = rooms[room].users[socket.id]
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ",room)
             updateModels(rooms[room].model,room,withmap = true)  
@@ -119,6 +126,7 @@ server.listen(3000, function () {
             if(socket.id == rooms[room].roomLeader){
                 console.log("SERVEUR EMIT : gameReadey ",room)
                 io.in(room).emit('gameReady')
+                io.emit('update-lobbyMenu',room)
                 rooms[room].state = "inGame"
             }else{
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -221,7 +229,7 @@ const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléa
 const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
 
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], id = newId(), oldPosition = position, socketID = null) => Object({ id, position, oldPosition, role, score, inventory, socketID }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, id = newId(), oldPosition = position, socketID = null) => Object({ id, position, oldPosition, name, role, score, inventory, socketID }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (position, score = 1, triggered = null) => Object({ position, score, triggered }) //champ reward
 const map = () => [

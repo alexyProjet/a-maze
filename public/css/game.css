@@ -6,7 +6,7 @@ canvas {
     display: block;
 }
 
-h2{
+h2, h3, h4{
 	color: #F96E46;
 	font-family: 'Roboto', sans-serif;
 }
@@ -26,7 +26,7 @@ li{
 	display: inline;
 }
 
-#scoreList{
+#scoreListContainer{
 	float: right;
 	margin-right: 3%;
 }
@@ -40,4 +40,9 @@ body{
 	margin-right: 3%;
 	background-color: #F9C846;
 	border-radius: 25px;
+}
+
+#scoreDiv{
+	color: #F96E46;
+	font-family: 'Roboto', sans-serif;
 }

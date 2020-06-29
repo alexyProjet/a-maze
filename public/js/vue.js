@@ -72,10 +72,47 @@ class Vue {
         var btn = document.createElement("button");
         btn.innerHTML = "start";
         $("#startGameButton").append(btn)
+
+        var box = document.createElement("input");
+        box.type = "text";       
+        
+        var btnName = document.createElement("button");
+        btnName.innerHTML = "ok";
+        $("#nameContainer").append(box)
+        $("#nameContainer").append(btnName)
+
         btn.addEventListener ("click", function() {
             controller.startButtonClicked()
           });
         console.log("..END OF rendering lobby")
+
+        btnName.addEventListener ("click", function() {
+            console.log(box.value)
+            controller.setName(box.value)
+          });
+    }
+
+    scoreList(){
+        document.getElementById("scoreList").innerHTML = "";
+        //for controller.model.players
+        for (const player of controller.getModel().players) {
+
+            console.log(player)
+            var div = document.createElement("div");
+            div.setAttribute("class", "scoreDiv");
+
+            var playerNameBalise = document.createElement("p");
+            var text = document.createTextNode(player.name);
+            playerNameBalise.appendChild(text);
+
+            var playerScoreBalise = document.createElement("p")
+            text = document.createTextNode(player.score);
+            playerScoreBalise.appendChild(text);
+
+            div.append(playerNameBalise)
+            div.append(playerScoreBalise)
+            $("#scoreList").append(div)
+         }
     }
 
     /**
@@ -92,9 +129,9 @@ class Vue {
         this.players(controller.getModel().players) //todo
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards()
-        this.score(controller.getCurrentPlayer().score)
         lastRole = controller.getCurrentPlayer().role
         lastInventoryCount = controller.getCurrentPlayer().inventory.length
+        this.scoreList()
     }
 
     clearAll() {
@@ -240,14 +277,6 @@ class Vue {
     }
 
     /**
-     * Dessine le score, A IMPLEMENTER : liste des scores
-     * @param {Dessine le} score 
-     */
-    score(score){
-        document.getElementById("score").innerText = score
-    }
-
-    /**
      * Dessine les pièges sur le plateau
      * @param {*} trapArray 
      */
@@ -292,7 +321,6 @@ class Vue {
             if(playersArray[i]){
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                console.log(coordX,coordY)
                 if(coordX >=0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight-this.biais, this.playerAsset.width, this.playerAsset.height)
             }
         }
