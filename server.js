@@ -79,7 +79,7 @@ server.listen(3000, function () {
             ref.socketID = socket.id
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ",room)
-            updateModels(rooms[room].model,room, socket,withmap = true)  
+            updateModels(rooms[room].model,room,withmap = true)  
             io.in(room).emit('displayGame')
         })
 
@@ -97,7 +97,7 @@ server.listen(3000, function () {
             trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
             reward_instance = reward(data.reward)
 
-            if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_)) {//si placement possible TODO
+            if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_,room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_,room)) {//si placement possible TODO
                 console.log("trap et reward placés valides")
                 rooms[room].model.traps.push(trap_instance)
                 rooms[room].model.rewards.push(reward_instance)
@@ -106,7 +106,7 @@ server.listen(3000, function () {
             } else {
                 console.log("trap et reward placés NON valides")
             }
-            updateModels(rooms[room].model,room,socket)
+            updateModels(rooms[room].model,room)
         });
 
         socket.on('MOVE', function (room, dataJSON) {
@@ -169,12 +169,12 @@ server.listen(3000, function () {
                     player.position = data.position
                 }
             }
-            updateModels(rooms[room].model,room,socket)
+            updateModels(rooms[room].model,room)
         })
     });
 });
 
-function updateModels(mod,room,socket,withmap = false) {
+function updateModels(mod,room,withmap = false) {
     console.log("SERVEUR EMIT : model content ",mod)
     io.in(room).emit('modelUpdate', JSON.stringify(mod))
 }
@@ -282,7 +282,7 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
         }
     }
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
-    updateModels(rooms[room].model, room,socket)
+    updateModels(rooms[room].model, room)
 }, fuzeTime)
 
 /**
@@ -296,7 +296,7 @@ const rewardPlayer = (rewardUsed, player, room) => setTimeout(() => {
     pl.score++
     rooms[room].model.rewards = rooms[room].model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
-    updateModels(rooms[room].model,room,socket)
+    updateModels(rooms[room].model,room)
 }, fuzeTime)
 
 /**
