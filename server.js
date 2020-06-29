@@ -24,7 +24,7 @@ app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    rooms[req.body.room] = { users: {}, model: model() }
+    rooms[req.body.room] = { users: {}, model: model(), roomLeader:null }
     res.redirect(req.body.room)
     io.emit("newRoom", req.body.room)
     console.log("SERVEUR io.EMIT : new room created",req.body.room)
@@ -34,8 +34,8 @@ app.get('/:room', (req, res) => {
     if (rooms[req.params.room] == null) {
         return res.redirect('/')
     }
-    console.log("SERVEUR : /:room",rooms[req.params.room])
     res.render('game', { roomName: req.params.room, roomType: "lobby" })
+    console.log("SERVEUR : /:room",req.params.room)
 })
 
 function getUserRooms(socket){
@@ -51,9 +51,12 @@ server.listen(3000, function () {
     io.on('connection', function (socket) {
 
         socket.on('new-user', (room, name) => {
-            console.log("SERVEUR ON : new-user",name)
+            console.log("SERVEUR ON : new-user",name,room)
             socket.join(room)
             rooms[room].users[socket.id] = name
+            if(Object.keys(rooms[room].users).length == 1){
+                rooms[room].roomLeader = socket.id
+            }
            // console.log("SERVEUR : rooms content ",rooms)
             io.in(room).emit("user-connected", name)
             console.log("SERVEUR EMIT : user-connected", name)
@@ -62,9 +65,28 @@ server.listen(3000, function () {
         // si un joueur part
         socket.on('disconnect', function () {
             getUserRooms(socket).forEach(room => {
-                console.log("SERVEUR ON : deconnexion de", rooms[room].users[socket.id]," dans ",rooms[room])
-                socket.emit('user-disconnected', rooms[room].users[socket.id])
-                delete rooms[room].users[socket.id]
+                console.log("part",rooms[room].users[socket.id])
+                console.log("leader",rooms[room].roomLeader)
+                console.log("lenth is ", Object.keys(rooms[room].users).length )
+                //console.log("SERVEUR ON : deconnexion de", rooms[room].users[socket.id]," dans ",rooms[room])
+                if(Object.keys(rooms[room].users).length == 1){ //si plus personne, on detruit le salon
+                    delete rooms[room]
+                    console.log("SERVEUR ON : disconnect room detruite", rooms[room])
+                }else if(rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]){ //le leader part
+                    let newLeader = null
+                    console.log("SERVEUR ON : disconnet roomLeader is leaving", rooms[room].roomLeader)
+                    delete rooms[room].users[socket.id]
+
+                    rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
+                    console.log("SERVEUR ON : disconnect new roomLeader is", rooms[room].roomLeader,rooms[room].users)
+
+                    socket.emit('user-disconnected', rooms[room].users[socket.id])
+                    
+                }else{
+                    console.log("SERVEUR ON : disconnect ", rooms[room].users[socket.id])
+                    socket.emit('user-disconnected', rooms[room].users[socket.id])
+                    delete rooms[room].users[socket.id]
+                }
             })  
       
         });
@@ -207,7 +229,7 @@ let model = () => Object({
         traps: [],
         rewards: [],
         map: map(),
-        roomID: 0
+        roomLeader: null
     })
 
 const fuzeTime = 500 //temps de suspense

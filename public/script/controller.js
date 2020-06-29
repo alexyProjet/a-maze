@@ -1,10 +1,12 @@
 let controller = null;
-var self = this;
-self.socket = io();
-var gameStarted = false;
-var name = "invité"
+
+
 
 $(() => {
+    var gameStarted = false;
+    var name = "invité"
+    var self = this;
+    self.socket = io();
     const roomContainer = document.getElementById('room-container')
 
     this.socket.on('newRoom', room => {
@@ -26,7 +28,8 @@ $(() => {
             traps: [],
             rewards: [],
             map: [[]],
-            currentPlayer: ''
+            currentPlayer: '',
+            roomLeader: null
         }
 
         let ui = null;//creer l'ui
@@ -48,7 +51,9 @@ $(() => {
         if(roomType == "lobby"){
             ui = new UI();
             ui.loadLobbyInterface()
-            socket.on('connect', function() {
+            console.log("dans le controller")
+            self.socket.on('connect', function() {
+                console.log("controller envoi")
                 socket.emit('new-user', roomName, name);
                 console.log("CONTROLLER EMIT : new-user", roomName, name)
              });
