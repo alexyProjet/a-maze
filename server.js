@@ -7,8 +7,7 @@ app.set('view engine', 'pug')
 app.use(express.static(__dirname + '/public'));
 app.use(express.urlencoded({extended: true}))
 
-const rooms = { name: {} }
-var players = {};
+const rooms = {}
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 
 app.get('/', (req, res) => {
@@ -16,53 +15,76 @@ app.get('/', (req, res) => {
     res.render('lobby', { rooms: rooms })
 })
 
+/**
+ * lorsque clic bouton "creer room"
+ * averti tout autre clients que nouvelle room
+ * redirige le createur vers sa nouvelle room
+ */
 app.post('/room', (req, res) => {
-    console.log("/room")
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
     rooms[req.body.room] = { users: {} }
     res.redirect(req.body.room)
-    //send message that new room is created
-    console.log("creation room signalée", req.body.room)
+    console.log("SERVEUR : /room",req.body.room)
     io.emit("newRoom", req.body.room)
 })
 
 app.get('/:room', (req, res) => {
-    console.log("/autre")
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    res.render('game', { roomName: req.params.room })
+    console.log("SERVEUR : /:room")
+    res.render('game', { roomName: req.params.room, roomType: "lobby" })
 })
+
+function getUserRooms(socket){
+    return Object.entries(rooms).reduce((names, [name, room]) => {
+        if(room.users[socket.id] != null) names.push(name)
+        return names
+    }, [])
+}
 
 server.listen(3000, function () {
     console.log(`En écoute sur ${server.address().port}`);
 
     io.on('connection', function (socket) {
-        console.log('Nouvelle utilisateur connecté');
-        io.emit('connect', socket.id);
-        
-        socket.on('disconnect', function () {
-            console.log('Utilisateur deconnecté');
-            // remove this player from our players object
-            delete players[socket.id];
-            // emit a message to all players to remove this player
-            io.emit('disconnect', socket.id);
+
+        socket.on('new-user', (room, name) => {
+            console.log("SERVEUR ON : new-user",name)
+            socket.join(room)
+            rooms[room].users[socket.id] = name
+            console.log("SERVEUR : rooms content ",rooms)
+            socket.to(room).broadcast.emit("user-connected", name)
+            console.log("SERVEUR EMIT : user-connected", name)
         });
 
-        let ref
-        if (model.players.filter(pl => pl.role == "trapper").length == 0) {
-            ref = player(position(-10, 1), roles.trapper, 0, trapperInventory) // construit nouveau joeur a position 11 et role explorer
-        } else {
-            ref = player(randomPosition(), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
-        }
-        ref.socketID = socket.id
+        // si un joueur part
+        socket.on('disconnect', function () {
+            getUserRooms(socket).forEach(room => {
+                console.log("SERVEUR ON : deconnexion de", rooms[room].users[socket.id])
+                socket.broadcast.emit('user-disconnected', rooms[room].users[socket.id])
+                delete rooms[room].users[socket.id]
+            })  
+      
+        });
 
-        model.players.push(ref)
-        updateModels(model, withmap = true)
+        socket.on('START', function (room){
+            socket.to(room).broadcast.emit("gameStarting")//alerte joeurs de la salle
+            let ref
+            if (model.players.filter(pl => pl.role == "trapper").length == 0) {
+                ref = player(position(-10, 1), roles.trapper, 0, trapperInventory) // construit nouveau joeur a position 11 et role explorer
+            } else {
+                ref = player(randomPosition(), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
+            }
+            ref.socketID = socket.id
+    
+            model.players.push(ref)
+            updateModels(model,room, socket,withmap = true)    
+            console.log("SERVEUR ON : START in room ",room)
+        })
 
-        socket.on('PLACE', function (dataJSON) {
+        socket.on('PLACE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = model.players.find(pl => pl.socketID == socket.id)
 
@@ -78,10 +100,10 @@ server.listen(3000, function () {
             } else {
                 console.log("trap et reward placés NON valides")
             }
-            updateModels(model)
+            updateModels(model,room,socket)
         });
 
-        socket.on('MOVE', function (dataJSON) {
+        socket.on('MOVE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = model.players.find(pl => pl.socketID == socket.id)
 
@@ -102,7 +124,7 @@ server.listen(3000, function () {
                             if (trap.triggered == null) {
                                 trap.triggered = Date.now()
                                 console.log("player : ", data.player.id, " walk on trap : ", trap)
-                                plan_explosion(trap, data.player);
+                                plan_explosion(trap, data.player,room);
                                 isCollidingTrap = false
                             }
                             return false
@@ -117,7 +139,7 @@ server.listen(3000, function () {
                             if (rew.triggered == null) {
                                 rew.triggered = Date.now()
                                 console.log("player : ", data.player.id, " walk on reward : ", rew)
-                                rewardPlayer(rew, data.player)
+                                rewardPlayer(rew, data.player,room)
                                 isCollidingReward = false
                             }
                             return false
@@ -140,13 +162,14 @@ server.listen(3000, function () {
                     ref.position = data.position
                 }
             }
-            updateModels(model)
+            updateModels(model,room,socket)
         })
     });
 });
 
-function updateModels(mod, withmap = false) {
-    io.emit('modelUpdate', JSON.stringify(mod))
+function updateModels(mod,room,socket,withmap = false) {
+    console.log("SERVEUR EMIT : model update TO ",room)
+    socket.to(room).broadcast.emit('modelUpdate', JSON.stringify(mod))
 }
 
 const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
@@ -230,7 +253,7 @@ function isAValidPosition(x, y) {
  * supprime du model
  * @param {*} trap1 
  */
-const plan_explosion = (trap1, actualPlayer) => setTimeout(() => {
+const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
     //MAJ joueur marché sur piege
     let pl = model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
@@ -252,7 +275,7 @@ const plan_explosion = (trap1, actualPlayer) => setTimeout(() => {
         }
     }
     model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
-    updateModels(model)
+    updateModels(model, room,socket)
 }, fuzeTime)
 
 /**
@@ -261,12 +284,12 @@ const plan_explosion = (trap1, actualPlayer) => setTimeout(() => {
  * @param {} rewardUsed 
  * @param {*} player 
  */
-const rewardPlayer = (rewardUsed, player) => setTimeout(() => {
+const rewardPlayer = (rewardUsed, player, room) => setTimeout(() => {
     let pl = model.players.find(p => p.id == player.id)
     pl.score++
     model.rewards = model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
-    updateModels(model)
+    updateModels(model,room,socket)
 }, fuzeTime)
 
 /**

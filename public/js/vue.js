@@ -34,35 +34,7 @@ class Vue {
         this.playerAsset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight) //FIXME: DELETE DIS
         this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_16.png", this.spriteWidth, this.spriteHeight)
         this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
-
-        this.ennemyPlayer_Back1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Back2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_02.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Back3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_24.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Front1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_22.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Front2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_23.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Front3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_21.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Right1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_10.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Right2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_11.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Right2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_09.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Left1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_13.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Left2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_14.png", this.halfWidth, this.halfHeight)
-        this.ennemyPlayer_Left3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_12.png", this.halfWidth, this.halfHeight)
-
-        this.mainPlayer_Front1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_04.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Front2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_05.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Front3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_03.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Back1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_07.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Back2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_08.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Back3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_06.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Right1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_16.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Right2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_17.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Right3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_15.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Left1Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_19.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Left2Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_20.png", this.halfWidth, this.halfHeight)
-        this.mainPlayer_Left3Asset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_18.png", this.halfWidth, this.halfHeight)
-
         this.isAssetLoadingOver = true
-        this.menus(controller.getCurrentPlayer().inventory)
     }
 
     /**
@@ -83,10 +55,30 @@ class Vue {
         }).catch(error => console.log(error))
     }
 
+    initGame(){
+        this.loadAssets()
+        this.menus(controller.getCurrentPlayer().inventory)
+        document.getElementById('trapsRewardsMenu').style.display = 'block';
+        document.getElementById('scoreList').style.display = 'block';
+    }
+
+    renderLobby() {
+        //cacher container
+        console.log("rendering lobby")
+        document.getElementById('trapsRewardsMenu').style.display = 'none';
+        document.getElementById('scoreList').style.display = 'none';
+        var btn = document.createElement("button");
+        btn.innerHTML = "start";
+        $("#startGameButton").append(btn)
+        btn.addEventListener ("click", function() {
+            controller.startButtonClicked()
+          });
+    }
+
     /**
      * Rend visuellement le plateau, les joueurs, bref tout
      */
-    render() {
+    renderGame() {
         if( ( lastRole != controller.getCurrentPlayer().role && lastRole != null ) || lastInventoryCount != controller.getCurrentPlayer().inventory.length){
             this.menus(controller.getCurrentPlayer().inventory)
         } 

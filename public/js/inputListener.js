@@ -2,34 +2,38 @@ var zKey = false;
 var sKey = false
 var qKey = false
 var dKey = false
-
 var speed = 0.14
 
 function routine(){
-    let position = controller.getCurrentPlayer().position
-    if(zKey){
-        position.y -= speed
-        controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
-    }else if(sKey){
-        position.y += speed
-        controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
-    }
-    if(qKey){
-        if(zKey == true || sKey == true){
-            position.x -= speed/2.0
-        } else {
-            position.x -= speed
+    if(/*gameStarted*/false){
+        let position = controller.getCurrentPlayer().position
+        if(zKey){
+            position.y -= speed
+            controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
+        }else if(sKey){
+            position.y += speed
+            controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
         }
-        controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
-    }else if(dKey){
-        if(zKey == true || sKey == true){
-            position.x += speed/2.0
-        } else {
-            position.x += speed
+        if(qKey){
+            if(zKey == true || sKey == true){
+                position.x -= speed/2.0
+            } else {
+                position.x -= speed
+            }
+            controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
+        }else if(dKey){
+            if(zKey == true || sKey == true){
+                position.x += speed/2.0
+            } else {
+                position.x += speed
+            }
+            controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
         }
-        controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/
+    }else{
+        console.log("inputListener : game not started")
     }
 }
+
 
 var interval = setTimeout(() => setInterval(routine,16),500)
 
