@@ -12,7 +12,6 @@ const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 
 app.get('/', (req, res) => {
     console.log("/")
-    
     res.render('lobby', { rooms: rooms, roomType: "lobbyMenu", roomName: "lobbyMenu" })
 })
 
@@ -25,7 +24,7 @@ app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    rooms[req.body.room] = { users: {}, model: model }
+    rooms[req.body.room] = { users: {}, model: model() }
     res.redirect(req.body.room)
     io.emit("newRoom", req.body.room)
     console.log("SERVEUR io.EMIT : new room created",req.body.room)
@@ -72,15 +71,13 @@ server.listen(3000, function () {
 
         socket.on('INIT', function (room) {
             let ref
-            //console.log("TEEEEEEEEEEEEEEST",rooms[room].model)
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
                 ref = player(position(-10, 1), roles.trapper, 0, trapperInventory) // construit nouveau joeur a position 11 et role explorer
             } else {
-                ref = player(randomPosition(), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
+                ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
             }
             ref.socketID = socket.id
             rooms[room].model.players.push(ref)
-
             console.log("SERVEUR ON : START in room ",room)
             updateModels(rooms[room].model,room, socket,withmap = true)  
             io.in(room).emit('displayGame')
@@ -95,26 +92,26 @@ server.listen(3000, function () {
 
         socket.on('PLACE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
-            let player = model.players.find(pl => pl.socketID == socket.id)
+            let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
 
             trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
             reward_instance = reward(data.reward)
 
             if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_)) {//si placement possible TODO
                 console.log("trap et reward placés valides")
-                model.traps.push(trap_instance)
-                model.rewards.push(reward_instance)
-                getPlayerFromId(player.id).inventory.pop()
-                getPlayerFromId(player.id).inventory.pop()
+                rooms[room].model.traps.push(trap_instance)
+                rooms[room].model.rewards.push(reward_instance)
+                getPlayerFromId(player.id,room).inventory.pop()
+                getPlayerFromId(player.id,room).inventory.pop()
             } else {
                 console.log("trap et reward placés NON valides")
             }
-            updateModels(model,room,socket)
+            updateModels(rooms[room].model,room,socket)
         });
 
         socket.on('MOVE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
-            let player = model.players.find(pl => pl.socketID == socket.id)
+            let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
 
             if (data.player.role == "trapper") {
 
@@ -127,7 +124,7 @@ server.listen(3000, function () {
                         return false
                     }
                     //... des pièges
-                    model.traps.some(function (trap, index) {
+                    rooms[room].model.traps.some(function (trap, index) {
                         if (trap.position.x_ == pos.x && trap.position.y_ == pos.y) {
                             isCollidingTrap = true
                             if (trap.triggered == null) {
@@ -142,7 +139,7 @@ server.listen(3000, function () {
                         }
                     })
                     //...des recompenses
-                    model.rewards.some(function (rew, index) {
+                    rooms[room].model.rewards.some(function (rew, index) {
                         if (rew.position.x_ == pos.x && rew.position.y_ == pos.y) {
                             isCollidingReward = true
                             if (rew.triggered == null) {
@@ -163,7 +160,7 @@ server.listen(3000, function () {
                 let isCollidingWall=false
                 collision(data.position, thickness / 2.0).forEach(
                     pos => {
-                        if (model.map[pos.y][pos.x] == 1) { //inversé mais fonctionne 
+                        if (rooms[room].model.map[pos.y][pos.x] == 1) { //inversé mais fonctionne 
                             isCollidingWall = true
                         }
                     })
@@ -171,7 +168,7 @@ server.listen(3000, function () {
                     ref.position = data.position
                 }
             }
-            updateModels(model,room,socket)
+            updateModels(rooms[room].model,room,socket)
         })
     });
 });
@@ -211,13 +208,13 @@ const map = () => [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-let model = {
-    players: [],
-    traps: [],
-    rewards: [],
-    map: map(),
-    roomID: 0
-} //structure du model
+let model = () => Object({
+        players: [],
+        traps: [],
+        rewards: [],
+        map: map(),
+        roomID: 0
+    })
 
 const fuzeTime = 500 //temps de suspense
 const thickness = 0.5 // taille joueur et piege, rayon à verifier
@@ -228,13 +225,13 @@ const roles = {
 }
 
 
-function randomPosition() {
+function randomPosition(room) {
     let x
     let y
     do {
-        x = Math.floor(Math.random() * (model.map[0].length - 1)) + 1
-        y = Math.floor(Math.random() * (model.map.length - 1)) + 1
-    } while (!(isAValidPosition(x, y)))
+        x = Math.floor(Math.random() * (rooms[room].model.map[0].length - 1)) + 1
+        y = Math.floor(Math.random() * (rooms[room].model.map.length - 1)) + 1
+    } while (!(isAValidPosition(x, y,room)))
 
     return position(x, y)
 }
@@ -243,10 +240,10 @@ function randomPosition() {
  * @param {*} x 
  * @param {*} y 
  */
-function isAValidPosition(x, y) {
-    if (model.map[y][x] == 0) {
-        let trap = model.traps.filter(tr => tr.position == position(x, y))
-        let rew = model.rewards.filter(rew => rew.position == position(x, y))
+function isAValidPosition(x, y,room) {
+    if (rooms[room].model.map[y][x] == 0) {
+        let trap = rooms[room].model.traps.filter(tr => tr.position == position(x, y))
+        let rew = rooms[room].model.rewards.filter(rew => rew.position == position(x, y))
 
         if (trap.length == 0 && rew.length == 0) {
             return true
@@ -264,7 +261,7 @@ function isAValidPosition(x, y) {
  */
 const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
     //MAJ joueur marché sur piege
-    let pl = model.players.find(p => p.id == actualPlayer.id)
+    let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
     pl.inventory = trapperInventory //l'ordre est important
     pl.oldPosition = pl.position
@@ -272,7 +269,7 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
     console.log("player : ", pl.id, " role changed, now is : ", pl.role)
 
     //MAJ joueur auteur du piege
-    let trapAuthor = getPlayerFromId(trap1.parentId)
+    let trapAuthor = getPlayerFromId(trap1.parentId,room)
     trapAuthor.score++
     if (trapAuthor.role == roles.trapper) {
         trapAuthor.role = roles.explorer
@@ -280,11 +277,11 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
         trapAuthor.inventory = []
         trapAuthor.position = trapAuthor.oldPosition
         if (trapAuthor.position.x < 0) {
-            trapAuthor.position = randomPosition() //on le repositionne à ses anciennes coordonées
+            trapAuthor.position = randomPosition(room) //on le repositionne à ses anciennes coordonées
         }
     }
-    model.traps = model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
-    updateModels(model, room,socket)
+    rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
+    updateModels(rooms[room].model, room,socket)
 }, fuzeTime)
 
 /**
@@ -294,11 +291,11 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
  * @param {*} player 
  */
 const rewardPlayer = (rewardUsed, player, room) => setTimeout(() => {
-    let pl = model.players.find(p => p.id == player.id)
+    let pl = rooms[room].model.players.find(p => p.id == player.id)
     pl.score++
-    model.rewards = model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
+    rooms[room].model.rewards = rooms[room].model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
-    updateModels(model,room,socket)
+    updateModels(rooms[room].model,room,socket)
 }, fuzeTime)
 
 /**
@@ -317,4 +314,4 @@ const collision = (pos, size) => [
  * Donne un joueur à partir d'un id
  * @param {*} id 
  */
-const getPlayerFromId = (id) => model.players.filter(Boolean).filter(p => p.id == id)[0]
+const getPlayerFromId = (id,room) => rooms[room].model.players.filter(Boolean).filter(p => p.id == id)[0]

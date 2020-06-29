@@ -5,7 +5,7 @@ var dKey = false
 var speed = 0.14
 
 function routine(){
-    if(/*gameStarted*/false){
+    if(gameStarted){
         let position = controller.getCurrentPlayer().position
         if(zKey){
             position.y -= speed
