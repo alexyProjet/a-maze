@@ -108,8 +108,13 @@ server.listen(3000, function () {
 
         //averti tous le monde que partie commence
         socket.on('START', function (room){
-            console.log("SERVEUR EMIT : gameReadey ",room)
-            io.in(room).emit('gameReady')
+            if(socket.id == rooms[room].roomLeader){
+                console.log("SERVEUR EMIT : gameReadey ",room)
+                io.in(room).emit('gameReady')
+            }else{
+                console.log("SERVEUR : seul le roomLeader peut lancer la partie")
+            }
+
         })
 
         socket.on('PLACE', function (room, dataJSON) {
