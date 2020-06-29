@@ -17,6 +17,10 @@ $(() => {
         roomContainer.append(roomElement)
         roomContainer.append(roomLink)
     })
+
+    this.socket.on('already-in-game', () => {
+        window.location.replace("/");
+    })
     
     
     controller = (() => {

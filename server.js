@@ -24,7 +24,7 @@ app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    rooms[req.body.room] = { users: {}, model: model(), roomLeader:null }
+    rooms[req.body.room] = { users: {}, model: model(), roomLeader:null, state:"lobby" }
     res.redirect(req.body.room)
     io.emit("newRoom", req.body.room)
     console.log("SERVEUR io.EMIT : new room created",req.body.room)
@@ -52,15 +52,21 @@ server.listen(3000, function () {
 
         //recu du controller, enregistre le nouveau joueur
         socket.on('new-user', (room, name) => {
-            console.log("SERVEUR ON : new-user",name,room)
-            socket.join(room)
-            rooms[room].users[socket.id] = name
-            if(Object.keys(rooms[room].users).length == 1){
-                rooms[room].roomLeader = socket.id
+            if(rooms[room].state != "inGame"){
+                console.log("SERVEUR ON : new-user",name,room)
+                socket.join(room)
+                rooms[room].users[socket.id] = name
+                if(Object.keys(rooms[room].users).length == 1){
+                    rooms[room].roomLeader = socket.id
+                }
+               // console.log("SERVEUR : rooms content ",rooms)
+                io.in(room).emit("user-connected", name)
+                console.log("SERVEUR EMIT : user-connected", name)
+            }else{
+                io.to(socket.id).emit("already-in-game") 
+                console.log("SERVEUR on : deja en jeu")
             }
-           // console.log("SERVEUR : rooms content ",rooms)
-            io.in(room).emit("user-connected", name)
-            console.log("SERVEUR EMIT : user-connected", name)
+         
         });
 
         // si un joueur part
@@ -113,6 +119,7 @@ server.listen(3000, function () {
             if(socket.id == rooms[room].roomLeader){
                 console.log("SERVEUR EMIT : gameReadey ",room)
                 io.in(room).emit('gameReady')
+                rooms[room].state = "inGame"
             }else{
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
             }
