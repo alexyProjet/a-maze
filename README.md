@@ -18,7 +18,7 @@ FEATURES:
 
 essayer d'avoir socket id en clé et non dans player
 
-FEATURES TU COME:
+FEATURES TO COME:
 - empecher de rejoindre partie en cours
 - faire disparaitre joueur quand qq quitte prematurement + ne peut avoir que un seul trapper
 - rajouter une feed back visuel quand piege et recompense validés par le serveur + indiquer qu'il faut poser 1 de chaque pour que ce soit valide
