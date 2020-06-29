@@ -31,10 +31,10 @@ app.post('/room', (req, res) => {
 })
 
 app.get('/:room', (req, res) => {
-    if (rooms[req.body.room] != null) {
+    if (rooms[req.params.room] == null) {
         return res.redirect('/')
     }
-    console.log("SERVEUR : /:room")
+    console.log("SERVEUR : /:room",rooms[req.params.room])
     res.render('game', { roomName: req.params.room, roomType: "lobby" })
 })
 
