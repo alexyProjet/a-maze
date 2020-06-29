@@ -12,7 +12,8 @@ const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 
 app.get('/', (req, res) => {
     console.log("/")
-    res.render('lobby', { rooms: rooms })
+    
+    res.render('lobby', { rooms: rooms, roomType: "lobbyMenu", roomName: "lobbyMenu" })
 })
 
 /**
@@ -24,10 +25,10 @@ app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    rooms[req.body.room] = { users: {} }
+    rooms[req.body.room] = { users: {}, model: model }
     res.redirect(req.body.room)
-    console.log("SERVEUR : /room",req.body.room)
     io.emit("newRoom", req.body.room)
+    console.log("SERVEUR io.EMIT : new room created",req.body.room)
 })
 
 app.get('/:room', (req, res) => {
@@ -55,33 +56,41 @@ server.listen(3000, function () {
             socket.join(room)
             rooms[room].users[socket.id] = name
             console.log("SERVEUR : rooms content ",rooms)
-            socket.to(room).broadcast.emit("user-connected", name)
+            io.in(room).emit("user-connected", name)
             console.log("SERVEUR EMIT : user-connected", name)
         });
 
         // si un joueur part
         socket.on('disconnect', function () {
             getUserRooms(socket).forEach(room => {
-                console.log("SERVEUR ON : deconnexion de", rooms[room].users[socket.id])
-                socket.broadcast.emit('user-disconnected', rooms[room].users[socket.id])
+                console.log("SERVEUR ON : deconnexion de", rooms[room].users[socket.id]," dans ",rooms[room])
+                socket.emit('user-disconnected', rooms[room].users[socket.id])
                 delete rooms[room].users[socket.id]
             })  
       
         });
 
-        socket.on('START', function (room){
-            socket.to(room).broadcast.emit("gameStarting")//alerte joeurs de la salle
+        socket.on('INIT', function (room) {
             let ref
-            if (model.players.filter(pl => pl.role == "trapper").length == 0) {
+            //console.log("TEEEEEEEEEEEEEEST",rooms[room].model)
+            if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
                 ref = player(position(-10, 1), roles.trapper, 0, trapperInventory) // construit nouveau joeur a position 11 et role explorer
             } else {
                 ref = player(randomPosition(), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
             }
             ref.socketID = socket.id
-    
-            model.players.push(ref)
-            updateModels(model,room, socket,withmap = true)    
+            rooms[room].model.players.push(ref)
+
             console.log("SERVEUR ON : START in room ",room)
+            updateModels(rooms[room].model,room, socket,withmap = true)  
+            io.in(room).emit('displayGame')
+        })
+
+
+        //averti tous le monde que partie commence
+        socket.on('START', function (room){
+            console.log("SERVEUR EMIT : gameReadey ",room)
+            io.in(room).emit('gameReady')
         })
 
         socket.on('PLACE', function (room, dataJSON) {
@@ -168,8 +177,8 @@ server.listen(3000, function () {
 });
 
 function updateModels(mod,room,socket,withmap = false) {
-    console.log("SERVEUR EMIT : model update TO ",room)
-    socket.to(room).broadcast.emit('modelUpdate', JSON.stringify(mod))
+    console.log("SERVEUR EMIT : model content ",mod)
+    io.in(room).emit('modelUpdate', JSON.stringify(mod))
 }
 
 const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire

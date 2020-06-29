@@ -29,7 +29,8 @@ $(() => {
             currentPlayer: ''
         }
 
-        let ui = new UI()//creer l'ui
+        let ui = null;//creer l'ui
+        
         let idtemp = Math.floor(Math.random()*1000);
         name = name + idtemp
 
@@ -39,37 +40,51 @@ $(() => {
 
         self.socket.on('modelUpdate', function (data) {
             Object.assign(model, JSON.parse(data))
-            model.actualPlayer = model.players.find(pl => pl.socketID == self.socket.id)
-            console.log("CONTROLLER ON : UpdateModel recu")
+            model.currentPlayer = model.players.find(pl => pl.socketID == self.socket.id)
+            console.log("CONTROLLER ON : UpdateModel recu",model,self.socket.id)
         })
 
-        self.socket.on('gameStarting', function (data) {
-            ui.loadGameInterface()
-            setTimeout(setInterval(() => ui.vue.renderGame(), 66), 200) 
-            console.log("CONTROLLER ON : game starting")
-        })
-        
         //si on est dans le lobby
         if(roomType == "lobby"){
+            ui = new UI();
             ui.loadLobbyInterface()
             socket.on('connect', function() {
                 socket.emit('new-user', roomName, name);
-                console.log("CONTROLLER EMIT : room", roomName)
+                console.log("CONTROLLER EMIT : new-user", roomName, name)
              });
         }
-        
+
+        //signale au serveur que le bouton start est cliqué
         const startButtonClicked =() => {
             console.log("controller : button start clicked")
-            gameStarted = true
             self.socket.emit("START",roomName)
         }
 
+        /**
+         * signale que le jeu est prêt
+         */
+        self.socket.on('gameReady', function () {
+            console.log("CONTROLLER ON : gameReady ")
+            self.socket.emit("INIT",roomName)
+        })
+
+        /**
+         * signale qu'il faut affiche le jeu
+         */
+        self.socket.on('displayGame', function () {
+            console.log("CONTROLLER ON : displayGame ")
+            gameStarted = true
+            console.log("CONTROLLER ON : loading game itnerface....")
+            ui.loadGameInterface()
+            setTimeout(setInterval(() => ui.vue.renderGame(), 66), 200)
+        })
+        
         const moveTo = (position, actualPlayer) => self.socket.emit("MOVE",roomName,JSON.stringify({ position: position, player: actualPlayer,roomName: room })) //send la position
 
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE",roomName,JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer}))
 
         const getModel = () => model //renvoi le model
-        const getCurrentPlayer = () => model.actualPlayer //renvoi le current player
+        const getCurrentPlayer = () => model.currentPlayer //renvoi le current player
         //attend un peu puis lance le set interval pour être sur que tout pret
         return { moveTo, place, getModel, getCurrentPlayer,startButtonClicked} //
     })()

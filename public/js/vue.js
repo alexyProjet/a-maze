@@ -56,15 +56,17 @@ class Vue {
     }
 
     initGame(){
+        console.log("Initiallising game....")
         this.loadAssets()
         this.menus(controller.getCurrentPlayer().inventory)
         document.getElementById('trapsRewardsMenu').style.display = 'block';
         document.getElementById('scoreList').style.display = 'block';
+        console.log("END OF initiallising game....")
     }
 
     renderLobby() {
         //cacher container
-        console.log("rendering lobby")
+        console.log("rendering lobby..")
         document.getElementById('trapsRewardsMenu').style.display = 'none';
         document.getElementById('scoreList').style.display = 'none';
         var btn = document.createElement("button");
@@ -73,6 +75,7 @@ class Vue {
         btn.addEventListener ("click", function() {
             controller.startButtonClicked()
           });
+        console.log("..END OF rendering lobby")
     }
 
     /**
