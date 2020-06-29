@@ -95,6 +95,7 @@ class Vue {
     scoreList(){
         document.getElementById("scoreList").innerHTML = "";
         //for controller.model.players
+        let scorePrecedent = 0
         for (const player of controller.getModel().players) {
 
             console.log(player)
@@ -111,7 +112,13 @@ class Vue {
 
             div.append(playerNameBalise)
             div.append(playerScoreBalise)
-            $("#scoreList").append(div)
+
+            if(scorePrecedent < player.score){
+                $("#scoreList").prepend(div)
+            } else{
+                $("#scoreList").append(div)
+            }
+            
          }
     }
 
