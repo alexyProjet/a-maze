@@ -20,7 +20,7 @@ FEATURES:
 essayer d'avoir socket id en clé et non dans player
 
 FEATURES TO COME:
-
+- enlever lobby du menu quand en jeu
 - faire disparaitre joueur quand qq quitte prematurement + ne peut avoir que un seul trapper
 - rajouter une feed back visuel quand piege et recompense validés par le serveur + indiquer qu'il faut poser 1 de chaque pour que ce soit valide
 - pseudo
