@@ -26,4 +26,5 @@ FEATURES TU COME:
 - score list
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
+- partie avec bot
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul
