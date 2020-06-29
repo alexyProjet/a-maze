@@ -164,8 +164,9 @@ server.listen(3000, function () {
                             isCollidingWall = true
                         }
                     })
+
                 if (!isCollidingWall) {
-                    ref.position = data.position
+                    player.position = data.position
                 }
             }
             updateModels(rooms[room].model,room,socket)

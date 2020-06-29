@@ -79,9 +79,9 @@ $(() => {
             setTimeout(setInterval(() => ui.vue.renderGame(), 66), 200)
         })
         
-        const moveTo = (position, actualPlayer,roomName) => self.socket.emit("MOVE",roomName,JSON.stringify({ position: position, player: actualPlayer})) //send la position
+        const moveTo = (position, actualPlayer) => self.socket.emit("MOVE",roomName,JSON.stringify({ position: position, player: actualPlayer})) //send la position
 
-        const place = (trapPosition, rewardPosition, actualplayer,roomName) => self.socket.emit("PLACE",roomName,JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer}))
+        const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE",roomName,JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer}))
 
         const getModel = () => model //renvoi le model
         const getCurrentPlayer = () => model.currentPlayer //renvoi le current player
