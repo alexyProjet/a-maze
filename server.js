@@ -50,6 +50,7 @@ server.listen(3000, function () {
 
     io.on('connection', function (socket) {
 
+        //recu du controller, enregistre le nouveau joueur
         socket.on('new-user', (room, name) => {
             console.log("SERVEUR ON : new-user",name,room)
             socket.join(room)
@@ -91,6 +92,7 @@ server.listen(3000, function () {
       
         });
 
+        //Initialisation du joueur
         socket.on('INIT', function (room) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
@@ -117,6 +119,7 @@ server.listen(3000, function () {
 
         })
 
+        //place un piege ou recompense si l'emplacement est valide
         socket.on('PLACE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
@@ -136,6 +139,8 @@ server.listen(3000, function () {
             updateModels(rooms[room].model,room)
         });
 
+        //vérifi si le deplacement du joueur est valide
+        //vérifi si collision avec piege ou recompense
         socket.on('MOVE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
@@ -194,6 +199,12 @@ server.listen(3000, function () {
     });
 });
 
+/**
+ * Met à jour le model
+ * @param {*} mod 
+ * @param {*} room 
+ * @param {*} withmap 
+ */
 function updateModels(mod,room,withmap = false) {
     //console.log("SERVEUR EMIT : model content ",mod)
     io.in(room).emit('modelUpdate', JSON.stringify(mod))
@@ -245,7 +256,10 @@ const roles = {
     trapper: "trapper"
 }
 
-
+/**
+ * renvoi une position random
+ * @param {*} room 
+ */
 function randomPosition(room) {
     let x
     let y
@@ -256,6 +270,7 @@ function randomPosition(room) {
 
     return position(x, y)
 }
+
 /**
  * Vérfie qu'il n'y a que du sol à la position donnée
  * @param {*} x 

@@ -1,7 +1,5 @@
 let controller = null;
 
-
-
 $(() => {
     var gameStarted = false;
     var name = "invité"
@@ -37,10 +35,14 @@ $(() => {
         let idtemp = Math.floor(Math.random()*1000);
         name = name + idtemp
 
+        //un nouvel utilisateur est connecté
         self.socket.on('user-connected', function (name) {
             console.log("CONTROLLER ON : utilisateur connecte : ",name)
         })
 
+        /**
+         * MAJ du model
+         */
         self.socket.on('modelUpdate', function (data) {
             Object.assign(model, JSON.parse(data))
             model.currentPlayer = model.players.find(pl => pl.socketID == self.socket.id)
@@ -82,12 +84,11 @@ $(() => {
             console.log("CONTROLLER ON : loading game itnerface....")
             ui.loadGameInterface()
             setTimeout(setInterval(() => ui.vue.renderGame(), 66), 200)
+            document.getElementById('startGameButton').style.display = 'none';
         })
         
         const moveTo = (position, actualPlayer) => self.socket.emit("MOVE",roomName,JSON.stringify({ position: position, player: actualPlayer})) //send la position
-
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE",roomName,JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer}))
-
         const getModel = () => model //renvoi le model
         const getCurrentPlayer = () => Object.assign({},model.currentPlayer) //renvoi le current player
         //attend un peu puis lance le set interval pour être sur que tout pret
