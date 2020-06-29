@@ -6,7 +6,7 @@ var speed = 0.14
 
 function routine(){
     if(gameStarted){
-        let position = controller.getCurrentPlayer().position
+        let position = Object.assign({},controller.getCurrentPlayer().position)
         if(zKey){
             position.y -= speed
             controller.moveTo(position,controller.getCurrentPlayer()) //signale au controller le deplacement*/

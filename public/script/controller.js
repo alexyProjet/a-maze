@@ -84,7 +84,7 @@ $(() => {
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE",roomName,JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer}))
 
         const getModel = () => model //renvoi le model
-        const getCurrentPlayer = () => model.currentPlayer //renvoi le current player
+        const getCurrentPlayer = () => Object.assign({},model.currentPlayer) //renvoi le current player
         //attend un peu puis lance le set interval pour être sur que tout pret
         return { moveTo, place, getModel, getCurrentPlayer,startButtonClicked} //
     })()

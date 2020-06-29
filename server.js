@@ -54,7 +54,7 @@ server.listen(3000, function () {
             console.log("SERVEUR ON : new-user",name)
             socket.join(room)
             rooms[room].users[socket.id] = name
-            console.log("SERVEUR : rooms content ",rooms)
+           // console.log("SERVEUR : rooms content ",rooms)
             io.in(room).emit("user-connected", name)
             console.log("SERVEUR EMIT : user-connected", name)
         });
@@ -157,14 +157,7 @@ server.listen(3000, function () {
                 })
 
                 //check collisions avec mur
-                let isCollidingWall=false
-                collision(data.position, thickness / 2.0).forEach(
-                    pos => {
-                        if (rooms[room].model.map[pos.y][pos.x] == 1) { //inversé mais fonctionne 
-                            isCollidingWall = true
-                        }
-                    })
-
+                let isCollidingWall = collision(data.position, thickness / 2.0).some( pos => rooms[room].model.map[pos.y][pos.x] == 1 ) 
                 if (!isCollidingWall) {
                     player.position = data.position
                 }
@@ -175,7 +168,7 @@ server.listen(3000, function () {
 });
 
 function updateModels(mod,room,withmap = false) {
-    console.log("SERVEUR EMIT : model content ",mod)
+    //console.log("SERVEUR EMIT : model content ",mod)
     io.in(room).emit('modelUpdate', JSON.stringify(mod))
 }
 
@@ -245,7 +238,6 @@ function isAValidPosition(x, y,room) {
     if (rooms[room].model.map[y][x] == 0) {
         let trap = rooms[room].model.traps.filter(tr => tr.position == position(x, y))
         let rew = rooms[room].model.rewards.filter(rew => rew.position == position(x, y))
-
         if (trap.length == 0 && rew.length == 0) {
             return true
         }
