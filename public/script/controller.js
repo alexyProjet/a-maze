@@ -117,10 +117,8 @@ $(() => {
            // if(time != 0 && time <= 60){ //a enlever
                 self.socket.emit("START", roomName,time)
            // }else{
-               alert("Le nombre de minutes ne peut être > 60 et = 0")
+               //alert("Le nombre de minutes ne peut être > 60 et = 0")
            }
-
-        }
 
 
 
@@ -146,7 +144,7 @@ $(() => {
             console.log("CONTROLLER ON : loading game itnerface....", model)
             vue.initGame()
             vue.launchCountdown(timeStop)
-            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(), 66), 200)
+            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myId), 66), 200)
             document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));
             document.getElementById('nameContainer').parentNode.removeChild(document.getElementById('nameContainer'));
         })

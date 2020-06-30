@@ -37,10 +37,10 @@ class Vue {
         this.playerRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_right.png", this.halfWidth, this.halfHeight)
         this.playerLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_left.png", this.halfWidth, this.halfHeight)
 
-        this.playerEnemyUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
-        this.playerEnemyDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
-        this.playerEnemyRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_right.png", this.halfWidth, this.halfHeight)
-        this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_left.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_up.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_down.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_right.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_left.png", this.halfWidth, this.halfHeight)
 
         this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_16.png", this.spriteWidth, this.spriteHeight)
         this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
@@ -382,7 +382,7 @@ class Vue {
     /**
      * Rend visuellement le plateau, les joueurs, bref tout
      */
-    renderGame() {
+    renderGame(thisplayerId) {
         if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
             this.menus(controller.getCurrentPlayer().inventory)
         }
@@ -390,7 +390,7 @@ class Vue {
         this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
         this.bonus(controller.getModel().rewards) //todo
-        this.players(controller.getModel().players) //todo
+        this.players(controller.getModel().players,thisplayerId) //todo
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
@@ -602,7 +602,8 @@ class Vue {
             if (playersArray[i].role == "explorer") { //ne rend que les explorers
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                console.log("LA DIRECTION EST ",playersArray[i].direction)
+                console.log("thisplayerid",thisPlayerId)
+                console.log("playerarrayid",playersArray[i].id)
                 if (thisPlayerId == playersArray[i].id) {
                     switch (playersArray[i].direction) {
                         case 'up':
