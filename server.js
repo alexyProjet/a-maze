@@ -106,7 +106,7 @@ server.listen(3000, function () {
 
                 } else { //si deconnexion en jeu
 
-                    if (Object.keys(rooms[room].users).length == 2) { //si plus personne, on detruit le salon
+                    if (Object.keys(rooms[room].users).length >= 2) { //si plus personne, on detruit le salon
                         delete rooms[room]
                         io.in(room).emit("exit")
                         console.log("SERVEUR ON : disconnect room detruite", rooms[room])
@@ -168,7 +168,7 @@ server.listen(3000, function () {
 
 
         //averti tous le monde que partie commence
-        socket.on('START', function (room) {
+        socket.on('START', function (room, time) {
             if (socket.id == rooms[room].roomLeader) {
                 if (false/*Object.keys(rooms[room].users).length == 1*/) { // a enlever 
                     console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")

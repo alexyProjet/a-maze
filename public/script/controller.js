@@ -104,8 +104,11 @@ $(() => {
 
         //signale au serveur que le bouton start est cliqué
         const startButtonClicked = () => {
-            console.log("controller : button start clicked")
-            self.socket.emit("START", roomName)
+            let time = document.getElementById("inputBoxTime").value
+            if(time != 0 && time <= 60){
+                self.socket.emit("START", roomName,time)
+            }
+
         }
 
 

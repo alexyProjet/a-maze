@@ -147,7 +147,13 @@ class Vue {
         let divColonneGauche = document.createElement("div")
         divColonneGauche.setAttribute("id", "colonne-gauche-div")
 
-        divColonneGauche.innerHTML = "<h2>OPTIONS</h2>"
+        let divOptions = document.createElement("div")
+        divOptions.setAttribute("id", "divOptions")
+
+        let divOptionsPartie = document.createElement("div")
+        divOptionsPartie.setAttribute("id", "divOptionsPartie")
+
+        divOptions.innerHTML = "<h2>OPTIONS</h2>"
 
         let inputBox = document.createElement("input");
         inputBox.type = "text";
@@ -161,11 +167,35 @@ class Vue {
         divNameContainer.append(inputBox)
         divNameContainer.append(btnName)
 
-        divColonneGauche.append(divNameContainer)
+        divOptions.append(divNameContainer)
+
+        divColonneGauche.append(divOptions)
 
 
         if (JSON.stringify(controller.getId()) == JSON.stringify(controller.getRoomLeader())) {
-            //set le temps d'une partie, kick les joueurs etc
+            divOptionsPartie.innerHTML = "<h2>OPTIONS DE JEU</h2>"
+
+            let dureeDiv = document.createElement("div")
+            dureeDiv.setAttribute("id", "dureeDiv")
+
+            let inputBoxTime = document.createElement("input");
+            inputBoxTime.setAttribute("id", "inputBoxTime")
+            inputBoxTime.type = "text";
+
+
+            let dureeLabel = document.createElement("p");
+            let dureeText = document.createTextNode("Durée de la partie (minutes) : ");
+            dureeLabel.append(dureeText)
+
+            dureeDiv.append(dureeLabel)
+            dureeDiv.append(inputBoxTime)
+
+            divOptionsPartie.append(dureeDiv)
+
+            this.setInputFilter(inputBoxTime, function (value) { //empeche de retnrer autre chose que des entiers
+                return /^-?\d*$/.test(value);
+            });
+            divColonneGauche.append(divOptionsPartie)
         }
 
         /**
@@ -207,274 +237,297 @@ class Vue {
         });
     }
 
-    scoreList() {
-        document.getElementById("scoreList").innerHTML = "";
-        //for controller.model.players
-        let scorePrecedent = 0
-        for (const player of controller.getModel().players) {
-            var div = document.createElement("div");
-            div.setAttribute("class", "scoreDiv");
-
-            var divName = document.createElement("div");
-            divName.setAttribute("class", "score-container");
-            var playerNameBalise = document.createElement("p");
-            playerNameBalise.setAttribute("class", "scoreName");
-            var text = document.createTextNode(player.name);
-            playerNameBalise.appendChild(text);
-            divName.append(playerNameBalise)
-
-            if (player.isRoomLeader) {
-                var imgLeader = document.createElement("img")
-                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
-                imgLeader.setAttribute('width', '24px');
-                imgLeader.setAttribute('height', '24px');
-                imgLeader.setAttribute('id', 'leaderImg');
-                divName.append(imgLeader)
-            }
-
-            var playerScoreBalise = document.createElement("p")
-            playerScoreBalise.setAttribute("class", "scoreText");
-            text = document.createTextNode(player.score);
-            playerScoreBalise.appendChild(text);
-
-            div.append(divName)
-            div.append(playerScoreBalise)
+    /**
+     * Empeche la saisie de caractere autres que des entiers dans la box de durée
+     * @param {*} textbox 
+     * @param {*} inputFilter 
+     */
+    setInputFilter(textbox, inputFilter) {
+        ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function (event) {
+            textbox.addEventListener(event, function () {
+                if (inputFilter(this.value)) {
+                    this.oldValue = this.value;
+                    this.oldSelectionStart = this.selectionStart;
+                    this.oldSelectionEnd = this.selectionEnd;
+                } else if (this.hasOwnProperty("oldValue")) {
+                    this.value = this.oldValue;
+                    this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+                } else {
+                    this.value = "";
+                }
+            });
+        });
+    }
 
 
-            if (scorePrecedent < player.score) {
-                $("#scoreList").prepend(div)
-            } else {
-                $("#scoreList").append(div)
-            }
+scoreList() {
+    document.getElementById("scoreList").innerHTML = "";
+    //for controller.model.players
+    let scorePrecedent = 0
+    for (const player of controller.getModel().players) {
+        var div = document.createElement("div");
+        div.setAttribute("class", "scoreDiv");
 
+        var divName = document.createElement("div");
+        divName.setAttribute("class", "score-container");
+        var playerNameBalise = document.createElement("p");
+        playerNameBalise.setAttribute("class", "scoreName");
+        var text = document.createTextNode(player.name);
+        playerNameBalise.appendChild(text);
+        divName.append(playerNameBalise)
+
+        if (player.isRoomLeader) {
+            var imgLeader = document.createElement("img")
+            imgLeader.src = '/img/PNG/Default size/misc/crown.png';
+            imgLeader.setAttribute('width', '24px');
+            imgLeader.setAttribute('height', '24px');
+            imgLeader.setAttribute('id', 'leaderImg');
+            divName.append(imgLeader)
+        }
+
+        var playerScoreBalise = document.createElement("p")
+        playerScoreBalise.setAttribute("class", "scoreText");
+        text = document.createTextNode(player.score);
+        playerScoreBalise.appendChild(text);
+
+        div.append(divName)
+        div.append(playerScoreBalise)
+
+
+        if (scorePrecedent < player.score) {
+            $("#scoreList").prepend(div)
+        } else {
+            $("#scoreList").append(div)
+        }
+
+    }
+}
+
+/**
+ * Rend visuellement le plateau, les joueurs, bref tout
+ */
+renderGame() {
+    if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
+        this.menus(controller.getCurrentPlayer().inventory)
+    }
+    this.clearAll()
+    this.map(controller.getModel().map) //todo rajouter les paramètres
+    this.traps(controller.getModel().traps) //todo
+    this.bonus(controller.getModel().rewards) //todo
+    this.players(controller.getModel().players) //todo
+    if (controller.getCurrentPlayer().role == "explorer") this.darken()
+    this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
+    lastRole = controller.getCurrentPlayer().role
+    lastInventoryCount = controller.getCurrentPlayer().inventory.length
+    this.scoreList()
+}
+
+clearAll() {
+    this.context.clearRect(0, 0, this.canva.width, this.canva.height);
+}
+
+//a appeler par controller ?
+/**
+ * Affiche les menus et les complete en fonction de 
+ */
+menus(inventory) {
+    document.getElementById("rewardsList").innerHTML = "";
+    document.getElementById("trapsList").innerHTML = "";
+
+    this.trapsMenu = document.getElementById("trapsMenu")
+    this.rewardsMenu = document.getElementById("rewardsMenu")
+
+    let trapSlotUsed = 0;
+    let rewardSlotUsed = 0;
+    inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
+        if (element == 0) { //c'est une recompenses
+            rewardSlotUsed++
+            $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+        } else { //c'est un piege
+            trapSlotUsed++
+            $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+        }
+
+    });
+
+    for (var i = rewardSlotUsed; i < 4; i++) {
+        $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+    }
+
+    for (var i = trapSlotUsed; i < 4; i++) {
+        $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+    }
+
+    //séléctionne les pieges et rewards
+    var traps = $(".traps");
+    var rewards = $(".rewards");
+
+    //deviennent draggable
+    traps.draggable({
+        helper: 'clone',
+    });
+    traps.data("type", "trap");
+    rewards.draggable({
+        helper: 'clone',
+    });
+    rewards.data("type", "rewards");
+
+
+    var $canvas = $("#canva");
+    //le canva est droppable
+    $canvas.droppable({
+        drop: dragDrop,
+    });
+
+    let t = this
+
+    function dragDrop(e, ui) {
+        let Offset = $canvas.offset();
+        let offsetX = Offset.left;
+        let offsetY = Offset.top;
+        let x = Math.round((parseInt(ui.offset.left - offsetX) - 1) / t.spriteWidth);
+        let y = Math.round((parseInt(ui.offset.top - offsetY)) / t.spriteHeight);
+        var data = ui.draggable.data("type");
+
+        if (data == "trap") {
+            tempTrapsRewardsArray["trap"] = { x_: x, y_: y }
+        } else {
+            tempTrapsRewardsArray["reward"] = { x_: x, y_: y }
         }
     }
 
-    /**
-     * Rend visuellement le plateau, les joueurs, bref tout
-     */
-    renderGame() {
-        if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
-            this.menus(controller.getCurrentPlayer().inventory)
-        }
-        this.clearAll()
-        this.map(controller.getModel().map) //todo rajouter les paramètres
-        this.traps(controller.getModel().traps) //todo
-        this.bonus(controller.getModel().rewards) //todo
-        this.players(controller.getModel().players) //todo
-        if (controller.getCurrentPlayer().role == "explorer") this.darken()
-        this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
-        lastRole = controller.getCurrentPlayer().role
-        lastInventoryCount = controller.getCurrentPlayer().inventory.length
-        this.scoreList()
+}
+
+/**
+ * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
+ * on l'affiche grâce à cette fonction
+ */
+tempTrapsAndRewards(role) {
+    let trapIndex = -1
+    let rewardsIndex = -1
+    let x
+    let y
+    document.getElementById("indication").innerHTML = "";
+    if (role == "trapper") {
+
+        var indicationTextBalise = document.createElement("p");
+        var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense à la fois");
+
+        indicationTextBalise.appendChild(indicationText);
+
+        document.getElementById("indication").append(indicationTextBalise);
+    } else {
+        var indicationTextBalise = document.createElement("p");
+        var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
+
+        indicationTextBalise.appendChild(indicationText);
+
+        document.getElementById("indication").append(indicationTextBalise);
     }
 
-    clearAll() {
-        this.context.clearRect(0, 0, this.canva.width, this.canva.height);
+    if (tempTrapsRewardsArray["trap"] != null) {
+        this.context.globalAlpha = 0.5;
+        x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
+        y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
+        this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
+        this.context.globalAlpha = 1.0;
     }
+    if (tempTrapsRewardsArray["reward"] != null) {
+        this.context.globalAlpha = 0.5;
+        x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
+        y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
+        this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
+        this.context.globalAlpha = 1.0;
+    }
+    //si envoi
+    if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
+        controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
 
-    //a appeler par controller ?
-    /**
-     * Affiche les menus et les complete en fonction de 
-     */
-    menus(inventory) {
+        tempTrapsRewardsArray["trap"] = null
+        tempTrapsRewardsArray["reward"] = null
+
         document.getElementById("rewardsList").innerHTML = "";
         document.getElementById("trapsList").innerHTML = "";
-
-        this.trapsMenu = document.getElementById("trapsMenu")
-        this.rewardsMenu = document.getElementById("rewardsMenu")
-
-        let trapSlotUsed = 0;
-        let rewardSlotUsed = 0;
-        inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
-            if (element == 0) { //c'est une recompenses
-                rewardSlotUsed++
-                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-            } else { //c'est un piege
-                trapSlotUsed++
-                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-            }
-
-        });
-
-        for (var i = rewardSlotUsed; i < 4; i++) {
-            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-        }
-
-        for (var i = trapSlotUsed; i < 4; i++) {
-            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-        }
-
-        //séléctionne les pieges et rewards
-        var traps = $(".traps");
-        var rewards = $(".rewards");
-
-        //deviennent draggable
-        traps.draggable({
-            helper: 'clone',
-        });
-        traps.data("type", "trap");
-        rewards.draggable({
-            helper: 'clone',
-        });
-        rewards.data("type", "rewards");
-
-
-        var $canvas = $("#canva");
-        //le canva est droppable
-        $canvas.droppable({
-            drop: dragDrop,
-        });
-
-        let t = this
-
-        function dragDrop(e, ui) {
-            let Offset = $canvas.offset();
-            let offsetX = Offset.left;
-            let offsetY = Offset.top;
-            let x = Math.round((parseInt(ui.offset.left - offsetX) - 1) / t.spriteWidth);
-            let y = Math.round((parseInt(ui.offset.top - offsetY)) / t.spriteHeight);
-            var data = ui.draggable.data("type");
-
-            if (data == "trap") {
-                tempTrapsRewardsArray["trap"] = { x_: x, y_: y }
-            } else {
-                tempTrapsRewardsArray["reward"] = { x_: x, y_: y }
-            }
-        }
-
+        this.menus(controller.getCurrentPlayer().inventory)
     }
-
-    /**
-     * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
-     * on l'affiche grâce à cette fonction
-     */
-    tempTrapsAndRewards(role) {
-        let trapIndex = -1
-        let rewardsIndex = -1
-        let x
-        let y
-        document.getElementById("indication").innerHTML = "";
-        if (role == "trapper") {
-
-            var indicationTextBalise = document.createElement("p");
-            var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense à la fois");
-
-            indicationTextBalise.appendChild(indicationText);
-
-            document.getElementById("indication").append(indicationTextBalise);
-        } else {
-            var indicationTextBalise = document.createElement("p");
-            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
-
-            indicationTextBalise.appendChild(indicationText);
-
-            document.getElementById("indication").append(indicationTextBalise);
-        }
-
-        if (tempTrapsRewardsArray["trap"] != null) {
-            this.context.globalAlpha = 0.5;
-            x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
-            y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
-            this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
-            this.context.globalAlpha = 1.0;
-        }
-        if (tempTrapsRewardsArray["reward"] != null) {
-            this.context.globalAlpha = 0.5;
-            x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
-            y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
-            this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
-            this.context.globalAlpha = 1.0;
-        }
-        //si envoi
-        if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
-            controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
-
-            tempTrapsRewardsArray["trap"] = null
-            tempTrapsRewardsArray["reward"] = null
-
-            document.getElementById("rewardsList").innerHTML = "";
-            document.getElementById("trapsList").innerHTML = "";
-            this.menus(controller.getCurrentPlayer().inventory)
-        }
-    }
+}
 
 
-    /**
-     * Dessine la map
-     * @param {*} mapArray de 0 et 1
-     */
-    map(mapArray) {
-        for (var i = 0; i < mapArray.length; i++) {
-            for (var j = 0; j < mapArray[i].length; j++) {
-                this.context.drawImage(this.floorAsset, j * this.floorAsset.width, i * this.floorAsset.height, this.floorAsset.width, this.floorAsset.height) //rend le sol
-                if (mapArray[i][j] == 1) {
-                    this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
-                }
+/**
+ * Dessine la map
+ * @param {*} mapArray de 0 et 1
+ */
+map(mapArray) {
+    for (var i = 0; i < mapArray.length; i++) {
+        for (var j = 0; j < mapArray[i].length; j++) {
+            this.context.drawImage(this.floorAsset, j * this.floorAsset.width, i * this.floorAsset.height, this.floorAsset.width, this.floorAsset.height) //rend le sol
+            if (mapArray[i][j] == 1) {
+                this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
             }
         }
     }
+}
 
-    /**
-     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
-     */
-    darken() {
-        let myPlayer = controller.getCurrentPlayer()
-        let coordX = myPlayer.position.x
-        let coordY = myPlayer.position.y
-        this.context.beginPath()
-        this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
-        this.context.fill();
-    }
+/**
+ * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
+ */
+darken() {
+    let myPlayer = controller.getCurrentPlayer()
+    let coordX = myPlayer.position.x
+    let coordY = myPlayer.position.y
+    this.context.beginPath()
+    this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
+    this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
+    this.context.fill();
+}
 
-    /**
-     * Dessine les pièges sur le plateau
-     * @param {*} trapArray 
-     */
-    traps(trapArray) {
-        for (var i = 0; i < trapArray.length; i++) {
-            if (trapArray[i]) {
-                let coordX = trapArray[i].position.x_
-                let coordY = trapArray[i].position.y_
-                let myPlayer = controller.getCurrentPlayer()
-                if (myPlayer.role == "explorer") {
-                    this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
-                } else {
-                    this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
-                }
-            }
-        }
-    }
-
-    /**
-     * Dessine les recompenses
-     * @param {*} bonusArray 
-     */
-    bonus(bonusArray) {
-        for (var i = 0; i < bonusArray.length; i++) {
-            let coordX = bonusArray[i].position.x_
-            let coordY = bonusArray[i].position.y_
+/**
+ * Dessine les pièges sur le plateau
+ * @param {*} trapArray 
+ */
+traps(trapArray) {
+    for (var i = 0; i < trapArray.length; i++) {
+        if (trapArray[i]) {
+            let coordX = trapArray[i].position.x_
+            let coordY = trapArray[i].position.y_
             let myPlayer = controller.getCurrentPlayer()
             if (myPlayer.role == "explorer") {
-                this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
+                this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             } else {
-                this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus
+                this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
             }
         }
     }
+}
 
-    /**
-     * Dessine tous les joueurs sur les plateau de jeu
-     * @param {*} playersArray 
-     */
-    players(playersArray) {
-        for (var i = 0; i < playersArray.length; i++) {
-            if (playersArray[i].role == "explorer") { //ne rend que les explorers
-                let coordX = playersArray[i].position.x
-                let coordY = playersArray[i].position.y
-                if (coordX >= 0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerAsset.width, this.playerAsset.height)
-            }
+/**
+ * Dessine les recompenses
+ * @param {*} bonusArray 
+ */
+bonus(bonusArray) {
+    for (var i = 0; i < bonusArray.length; i++) {
+        let coordX = bonusArray[i].position.x_
+        let coordY = bonusArray[i].position.y_
+        let myPlayer = controller.getCurrentPlayer()
+        if (myPlayer.role == "explorer") {
+            this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
+        } else {
+            this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus
         }
     }
+}
+
+/**
+ * Dessine tous les joueurs sur les plateau de jeu
+ * @param {*} playersArray 
+ */
+players(playersArray) {
+    for (var i = 0; i < playersArray.length; i++) {
+        if (playersArray[i].role == "explorer") { //ne rend que les explorers
+            let coordX = playersArray[i].position.x
+            let coordY = playersArray[i].position.y
+            if (coordX >= 0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerAsset.width, this.playerAsset.height)
+        }
+    }
+}
 }
