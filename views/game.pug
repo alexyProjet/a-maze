@@ -12,6 +12,7 @@ head
 #container
   #startGameButton
   #nameContainer
+  #indication
   #trapsRewardsMenu
     #timer
       h2 Temps restant
@@ -23,8 +24,10 @@ head
       h2 Recompenses
       li#rewardsList
   #scoreListContainer
-    h3
-      li#scoreList
-  canvas#canva
+    h1 Scores
+    h5
+    li#scoreList
+  #canvaContainer
+    canvas#canva
 script(src='/script/controller.js')
 script(src='/js/inputListener.js')

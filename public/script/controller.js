@@ -92,9 +92,14 @@ $(() => {
         /**
          * signale que le jeu est prêt
          */
-        self.socket.on('gameReady', function () {
-            console.log("CONTROLLER ON : gameReady ")
-            self.socket.emit("INIT",roomName)
+        self.socket.on('gameReady', function (info) {
+            if(info == "missingPlayers"){
+                console.log("CONTROLLER ON : partie tout seul impossible ")
+            } else {
+                console.log("CONTROLLER ON : gameReady tout est bon ")
+                self.socket.emit("INIT",roomName)
+            }
+
         })
 
         /**

@@ -94,7 +94,16 @@ server.listen(3000, function () {
                     console.log("SERVEUR ON : disconnect new roomLeader is", rooms[room].roomLeader,rooms[room].users)
 
                     socket.emit('user-disconnected', rooms[room].users[socket.id])
-                    
+                    //enelver piege associé a ce sjoueur
+                    //enlever recompenses associe a ce joueur
+                    //enelver le player
+
+                    //maj leader dans player
+                    let pl = rooms[room].model.players.find(pl => 
+                        pl.socketID == rooms[room].roomLeader
+                    )
+                    pl.isRoomLeader = true
+                    updateModels(rooms[room].model,room,withmap = true)  
                 }else{
                     console.log("SERVEUR ON : disconnect ", rooms[room].users[socket.id])
                     socket.emit('user-disconnected', rooms[room].users[socket.id])
@@ -114,6 +123,10 @@ server.listen(3000, function () {
             }
             ref.socketID = socket.id
             ref.name = rooms[room].users[socket.id]
+            if(socket.id == rooms[room].roomLeader){
+                ref.isRoomLeader = true
+            }
+            
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ",room)
             updateModels(rooms[room].model,room,withmap = true)  
@@ -124,10 +137,15 @@ server.listen(3000, function () {
         //averti tous le monde que partie commence
         socket.on('START', function (room){
             if(socket.id == rooms[room].roomLeader){
-                console.log("SERVEUR EMIT : gameReadey ",room)
-                io.in(room).emit('gameReady')
-                io.emit('update-lobbyMenu',room)
-                rooms[room].state = "inGame"
+                if(false/*Object.keys(rooms[room].users).length == 1*/){ // a enlever 
+                    console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")
+                    io.in(room).emit('gameReady',"missingPlayers")
+                }else{
+                    console.log("SERVEUR EMIT : gameReadey ",room)
+                    io.in(room).emit('gameReady',"ok")
+                    io.emit('update-lobbyMenu',room)
+                    rooms[room].state = "inGame"
+                }
             }else{
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
             }
@@ -142,7 +160,9 @@ server.listen(3000, function () {
             let trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
             let reward_instance = reward(data.reward)
 
-            if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_,room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_,room)) {//si placement possible TODO
+            if(trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_){
+                console.log("SERVEUR on place : positions identiques invalides")
+            } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_,room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_,room)) {//si placement possible TODO
                 console.log("trap et reward placés valides")
                 rooms[room].model.traps.push(trap_instance)
                 rooms[room].model.rewards.push(reward_instance)
@@ -219,7 +239,7 @@ const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléa
 const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
 
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = newId(), socketID = null) => Object({ id, position, name, role, score, inventory, socketID }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, isRoomLeader=false, id = newId(), socketID = null) => Object({ id, position, name, role, isRoomLeader, score, inventory, socketID }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (position, score = 1, triggered = null) => Object({ position, score, triggered }) //champ reward
 const map = () => [

@@ -13,8 +13,8 @@ class Vue {
         this.context.imageSmoothingEnabled = false;
         this.context.webkitImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
-        this.spriteWidth = Math.floor($("#canva")[0].clientHeight / 22)
-        this.spriteHeight = Math.floor($("#canva")[0].clientHeight / 22)
+        this.spriteWidth = Math.floor($("#canva")[0].clientWidth / 51)
+        this.spriteHeight = Math.floor($("#canva")[0].clientWidth / 51)
         this.halfWidth = this.spriteWidth / 2.0
         this.halfHeight = this.spriteHeight / 2.0
         this.canva.setAttribute('width', this.spriteWidth * 30);
@@ -100,16 +100,30 @@ class Vue {
             var div = document.createElement("div");
             div.setAttribute("class", "scoreDiv");
 
+            var divName = document.createElement("div");
+            divName.setAttribute("class", "nameScore");
             var playerNameBalise = document.createElement("p");
             var text = document.createTextNode(player.name);
             playerNameBalise.appendChild(text);
+            divName.append(playerNameBalise)
+
+            if(player.isRoomLeader){
+                var imgLeader = document.createElement("img")
+                imgLeader.src = '/img/PNG/Default size/misc/crown.png'; 
+                imgLeader.setAttribute('width', '24px');
+                imgLeader.setAttribute('height', '24px');
+                imgLeader.setAttribute('id', 'leaderImg');
+                divName.append(imgLeader)
+            }
 
             var playerScoreBalise = document.createElement("p")
+            playerScoreBalise.setAttribute("class", "scoreText");
             text = document.createTextNode(player.score);
             playerScoreBalise.appendChild(text);
 
-            div.append(playerNameBalise)
+            div.append(divName)
             div.append(playerScoreBalise)
+
 
             if (scorePrecedent < player.score) {
                 $("#scoreList").prepend(div)
@@ -133,7 +147,7 @@ class Vue {
         this.bonus(controller.getModel().rewards) //todo
         this.players(controller.getModel().players) //todo
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
-        this.tempTrapsAndRewards()
+        this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
         lastInventoryCount = controller.getCurrentPlayer().inventory.length
         this.scoreList()
@@ -150,6 +164,7 @@ class Vue {
     menus(inventory) {
         document.getElementById("rewardsList").innerHTML = "";
         document.getElementById("trapsList").innerHTML = "";
+
         this.trapsMenu = document.getElementById("trapsMenu")
         this.rewardsMenu = document.getElementById("rewardsMenu")
 
@@ -218,21 +233,42 @@ class Vue {
      * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
      * on l'affiche grâce à cette fonction
      */
-    tempTrapsAndRewards() {
+    tempTrapsAndRewards(role) {
         let trapIndex = -1
         let rewardsIndex = -1
         let x
         let y
+        document.getElementById("indication").innerHTML = "";
+        if(role == "trapper"){
+            
+            var indicationTextBalise = document.createElement("p");
+            var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense");
+
+            indicationTextBalise.appendChild(indicationText);
+
+            document.getElementById("indication").append(indicationTextBalise);
+        }else{
+            var indicationTextBalise = document.createElement("p");
+            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges.");
+
+            indicationTextBalise.appendChild(indicationText);
+
+            document.getElementById("indication").append(indicationTextBalise);
+        }
 
         if (tempTrapsRewardsArray["trap"] != null) {
+            this.context.globalAlpha = 0.5;
             x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
             y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
             this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
+            this.context.globalAlpha = 1.0;
         }
         if (tempTrapsRewardsArray["reward"] != null) {
+            this.context.globalAlpha = 0.5;
             x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
             y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
             this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
+            this.context.globalAlpha = 1.0;
         }
         //si envoi
         if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
