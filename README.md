@@ -22,6 +22,8 @@ FEATURES:
 - lobby d'attente avec options de jeu (temps, kick)
 - timer
 - écran fin partie
+- couleur de perso différente
+- l'image du joueur tourne en fonction de la direction
 
 FEATURES TO COME:
 
@@ -31,5 +33,4 @@ FEATURES TO COME:
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
 - animation de piege
 - redesign des icons de pieges recompenses, perso et anonymes
-- couleur de perso différente
 
