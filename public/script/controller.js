@@ -13,19 +13,17 @@ $(() => {
 
     this.socket.on('newRoom', room => {
         console.log("createroom recu", room)
-        const roomElement = document.createElement('li')
-        roomElement.innerText = room
-        const roomLink = document.createElement('a')
 
-        roomLink.href = `/${room}`
-        roomLink.innerText = 'join'
+        const roomLink = document.createElement('button')
+        roomLink.setAttribute("class","room")
+        roomLink.setAttribute("id",room)
+        roomLink.onclick = function () {
+            window.location.replace("/"+room);
+        };
+        roomLink.innerText = room
 
-        var div = document.createElement("div");
-        div.setAttribute("id", room);
+        roomContainer.append(roomLink)
 
-        div.append(roomLink)
-        div.append(roomElement)
-        roomContainer.append(div)
     })
 
     this.socket.on('exit', room => {

@@ -1,5 +1,5 @@
 head
-  link(rel='stylesheet', href='/css/game.css')
+  link(rel='stylesheet', href='/css/lobby.css')
   link(href='https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap', rel='stylesheet')
   script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js')
   script(src='https://code.jquery.com/ui/1.12.0/jquery-ui.js')
@@ -9,13 +9,14 @@ head
   script.
     var socket = io.connect('http://localhost:3000');
 
-#container
-  h2 lobby
-  ul
-  #room-container
-    each room in Object.keys(rooms)
-      li= room
-      a(href='/' + room) join
-  form(action='/room', method='POST')
-    input(name='room', type='text', required='')
-    button(type='submit') new Room
+#page-container
+  #container
+    h2#menuTitle MENU DES SALONS
+    ul
+    #room-container
+      each room in Object.keys(rooms)
+        button(onclick='window.location.replace("/'+ room +'")').room(id=room) #{room}
+    div#createRoom-container
+      form(action='/room', method='POST')#createRoom
+        input(name='room', type='text', required='')
+        button(type='submit').btn Nouveau Salon

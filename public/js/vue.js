@@ -214,6 +214,7 @@ class Vue {
             divColonneGauche.append(divOptionsPartie)
         }
         $("#container").append(divColonneGauche)
+        
         btnName.addEventListener("click", function () {
             if (inputBox.value != "" && inputBox.value.length < 21) {
                 controller.setName(inputBox.value)
@@ -613,7 +614,7 @@ class Vue {
                             this.context.drawImage(this.playerDownAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerDownAsset.width, this.playerDownAsset.height)
                             break;
                         case 'right':
-                            this.context.drawImage(this.playeRightAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playeRightAsset.width, this.playeRightAsset.height)
+                            this.context.drawImage(this.playerRightAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerRightAsset.width, this.playerRightAsset.height)
                             break;
                         case 'left':
                             this.context.drawImage(this.playerLeftAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerLeftAsset.width, this.playerLeftAsset.height)

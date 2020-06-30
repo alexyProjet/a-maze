@@ -85,6 +85,7 @@ server.listen(3000, function () {
                     if (Object.keys(rooms[room].users).length == 1) { //si plus personne, on detruit le salon
                         delete rooms[room]
                         console.log("SERVEUR ON : disconnect lobby detruit", rooms[room])
+                        io.emit('update-lobbyMenu', room)
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part,  nouveau leader
                         let newLeader = null
                         console.log("SERVEUR ON : disconnet roomLeader is leaving", rooms[room].roomLeader)
