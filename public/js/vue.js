@@ -31,7 +31,17 @@ class Vue {
         this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
         this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_04.png", this.spriteWidth, this.spriteHeight)
         this.bonusAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_12.png", this.spriteWidth, this.spriteHeight)
-        this.playerAsset = await this._syncedLoadImg("/img/PNG/Retina/Player/player_01.png", this.halfWidth, this.halfHeight) //FIXME: DELETE DIS
+
+        this.playerUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
+        this.playerDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
+        this.playerRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_right.png", this.halfWidth, this.halfHeight)
+        this.playerLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_left.png", this.halfWidth, this.halfHeight)
+
+        this.playerEnemyUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_right.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_left.png", this.halfWidth, this.halfHeight)
+
         this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_16.png", this.spriteWidth, this.spriteHeight)
         this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
         this.isAssetLoadingOver = true
@@ -106,14 +116,12 @@ class Vue {
             //Lorsque fini
             if (distance <= 0) {
                 clearInterval(x);
-                self.renderEndGame()
             }
         }, 1000);
     }
 
     renderEndGame() {
         //tout efface sauf score et mettre score au milieu
-        controller.endGame()
         document.getElementById('trapsRewardsMenu').parentNode.removeChild(document.getElementById('trapsRewardsMenu'));
         document.getElementById('indication').parentNode.removeChild(document.getElementById('indication'));
         document.getElementById('canvaContainer').parentNode.removeChild(document.getElementById('canvaContainer'));
@@ -135,75 +143,19 @@ class Vue {
                 "height": "100%"
             });
 
-           var resultatBalise = document.createElement("p");
-           resultatBalise.setAttribute("id", "endResults");
+        var resultatBalise = document.createElement("p");
+        resultatBalise.setAttribute("id", "endResults");
 
-           var resultatText = document.createTextNode("Classement");
-           resultatBalise.appendChild(resultatText);
+        var resultatText = document.createTextNode("Classement");
+        resultatBalise.appendChild(resultatText);
 
-           $("#scoreListContainer").prepend(resultatBalise)
+        $("#scoreListContainer").prepend(resultatBalise)
 
         gameStarted = false;
         console.game("Game session ended properly.")
     }
 
-    renderLobby() {
-        //cacher container
-        console.log("rendering lobby..")
-        this.gameBaliseShown(false)
-        if (document.getElementById("colonne-milieu-div") != null) {
-            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
-            document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
-            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
-        }
-        /**
-         * COLONNE DU MILIEU
-         * liste de joueurs dans le lobby
-         */
-        let btnStart = document.createElement("button");
-        btnStart.setAttribute("id", "btnStart")
-        btnStart.innerHTML = "Lancer la partie";
-
-        let divColonneMilieu = document.createElement("div")
-        divColonneMilieu.setAttribute("id", "colonne-milieu-div")
-
-        let ulListUsers = document.createElement("ul");
-        ulListUsers.setAttribute("id", "listPlayers-container")
-        console.log(controller.getRoomUsers())
-        let usersArray = Object.entries(controller.getRoomUsers())
-        usersArray.forEach(entrie => {
-            let userName = entrie[1]
-            console.log("user est : ", userName)
-            let li = document.createElement("li");
-            li.setAttribute("class", "userInList")
-            let pBalise = document.createElement("p");
-            let name = document.createTextNode(userName);
-            pBalise.appendChild(name);
-            console.log("en0", entrie[0])
-            console.log(JSON.stringify(controller.getRoomLeader()))
-            if (entrie[0] == controller.getRoomLeader()) {
-                var imgLeader = document.createElement("img")
-                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
-                imgLeader.setAttribute('width', '24px');
-                imgLeader.setAttribute('height', '24px');
-                imgLeader.setAttribute('id', 'leaderImg');
-                pBalise.append(imgLeader)
-            }
-
-            li.appendChild(pBalise);
-            ulListUsers.append(li)
-        })
-
-        divColonneMilieu.innerHTML = "<h2>LISTE DE JOUEURS</h2>"
-        divColonneMilieu.append(ulListUsers)
-
-        console.log("getid", controller.getId())
-        console.log("roomleader", controller.getRoomLeader())
-        if (controller.getId() != controller.getRoomLeader()) {
-            btnStart.innerHTML = "En attente du lancement...";
-        }
-        divColonneMilieu.append(btnStart)
-
+    leftLobbyPannel(){
         /**
          * COLONNE DE GAUCHE
          * SET PSEUDO, OPTIONS...
@@ -261,7 +213,76 @@ class Vue {
             });
             divColonneGauche.append(divOptionsPartie)
         }
+        $("#container").append(divColonneGauche)
+        btnName.addEventListener("click", function () {
+            if (inputBox.value != "" && inputBox.value.length < 21) {
+                controller.setName(inputBox.value)
+            } else {
+                alert("Format de pseudo incorrect (>20 ou vide)")
+            }
 
+        });
+        this.middleAndRightLobbyPannel()
+    }
+
+    middleAndRightLobbyPannel() {
+        //cacher container
+        console.log("rendering lobby..")
+        this.gameBaliseShown(false)
+        if (document.getElementById("colonne-milieu-div") != null) {
+            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
+            //document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
+            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
+        }
+        /**
+         * COLONNE DU MILIEU
+         * liste de joueurs dans le lobby
+         */
+        let btnStart = document.createElement("button");
+        btnStart.setAttribute("id", "btnStart")
+        btnStart.innerHTML = "Lancer la partie";
+
+        let divColonneMilieu = document.createElement("div")
+        divColonneMilieu.setAttribute("id", "colonne-milieu-div")
+
+        let ulListUsers = document.createElement("ul");
+        ulListUsers.setAttribute("id", "listPlayers-container")
+        console.log(controller.getRoomUsers())
+        let usersArray = Object.entries(controller.getRoomUsers())
+        usersArray.forEach(entrie => {
+            let userName = entrie[1]
+            console.log("user est : ", userName)
+            let li = document.createElement("li");
+            li.setAttribute("class", "userInList")
+            let pBalise = document.createElement("p");
+            let name = document.createTextNode(userName);
+            pBalise.appendChild(name);
+            console.log("en0", entrie[0])
+            console.log(JSON.stringify(controller.getRoomLeader()))
+            if (entrie[0] == controller.getRoomLeader()) {
+                var imgLeader = document.createElement("img")
+                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
+                imgLeader.setAttribute('width', '24px');
+                imgLeader.setAttribute('height', '24px');
+                imgLeader.setAttribute('id', 'leaderImg');
+                pBalise.append(imgLeader)
+            }
+
+            li.appendChild(pBalise);
+            ulListUsers.append(li)
+        })
+
+        divColonneMilieu.innerHTML = "<h2>LISTE DE JOUEURS</h2>"
+        divColonneMilieu.append(ulListUsers)
+
+        console.log("getid", controller.getId())
+        console.log("roomleader", controller.getRoomLeader())
+        if (controller.getId() != controller.getRoomLeader()) {
+            btnStart.innerHTML = "En attente du lancement...";
+        }
+        divColonneMilieu.append(btnStart)
+
+        
         /**
          * COLONNE DE DROITE
          * SET PSEUDO, OPTIONS...
@@ -283,7 +304,6 @@ class Vue {
         divColonneDroite.append(divpseudoContainer);
 
 
-        $("#container").append(divColonneGauche)
         $("#container").append(divColonneMilieu)
         $("#container").append(divColonneDroite)
 
@@ -291,14 +311,6 @@ class Vue {
             controller.startButtonClicked()
         });
         console.log("..END OF rendering lobby")
-        btnName.addEventListener("click", function () {
-            if (inputBox.value != "" && inputBox.value.length < 21) {
-                controller.setName(inputBox.value)
-            } else {
-                alert("Format de pseudo incorrect (>20 ou vide)")
-            }
-
-        });
     }
 
     /**
@@ -585,12 +597,47 @@ class Vue {
      * Dessine tous les joueurs sur les plateau de jeu
      * @param {*} playersArray 
      */
-    players(playersArray) {
+    players(playersArray, thisPlayerId) {
         for (var i = 0; i < playersArray.length; i++) {
             if (playersArray[i].role == "explorer") { //ne rend que les explorers
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                if (coordX >= 0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerAsset.width, this.playerAsset.height)
+                console.log("LA DIRECTION EST ",playersArray[i].direction)
+                if (thisPlayerId == playersArray[i].id) {
+                    switch (playersArray[i].direction) {
+                        case 'up':
+                            this.context.drawImage(this.playerUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerUpAsset.width, this.playerUpAsset.height)
+                            break;
+                        case 'down':
+                            this.context.drawImage(this.playerDownAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerDownAsset.width, this.playerDownAsset.height)
+                            break;
+                        case 'right':
+                            this.context.drawImage(this.playeRightAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playeRightAsset.width, this.playeRightAsset.height)
+                            break;
+                        case 'left':
+                            this.context.drawImage(this.playerLeftAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerLeftAsset.width, this.playerLeftAsset.height)
+                            break;
+                        default:
+                            console.log(`Erreur dans la direction`);
+                    }
+                } else {
+                    switch (playersArray[i].direction) {
+                        case 'up':
+                            this.context.drawImage(this.playerEnemyUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
+                            break;
+                        case 'down':
+                            this.context.drawImage(this.playerEnemyDownAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyDownAsset.width, this.playerEnemyDownAsset.height)
+                            break;
+                        case 'right':
+                            this.context.drawImage(this.playerEnemyRightAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyRightAsset.width, this.playerEnemyRightAsset.height)
+                            break;
+                        case 'left':
+                            this.context.drawImage(this.playerEnemyLeftAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyLeftAsset.width, this.playerEnemyLeftAsset.height)
+                            break;
+                        default:
+                            console.log(`Erreur dans la direction`);
+                    }
+                }
             }
         }
     }

@@ -251,8 +251,10 @@ server.listen(3000, function () {
                 })
                 //check collisions avec mur
                 let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
+                //tout est oks
                 if (!isCollidingWall) {
                     console.log("MOUVEMENT", data.position)
+                    player.direction = getDirectionFromPositions(player.position,data.position,player.direction)
                     player.position = data.position
                 }
             }
@@ -260,6 +262,29 @@ server.listen(3000, function () {
         })
     });
 });
+
+function getDirectionFromPositions(oldPosition, newPosition,oldDirection){
+    let newY = newPosition.y
+    let newX = newPosition.x
+    let oldY = oldPosition.y
+    let oldX = oldPosition.x
+    
+    if(oldX == newX){
+        if(oldY > newY){
+            return "up"
+        }else{
+            return "down"
+        }
+    }else if(oldY == newY){
+        if(oldX > newX){
+            return "left"
+        }else{
+            return "right"
+        }
+    }else{
+        return oldDirection  //si en diagonale
+    }
+}
 
 function timer(stop,room){
     var x = setInterval(function() {
@@ -303,7 +328,7 @@ function removeEntityAssociatedtoPlayer(player, room) {
 const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
 const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false) => Object({ id, position, name, role, isRoomLeader, score, inventory }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false,direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
 const map = () => [

@@ -65,8 +65,15 @@ $(() => {
         //un nouvel utilisateur est connecté
         self.socket.on('user-connected', function (name, roomReceived) {
             myId = socket.id
+            if( Object.keys(room).length == 0){  //premiere connexion de l'utilisateur, room est vide
+                room = roomReceived
+                vue.leftLobbyPannel() 
+            }else{
+                room = roomReceived
+            }
+            
             room = roomReceived
-            vue.renderLobby()
+            vue.middleAndRightLobbyPannel()
             console.log("CONTROLLER ON : utilisateur connecte : ", name)
         })
 
@@ -74,13 +81,13 @@ $(() => {
         self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
             console.log(name,"disconnected")
             room = roomReceived
-            vue.renderLobby()
+            vue.middleAndRightLobbyPannel()
         })
 
         self.socket.on('lobby-changes-occured', function (roomReceived) {
             console.log("changes occured")
             room = roomReceived
-            vue.renderLobby()
+            vue.middleAndRightLobbyPannel()
         })
 
 
@@ -109,7 +116,9 @@ $(() => {
             let time = document.getElementById("inputBoxTime").value
            // if(time != 0 && time <= 60){ //a enlever
                 self.socket.emit("START", roomName,time)
-           // }
+           // }else{
+               alert("Le nombre de minutes ne peut être > 60 et = 0")
+           }
 
         }
 
@@ -143,13 +152,11 @@ $(() => {
         })
 
         self.socket.on('countdown-over', function () {
-            alert("fin de partie")
-        })
-        
-        const endGame = () => {
             clearTimeout(gameTimeout)
             clearInterval(gameInterval)
-        }
+            vue.renderEndGame()
+        })
+        
         const moveTo = (position, actualPlayer) => self.socket.emit("MOVE", roomName, JSON.stringify({ position: position, player: actualPlayer })) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
         const getModel = () => model //renvoi le model
@@ -163,6 +170,6 @@ $(() => {
         const getName = () => room.users[getId()]
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
         //attend un peu puis lance le set interval pour être sur que tout pret
-        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId,getName, endGame } //
+        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId,getName } //
     })()
 })
