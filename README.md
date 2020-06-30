@@ -28,3 +28,4 @@ FEATURES TO COME:
 - partie avec bot
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
 - animation de piege
+- timer
