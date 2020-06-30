@@ -2,7 +2,7 @@ var zKey = false;
 var sKey = false
 var qKey = false
 var dKey = false
-var speed = 0.14
+var speed = 0.11
 
 function routine(){
     if(gameStarted){
@@ -35,7 +35,7 @@ function routine(){
 }
 
 
-var interval = setTimeout(() => setInterval(routine,16),500)
+var interval = setTimeout(() => setInterval(routine,21),500)
 
 document.body.onkeypress = function(event){
     switch (event.key.toLowerCase()) {

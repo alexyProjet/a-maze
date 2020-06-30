@@ -108,7 +108,7 @@ server.listen(3000, function () {
         socket.on('INIT', function (room) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
-                ref = player(position(-10, 1), roles.trapper, 0, trapperInventory) // construit nouveau joeur a position 11 et role explorer
+                ref = player(position(-10, 1), roles.trapper, 0, trapperInventory.slice()) // construit nouveau joeur a position 11 et role explorer
             } else {
                 ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
             }
@@ -206,6 +206,7 @@ server.listen(3000, function () {
                 //check collisions avec mur
                 let isCollidingWall = collision(data.position, thickness / 2.0).some( pos => rooms[room].model.map[pos.y][pos.x] == 1 ) 
                 if (!isCollidingWall) {
+                    console.log("MOUVEMENT",data.position)
                     player.position = data.position
                 }
             }
@@ -263,7 +264,7 @@ let model = () => Object({
         roomLeader: null
     })
 
-const fuzeTime = 500 //temps de suspense
+const fuzeTime = 150 //temps de suspense
 const thickness = 0.5 // taille joueur et piege, rayon à verifier
 
 const roles = {
@@ -313,7 +314,7 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
     //MAJ joueur marché sur piege
     let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
-    pl.inventory = trapperInventory //l'ordre est important
+    pl.inventory = trapperInventory.slice() //l'ordre est important
     pl.oldPosition = pl.position
     pl.position.x = -10//n'est plus sur terrain de jeu
     console.log("player : ", pl.id, " role changed, now is : ", pl.role)
@@ -331,6 +332,7 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
         }
     }
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
+    console.log(pl.position)
     updateModels(rooms[room].model, room)
 }, fuzeTime)
 

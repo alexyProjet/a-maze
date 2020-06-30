@@ -62,7 +62,7 @@ $(() => {
         self.socket.on('modelUpdate', function (data) {
             Object.assign(model, JSON.parse(data))
             model.currentPlayer = model.players.find(pl => pl.socketID == self.socket.id)
-            console.log("CONTROLLER ON : UpdateModel recu",model,self.socket.id)
+            console.log("CONTROLLER ON : UpdateModel recu",model.players)
         })
 
         //si on est dans le lobby
