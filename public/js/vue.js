@@ -55,40 +55,155 @@ class Vue {
         }).catch(error => console.log(error))
     }
 
+    gameBaliseShown(value) {
+        if (value) {
+            document.getElementById('trapsRewardsMenu').style.display = 'block';
+            document.getElementById('scoreListContainer').style.display = 'block';
+            document.getElementById('canvaContainer').style.display = 'block';
+            document.getElementById('indication').style.display = 'block';
+        } else {
+            document.getElementById('trapsRewardsMenu').style.display = 'none';
+            document.getElementById('scoreListContainer').style.display = 'none';
+            document.getElementById('canvaContainer').style.display = 'none';
+            document.getElementById('indication').style.display = 'none';
+        }
+
+    }
+
     initGame() {
         console.log("Initiallising game....")
+        if (document.getElementById("colonne-milieu-div") != null) {
+            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
+            document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
+            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
+        }
         this.loadAssets()
         this.menus(controller.getCurrentPlayer().inventory)
-        document.getElementById('trapsRewardsMenu').style.display = 'block';
-        document.getElementById('scoreList').style.display = 'block';
+        this.gameBaliseShown(true)
         console.log("END OF initiallising game....")
     }
 
     renderLobby() {
         //cacher container
         console.log("rendering lobby..")
-        document.getElementById('trapsRewardsMenu').style.display = 'none';
-        document.getElementById('scoreList').style.display = 'none';
-        var btn = document.createElement("button");
-        btn.innerHTML = "start";
-        $("#startGameButton").append(btn)
+        this.gameBaliseShown(false)
+        if (document.getElementById("colonne-milieu-div") != null) {
+            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
+            document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
+            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
+        }
+        /**
+         * COLONNE DU MILIEU
+         * liste de joueurs dans le lobby
+         */
+        let btnStart = document.createElement("button");
+        btnStart.setAttribute("id", "btnStart")
+        btnStart.innerHTML = "Lancer la partie";
 
-        var box = document.createElement("input");
-        box.type = "text";
+        let divColonneMilieu = document.createElement("div")
+        divColonneMilieu.setAttribute("id", "colonne-milieu-div")
 
-        var btnName = document.createElement("button");
+        let ulListUsers = document.createElement("ul");
+        ulListUsers.setAttribute("id", "listPlayers-container")
+        console.log(controller.getRoomUsers())
+        let usersArray = Object.entries(controller.getRoomUsers())
+        usersArray.forEach(entrie => {
+            let userName = entrie[1]
+            console.log("user est : ", userName)
+            let li = document.createElement("li");
+            li.setAttribute("class", "userInList")
+            let pBalise = document.createElement("p");
+            let name = document.createTextNode(userName);
+            pBalise.appendChild(name);
+            console.log("en0", entrie[0])
+            console.log(JSON.stringify(controller.getRoomLeader()))
+            if (entrie[0] == controller.getRoomLeader()) {
+                var imgLeader = document.createElement("img")
+                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
+                imgLeader.setAttribute('width', '24px');
+                imgLeader.setAttribute('height', '24px');
+                imgLeader.setAttribute('id', 'leaderImg');
+                pBalise.append(imgLeader)
+            }
+
+            li.appendChild(pBalise);
+            ulListUsers.append(li)
+        })
+
+        divColonneMilieu.innerHTML = "<h2>LISTE DE JOUEURS</h2>"
+        divColonneMilieu.append(ulListUsers)
+
+        console.log("getid", controller.getId())
+        console.log("roomleader", controller.getRoomLeader())
+        if (controller.getId() != controller.getRoomLeader()) {
+            btnStart.innerHTML = "En attente du lancement...";
+        }
+        divColonneMilieu.append(btnStart)
+
+        /**
+         * COLONNE DE GAUCHE
+         * SET PSEUDO, OPTIONS...
+         */
+        let divColonneGauche = document.createElement("div")
+        divColonneGauche.setAttribute("id", "colonne-gauche-div")
+
+        divColonneGauche.innerHTML = "<h2>OPTIONS</h2>"
+
+        let inputBox = document.createElement("input");
+        inputBox.type = "text";
+        let btnName = document.createElement("button");
+        btnName.setAttribute("id", "btnRename")
         btnName.innerHTML = "ok";
-        $("#nameContainer").append(box)
-        $("#nameContainer").append(btnName)
 
-        btn.addEventListener("click", function () {
+        let divNameContainer = document.createElement("div")
+        divNameContainer.setAttribute("id", "nameContainer")
+        divNameContainer.innerHTML = "<h4>Pseudo</h4>";
+        divNameContainer.append(inputBox)
+        divNameContainer.append(btnName)
+
+        divColonneGauche.append(divNameContainer)
+
+
+        if (JSON.stringify(controller.getId()) == JSON.stringify(controller.getRoomLeader())) {
+            //set le temps d'une partie, kick les joueurs etc
+        }
+
+        /**
+         * COLONNE DE DROITE
+         * SET PSEUDO, OPTIONS...
+         */
+        let divColonneDroite = document.createElement("div")
+        divColonneDroite.setAttribute("id", "colonne-droite-div")
+
+
+        let divpseudoContainer = document.createElement("div")
+        divpseudoContainer.setAttribute("id", "pseudo-container")
+        divpseudoContainer.innerHTML = "<h1 id='pseudoH1'>Ton pseudo</h1>"
+
+        let h2Pseudo = document.createElement("h2")
+        h2Pseudo.setAttribute("id", "pseudoH2")
+        let pseudo = document.createTextNode(controller.getName());
+        h2Pseudo.appendChild(pseudo);
+
+        divpseudoContainer.append(h2Pseudo);
+        divColonneDroite.append(divpseudoContainer);
+
+
+        $("#container").append(divColonneGauche)
+        $("#container").append(divColonneMilieu)
+        $("#container").append(divColonneDroite)
+
+        btnStart.addEventListener("click", function () {
             controller.startButtonClicked()
         });
         console.log("..END OF rendering lobby")
-
         btnName.addEventListener("click", function () {
-            console.log(box.value)
-            controller.setName(box.value)
+            if (inputBox.value != "" && inputBox.value.length < 21) {
+                controller.setName(inputBox.value)
+            } else {
+                alert("Format de pseudo incorrect (>20 ou vide)")
+            }
+
         });
     }
 
@@ -101,15 +216,16 @@ class Vue {
             div.setAttribute("class", "scoreDiv");
 
             var divName = document.createElement("div");
-            divName.setAttribute("class", "nameScore");
+            divName.setAttribute("class", "score-container");
             var playerNameBalise = document.createElement("p");
+            playerNameBalise.setAttribute("class", "scoreName");
             var text = document.createTextNode(player.name);
             playerNameBalise.appendChild(text);
             divName.append(playerNameBalise)
 
-            if(player.isRoomLeader){
+            if (player.isRoomLeader) {
                 var imgLeader = document.createElement("img")
-                imgLeader.src = '/img/PNG/Default size/misc/crown.png'; 
+                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
                 imgLeader.setAttribute('width', '24px');
                 imgLeader.setAttribute('height', '24px');
                 imgLeader.setAttribute('id', 'leaderImg');
@@ -239,15 +355,15 @@ class Vue {
         let x
         let y
         document.getElementById("indication").innerHTML = "";
-        if(role == "trapper"){
-            
+        if (role == "trapper") {
+
             var indicationTextBalise = document.createElement("p");
             var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense à la fois");
 
             indicationTextBalise.appendChild(indicationText);
 
             document.getElementById("indication").append(indicationTextBalise);
-        }else{
+        } else {
             var indicationTextBalise = document.createElement("p");
             var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
 

@@ -50,10 +50,11 @@ body{
 	margin-right: 3%;
 	background-color: #F9C846;
 	border-radius: 25px;
+	position:relative;
 }
 
 .scoreDiv{
-	color: #26272C;
+	color: white;
 	font-family: 'Roboto', sans-serif;
 	float: left;
 	width:95%;
@@ -64,7 +65,7 @@ body{
 	margin-top: 5px;
 }
 
-.nameScore{
+.score-container{
 	width:100%;
 	margin-left: 15%;
 }
@@ -73,15 +74,17 @@ body{
 	margin-right: 15%;
 }
 
-
-.nameScore p{
+.score-container p{
 	float: left;
 }
 
-.nameScore #leaderImg{
+.score-container #leaderImg{
 	float: left;
 }
 
+.scoreName{
+	color: #26272C;;
+}
 
 #timer{
 	float: left;
@@ -92,7 +95,7 @@ body{
 
 #indication p{
 	text-align: center;
-	color: #e83414;
+	color: #F96E46;
 	font-family: 'Roboto', sans-serif;
 	font-size: 1.2vw;
 	position: relative;
@@ -104,4 +107,112 @@ body{
 	height: 6%;
 }
 
+#colonne-gauche-div{
+	float: left;
+	width: 33%; 
+	height: 80%;
+}
 
+#colonne-milieu-div{
+	color: white;
+	margin: 0 auto;
+	width: 33%; 
+	height: 80%;
+	border-right: 0.2rem solid;
+	border-left: 0.2rem solid;
+	border-radius: 15px;
+	position: relative;
+}
+
+#colonne-droite-div{
+	float: right;
+	width: 33%; 
+	height: 100%;
+	position: absolute;
+    top: 0px;
+	right: 0px;
+	display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+#colonne-milieu-div h2, #colonne-gauche-div h2 {
+	text-align: center
+}
+
+#listPlayers-container{
+	width: 100%; 
+	display: inline-block;  
+	margin-right:0;
+}
+
+.userInList{
+	color: white;
+	font-family: 'Roboto', sans-serif;
+	float: left;
+	width:86%;
+	height:50px;
+	display: flex;
+	border-bottom: 0.1rem solid;
+	margin-top: 5px;
+}
+
+.userInList p{
+	color:  #F96E46;
+	font-family: 'Roboto', sans-serif;
+	text-align: center;
+}
+
+#btnStart{
+	font-family: 'Roboto', sans-serif;
+	height:8%;
+	border-radius: 15px;
+	font-size: 1.2vw;
+	background-color: #F96E46;
+	color: white;
+	position: absolute;
+	bottom: 10px;
+	right:25%;
+	left:auto;
+	width: 50%;
+}
+
+#colonneGauche{
+	width: 100%; 
+	height: 75%;
+	display: inline-block;  
+}
+
+#pseudo-container{
+	position: absolute;
+	height:25%;
+	top: 50%;
+	left: 50%;
+	
+	transform: translate(-50%, -50%);
+}
+
+#pseudoH1{
+	color: #26272C;
+}
+
+#pseudoH2{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+#nameContainer{
+	width: 80%;
+	margin: 0 auto;
+}
+
+
+#btnRename{
+	font-family: 'Roboto', sans-serif;
+	background-color: #F96E46;
+	color: white;
+	border-radius: 15px;
+}
