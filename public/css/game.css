@@ -92,9 +92,16 @@ body{
 
 #indication p{
 	text-align: center;
-	color: #F96E46;
+	color: #e83414;
 	font-family: 'Roboto', sans-serif;
-	font-size: large;
+	font-size: 1.2vw;
+	position: relative;
+	top: 20%;
+}
+
+#indication {
+	margin-top: 10px;
+	height: 6%;
 }
 
 

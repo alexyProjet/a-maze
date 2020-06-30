@@ -61,7 +61,7 @@ $(() => {
          */
         self.socket.on('modelUpdate', function (data) {
             Object.assign(model, JSON.parse(data))
-            model.currentPlayer = model.players.find(pl => pl.socketID == self.socket.id)
+            model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
             console.log("CONTROLLER ON : UpdateModel recu",model.players)
         })
 
@@ -108,7 +108,7 @@ $(() => {
         self.socket.on('displayGame', function () {
             console.log("CONTROLLER ON : displayGame ")
             gameStarted = true
-            console.log("CONTROLLER ON : loading game itnerface....")
+            console.log("CONTROLLER ON : loading game itnerface....",model)
             ui.loadGameInterface()
             setTimeout(setInterval(() => ui.vue.renderGame(), 66), 200)
             document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));

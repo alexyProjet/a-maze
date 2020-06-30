@@ -94,18 +94,28 @@ server.listen(3000, function () {
                     console.log("SERVEUR ON : disconnect new roomLeader is", rooms[room].roomLeader,rooms[room].users)
 
                     socket.emit('user-disconnected', rooms[room].users[socket.id])
-                    //enelver piege associé a ce sjoueur
-                    //enlever recompenses associe a ce joueur
-                    //enelver le player
 
-                    //maj leader dans player
                     let pl = rooms[room].model.players.find(pl => 
-                        pl.socketID == rooms[room].roomLeader
+                        pl.id == socket.id
                     )
                     pl.isRoomLeader = true
+
+                    removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id,room),room)
+                    rooms[room].model.players = rooms[room].model.players.filter(function( pl ) {
+                        return pl.id !== socket.id;
+                      });
+                    
+                    pl = rooms[room].model.players.find(pl => 
+                        pl.id == rooms[room].roomLeader
+                    )
+                    
                     updateModels(rooms[room].model,room,withmap = true)  
                 }else{
                     console.log("SERVEUR ON : disconnect ", rooms[room].users[socket.id])
+                                        //enelver piege associé a ce sjoueur
+                    //enlever recompenses associe a ce joueur
+                    //enelver le player
+
                     socket.emit('user-disconnected', rooms[room].users[socket.id])
                     delete rooms[room].users[socket.id]
                 }
@@ -121,12 +131,12 @@ server.listen(3000, function () {
             } else {
                 ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
             }
-            ref.socketID = socket.id
+            ref.id = socket.id
             ref.name = rooms[room].users[socket.id]
             if(socket.id == rooms[room].roomLeader){
                 ref.isRoomLeader = true
             }
-            
+            console.log("SERVEUR ON : player is  ",ref)
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ",room)
             updateModels(rooms[room].model,room,withmap = true)  
@@ -155,10 +165,10 @@ server.listen(3000, function () {
         //place un piege ou recompense si l'emplacement est valide
         socket.on('PLACE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
-            let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
+            let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
             let trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
-            let reward_instance = reward(data.reward)
+            let reward_instance = reward(player.id,data.reward)
 
             if(trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_){
                 console.log("SERVEUR on place : positions identiques invalides")
@@ -178,7 +188,7 @@ server.listen(3000, function () {
         //vérifi si collision avec piege ou recompense
         socket.on('MOVE', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
-            let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
+            let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
             if (data.player.role == "explorer"){
                 let isColliding=false;
@@ -235,13 +245,21 @@ function updateModels(mod,room,withmap = false) {
     io.in(room).emit('modelUpdate', JSON.stringify(mod))
 }
 
-const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
-const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
+function removeEntityAssociatedtoPlayer(player,room){
+    rooms[room].model.traps = rooms[room].model.traps.filter(function( tr ) {
+        return tr.parentId !== player.id;
+      });
+      rooms[room].model.rewards = rooms[room].model.rewards.filter(function( rew ) {
+        return rew.parentId !== player.id;
+      });
+}
 
+const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
+const newId = () => Math.floor(Math.random()*1000000000)//génère un id aléatoire
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, isRoomLeader=false, id = newId(), socketID = null) => Object({ id, position, name, role, isRoomLeader, score, inventory, socketID }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader=false) => Object({ id, position, name, role, isRoomLeader, score, inventory }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
-const reward = (position, score = 1, triggered = null) => Object({ position, score, triggered }) //champ reward
+const reward = (parentId,position, score = 1, triggered = null) => Object({ parentId,position, score, triggered }) //champ reward
 const map = () => [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],

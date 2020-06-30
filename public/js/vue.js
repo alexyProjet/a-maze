@@ -242,14 +242,14 @@ class Vue {
         if(role == "trapper"){
             
             var indicationTextBalise = document.createElement("p");
-            var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense");
+            var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense à la fois");
 
             indicationTextBalise.appendChild(indicationText);
 
             document.getElementById("indication").append(indicationTextBalise);
         }else{
             var indicationTextBalise = document.createElement("p");
-            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges.");
+            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
 
             indicationTextBalise.appendChild(indicationText);
 
