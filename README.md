@@ -27,6 +27,7 @@ FEATURES:
 
 FEATURES TO COME:
 
+- design lobby menu
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
 - partie avec bot
