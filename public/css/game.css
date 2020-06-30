@@ -89,7 +89,9 @@ body{
 #timer{
 	float: left;
 	width:100%;
-	height:15%;
+	height:20%;
+	border-bottom: 0.1rem solid;
+	color: white;
 }
 
 
@@ -215,4 +217,18 @@ body{
 	background-color: #F96E46;
 	color: white;
 	border-radius: 15px;
+}
+
+#countdown{
+	font-family: 'Roboto', sans-serif;
+	font-size: 1.5vw;
+	color: #26272C;
+}
+
+#endResults{
+	text-align: center;
+	color: #F96E46;
+	font-family: 'Roboto', sans-serif;
+	font-size: 2.0vw;
+	position: relative;
 }

@@ -147,7 +147,7 @@ server.listen(3000, function () {
         });
 
         //Initialisation du joueur
-        socket.on('INIT', function (room) {
+        socket.on('INIT', function (room,time) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
                 ref = player(position(-10, 1), roles.trapper, 0, trapperInventory.slice()) // construit nouveau joeur a position 11 et role explorer
@@ -163,7 +163,7 @@ server.listen(3000, function () {
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ", room)
             updateModels(rooms[room].model, room, withmap = true)
-            io.in(room).emit('displayGame')
+            io.in(room).emit('displayGame',time)
         })
 
 
@@ -175,9 +175,13 @@ server.listen(3000, function () {
                     io.in(room).emit('gameReady', "missingPlayers")
                 } else {
                     console.log("SERVEUR EMIT : gameReadey ", room)
-                    io.in(room).emit('gameReady', "ok")
+                    io.in(room).emit('gameReady', "ok",time)
                     io.emit('update-lobbyMenu', room)
                     rooms[room].state = "inGame"
+
+                    let timeStop = new Date();
+                    timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
+                    timer(timeStop.getTime(),room)
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -257,6 +261,23 @@ server.listen(3000, function () {
     });
 });
 
+function timer(stop,room){
+    var x = setInterval(function() {
+        var now = new Date().getTime();
+        
+        var distance = stop - now;
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        //Lorsque fini
+        if (distance <= 0) {
+          clearInterval(x);
+          io.to(room).emit("countdown-over")
+        }
+      }, 1000);
+}
+
+
 /**
  * Met à jour le model
  * @param {*} mod 
@@ -267,6 +288,8 @@ function updateModels(mod, room, withmap = false) {
     //console.log("SERVEUR EMIT : model content ",mod)
     io.in(room).emit('modelUpdate', JSON.stringify(mod))
 }
+
+
 
 function removeEntityAssociatedtoPlayer(player, room) {
     rooms[room].model.traps = rooms[room].model.traps.filter(function (tr) {

@@ -83,6 +83,70 @@ class Vue {
         console.log("END OF initiallising game....")
     }
 
+    launchCountdown(stopTime, room) {
+        let timeStop = new Date();
+        timeStop.setMinutes(timeStop.getMinutes() + parseInt(stopTime));
+        let stop = timeStop.getTime()
+        var self = this
+
+        var x = setInterval(function () {
+            var now = new Date().getTime();
+            var distance = stop - now;
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            if (minutes < 10) {
+                minutes = "0" + minutes
+            }
+            if (seconds < 10) {
+                seconds = "0" + seconds
+            }
+            document.getElementById('countdown').innerHTML = minutes + ":" + seconds
+
+            //Lorsque fini
+            if (distance <= 0) {
+                clearInterval(x);
+                self.renderEndGame()
+            }
+        }, 1000);
+    }
+
+    renderEndGame() {
+        //tout efface sauf score et mettre score au milieu
+        controller.endGame()
+        document.getElementById('trapsRewardsMenu').parentNode.removeChild(document.getElementById('trapsRewardsMenu'));
+        document.getElementById('indication').parentNode.removeChild(document.getElementById('indication'));
+        document.getElementById('canvaContainer').parentNode.removeChild(document.getElementById('canvaContainer'));
+        document.getElementById('scoreLabel').parentNode.removeChild(document.getElementById('scoreLabel'));
+        $("#scoreListContainer").css(
+            {
+                "padding-left": "0",
+                "padding-right": "0",
+                "margin-left": "18%",
+                "margin-right": "18%",
+                "display": "block",
+                "width": "64%"
+            });
+        $("#container").css(
+            {
+                "margin-left": "auto",
+                "margin-right": "auto",
+                "width": "80%",
+                "height": "100%"
+            });
+
+           var resultatBalise = document.createElement("p");
+           resultatBalise.setAttribute("id", "endResults");
+
+           var resultatText = document.createTextNode("Classement");
+           resultatBalise.appendChild(resultatText);
+
+           $("#scoreListContainer").prepend(resultatBalise)
+
+        gameStarted = false;
+        console.game("Game session ended properly.")
+    }
+
     renderLobby() {
         //cacher container
         console.log("rendering lobby..")
@@ -260,274 +324,274 @@ class Vue {
     }
 
 
-scoreList() {
-    document.getElementById("scoreList").innerHTML = "";
-    //for controller.model.players
-    let scorePrecedent = 0
-    for (const player of controller.getModel().players) {
-        var div = document.createElement("div");
-        div.setAttribute("class", "scoreDiv");
+    scoreList() {
+        document.getElementById("scoreList").innerHTML = "";
+        //for controller.model.players
+        let scorePrecedent = 0
+        for (const player of controller.getModel().players) {
+            var div = document.createElement("div");
+            div.setAttribute("class", "scoreDiv");
 
-        var divName = document.createElement("div");
-        divName.setAttribute("class", "score-container");
-        var playerNameBalise = document.createElement("p");
-        playerNameBalise.setAttribute("class", "scoreName");
-        var text = document.createTextNode(player.name);
-        playerNameBalise.appendChild(text);
-        divName.append(playerNameBalise)
+            var divName = document.createElement("div");
+            divName.setAttribute("class", "score-container");
+            var playerNameBalise = document.createElement("p");
+            playerNameBalise.setAttribute("class", "scoreName");
+            var text = document.createTextNode(player.name);
+            playerNameBalise.appendChild(text);
+            divName.append(playerNameBalise)
 
-        if (player.isRoomLeader) {
-            var imgLeader = document.createElement("img")
-            imgLeader.src = '/img/PNG/Default size/misc/crown.png';
-            imgLeader.setAttribute('width', '24px');
-            imgLeader.setAttribute('height', '24px');
-            imgLeader.setAttribute('id', 'leaderImg');
-            divName.append(imgLeader)
-        }
+            if (player.isRoomLeader) {
+                var imgLeader = document.createElement("img")
+                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
+                imgLeader.setAttribute('width', '24px');
+                imgLeader.setAttribute('height', '24px');
+                imgLeader.setAttribute('id', 'leaderImg');
+                divName.append(imgLeader)
+            }
 
-        var playerScoreBalise = document.createElement("p")
-        playerScoreBalise.setAttribute("class", "scoreText");
-        text = document.createTextNode(player.score);
-        playerScoreBalise.appendChild(text);
+            var playerScoreBalise = document.createElement("p")
+            playerScoreBalise.setAttribute("class", "scoreText");
+            text = document.createTextNode(player.score);
+            playerScoreBalise.appendChild(text);
 
-        div.append(divName)
-        div.append(playerScoreBalise)
-
-
-        if (scorePrecedent < player.score) {
-            $("#scoreList").prepend(div)
-        } else {
-            $("#scoreList").append(div)
-        }
-
-    }
-}
-
-/**
- * Rend visuellement le plateau, les joueurs, bref tout
- */
-renderGame() {
-    if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
-        this.menus(controller.getCurrentPlayer().inventory)
-    }
-    this.clearAll()
-    this.map(controller.getModel().map) //todo rajouter les paramètres
-    this.traps(controller.getModel().traps) //todo
-    this.bonus(controller.getModel().rewards) //todo
-    this.players(controller.getModel().players) //todo
-    if (controller.getCurrentPlayer().role == "explorer") this.darken()
-    this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
-    lastRole = controller.getCurrentPlayer().role
-    lastInventoryCount = controller.getCurrentPlayer().inventory.length
-    this.scoreList()
-}
-
-clearAll() {
-    this.context.clearRect(0, 0, this.canva.width, this.canva.height);
-}
-
-//a appeler par controller ?
-/**
- * Affiche les menus et les complete en fonction de 
- */
-menus(inventory) {
-    document.getElementById("rewardsList").innerHTML = "";
-    document.getElementById("trapsList").innerHTML = "";
-
-    this.trapsMenu = document.getElementById("trapsMenu")
-    this.rewardsMenu = document.getElementById("rewardsMenu")
-
-    let trapSlotUsed = 0;
-    let rewardSlotUsed = 0;
-    inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
-        if (element == 0) { //c'est une recompenses
-            rewardSlotUsed++
-            $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-        } else { //c'est un piege
-            trapSlotUsed++
-            $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-        }
-
-    });
-
-    for (var i = rewardSlotUsed; i < 4; i++) {
-        $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-    }
-
-    for (var i = trapSlotUsed; i < 4; i++) {
-        $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
-    }
-
-    //séléctionne les pieges et rewards
-    var traps = $(".traps");
-    var rewards = $(".rewards");
-
-    //deviennent draggable
-    traps.draggable({
-        helper: 'clone',
-    });
-    traps.data("type", "trap");
-    rewards.draggable({
-        helper: 'clone',
-    });
-    rewards.data("type", "rewards");
+            div.append(divName)
+            div.append(playerScoreBalise)
 
 
-    var $canvas = $("#canva");
-    //le canva est droppable
-    $canvas.droppable({
-        drop: dragDrop,
-    });
+            if (scorePrecedent < player.score) {
+                $("#scoreList").prepend(div)
+            } else {
+                $("#scoreList").append(div)
+            }
 
-    let t = this
-
-    function dragDrop(e, ui) {
-        let Offset = $canvas.offset();
-        let offsetX = Offset.left;
-        let offsetY = Offset.top;
-        let x = Math.round((parseInt(ui.offset.left - offsetX) - 1) / t.spriteWidth);
-        let y = Math.round((parseInt(ui.offset.top - offsetY)) / t.spriteHeight);
-        var data = ui.draggable.data("type");
-
-        if (data == "trap") {
-            tempTrapsRewardsArray["trap"] = { x_: x, y_: y }
-        } else {
-            tempTrapsRewardsArray["reward"] = { x_: x, y_: y }
         }
     }
 
-}
-
-/**
- * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
- * on l'affiche grâce à cette fonction
- */
-tempTrapsAndRewards(role) {
-    let trapIndex = -1
-    let rewardsIndex = -1
-    let x
-    let y
-    document.getElementById("indication").innerHTML = "";
-    if (role == "trapper") {
-
-        var indicationTextBalise = document.createElement("p");
-        var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense à la fois");
-
-        indicationTextBalise.appendChild(indicationText);
-
-        document.getElementById("indication").append(indicationTextBalise);
-    } else {
-        var indicationTextBalise = document.createElement("p");
-        var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
-
-        indicationTextBalise.appendChild(indicationText);
-
-        document.getElementById("indication").append(indicationTextBalise);
+    /**
+     * Rend visuellement le plateau, les joueurs, bref tout
+     */
+    renderGame() {
+        if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
+            this.menus(controller.getCurrentPlayer().inventory)
+        }
+        this.clearAll()
+        this.map(controller.getModel().map) //todo rajouter les paramètres
+        this.traps(controller.getModel().traps) //todo
+        this.bonus(controller.getModel().rewards) //todo
+        this.players(controller.getModel().players) //todo
+        if (controller.getCurrentPlayer().role == "explorer") this.darken()
+        this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
+        lastRole = controller.getCurrentPlayer().role
+        lastInventoryCount = controller.getCurrentPlayer().inventory.length
+        this.scoreList()
     }
 
-    if (tempTrapsRewardsArray["trap"] != null) {
-        this.context.globalAlpha = 0.5;
-        x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
-        y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
-        this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
-        this.context.globalAlpha = 1.0;
+    clearAll() {
+        this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
-    if (tempTrapsRewardsArray["reward"] != null) {
-        this.context.globalAlpha = 0.5;
-        x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
-        y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
-        this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
-        this.context.globalAlpha = 1.0;
-    }
-    //si envoi
-    if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
-        controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
 
-        tempTrapsRewardsArray["trap"] = null
-        tempTrapsRewardsArray["reward"] = null
-
+    //a appeler par controller ?
+    /**
+     * Affiche les menus et les complete en fonction de 
+     */
+    menus(inventory) {
         document.getElementById("rewardsList").innerHTML = "";
         document.getElementById("trapsList").innerHTML = "";
-        this.menus(controller.getCurrentPlayer().inventory)
+
+        this.trapsMenu = document.getElementById("trapsMenu")
+        this.rewardsMenu = document.getElementById("rewardsMenu")
+
+        let trapSlotUsed = 0;
+        let rewardSlotUsed = 0;
+        inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
+            if (element == 0) { //c'est une recompenses
+                rewardSlotUsed++
+                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            } else { //c'est un piege
+                trapSlotUsed++
+                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            }
+
+        });
+
+        for (var i = rewardSlotUsed; i < 4; i++) {
+            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+        }
+
+        for (var i = trapSlotUsed; i < 4; i++) {
+            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+        }
+
+        //séléctionne les pieges et rewards
+        var traps = $(".traps");
+        var rewards = $(".rewards");
+
+        //deviennent draggable
+        traps.draggable({
+            helper: 'clone',
+        });
+        traps.data("type", "trap");
+        rewards.draggable({
+            helper: 'clone',
+        });
+        rewards.data("type", "rewards");
+
+
+        var $canvas = $("#canva");
+        //le canva est droppable
+        $canvas.droppable({
+            drop: dragDrop,
+        });
+
+        let t = this
+
+        function dragDrop(e, ui) {
+            let Offset = $canvas.offset();
+            let offsetX = Offset.left;
+            let offsetY = Offset.top;
+            let x = Math.round((parseInt(ui.offset.left - offsetX) - 1) / t.spriteWidth);
+            let y = Math.round((parseInt(ui.offset.top - offsetY)) / t.spriteHeight);
+            var data = ui.draggable.data("type");
+
+            if (data == "trap") {
+                tempTrapsRewardsArray["trap"] = { x_: x, y_: y }
+            } else {
+                tempTrapsRewardsArray["reward"] = { x_: x, y_: y }
+            }
+        }
+
     }
-}
+
+    /**
+     * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
+     * on l'affiche grâce à cette fonction
+     */
+    tempTrapsAndRewards(role) {
+        let trapIndex = -1
+        let rewardsIndex = -1
+        let x
+        let y
+        document.getElementById("indication").innerHTML = "";
+        if (role == "trapper") {
+
+            var indicationTextBalise = document.createElement("p");
+            var indicationText = document.createTextNode("TRAPPER : Place un piège et une récompense à la fois");
+
+            indicationTextBalise.appendChild(indicationText);
+
+            document.getElementById("indication").append(indicationTextBalise);
+        } else {
+            var indicationTextBalise = document.createElement("p");
+            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
+
+            indicationTextBalise.appendChild(indicationText);
+
+            document.getElementById("indication").append(indicationTextBalise);
+        }
+
+        if (tempTrapsRewardsArray["trap"] != null) {
+            this.context.globalAlpha = 0.5;
+            x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
+            y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
+            this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
+            this.context.globalAlpha = 1.0;
+        }
+        if (tempTrapsRewardsArray["reward"] != null) {
+            this.context.globalAlpha = 0.5;
+            x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
+            y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
+            this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
+            this.context.globalAlpha = 1.0;
+        }
+        //si envoi
+        if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
+            controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
+
+            tempTrapsRewardsArray["trap"] = null
+            tempTrapsRewardsArray["reward"] = null
+
+            document.getElementById("rewardsList").innerHTML = "";
+            document.getElementById("trapsList").innerHTML = "";
+            this.menus(controller.getCurrentPlayer().inventory)
+        }
+    }
 
 
-/**
- * Dessine la map
- * @param {*} mapArray de 0 et 1
- */
-map(mapArray) {
-    for (var i = 0; i < mapArray.length; i++) {
-        for (var j = 0; j < mapArray[i].length; j++) {
-            this.context.drawImage(this.floorAsset, j * this.floorAsset.width, i * this.floorAsset.height, this.floorAsset.width, this.floorAsset.height) //rend le sol
-            if (mapArray[i][j] == 1) {
-                this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
+    /**
+     * Dessine la map
+     * @param {*} mapArray de 0 et 1
+     */
+    map(mapArray) {
+        for (var i = 0; i < mapArray.length; i++) {
+            for (var j = 0; j < mapArray[i].length; j++) {
+                this.context.drawImage(this.floorAsset, j * this.floorAsset.width, i * this.floorAsset.height, this.floorAsset.width, this.floorAsset.height) //rend le sol
+                if (mapArray[i][j] == 1) {
+                    this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
+                }
             }
         }
     }
-}
 
-/**
- * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
- */
-darken() {
-    let myPlayer = controller.getCurrentPlayer()
-    let coordX = myPlayer.position.x
-    let coordY = myPlayer.position.y
-    this.context.beginPath()
-    this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-    this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
-    this.context.fill();
-}
+    /**
+     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
+     */
+    darken() {
+        let myPlayer = controller.getCurrentPlayer()
+        let coordX = myPlayer.position.x
+        let coordY = myPlayer.position.y
+        this.context.beginPath()
+        this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
+        this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
+        this.context.fill();
+    }
 
-/**
- * Dessine les pièges sur le plateau
- * @param {*} trapArray 
- */
-traps(trapArray) {
-    for (var i = 0; i < trapArray.length; i++) {
-        if (trapArray[i]) {
-            let coordX = trapArray[i].position.x_
-            let coordY = trapArray[i].position.y_
+    /**
+     * Dessine les pièges sur le plateau
+     * @param {*} trapArray 
+     */
+    traps(trapArray) {
+        for (var i = 0; i < trapArray.length; i++) {
+            if (trapArray[i]) {
+                let coordX = trapArray[i].position.x_
+                let coordY = trapArray[i].position.y_
+                let myPlayer = controller.getCurrentPlayer()
+                if (myPlayer.role == "explorer") {
+                    this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
+                } else {
+                    this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
+                }
+            }
+        }
+    }
+
+    /**
+     * Dessine les recompenses
+     * @param {*} bonusArray 
+     */
+    bonus(bonusArray) {
+        for (var i = 0; i < bonusArray.length; i++) {
+            let coordX = bonusArray[i].position.x_
+            let coordY = bonusArray[i].position.y_
             let myPlayer = controller.getCurrentPlayer()
             if (myPlayer.role == "explorer") {
-                this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
+                this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             } else {
-                this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
+                this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus
             }
         }
     }
-}
 
-/**
- * Dessine les recompenses
- * @param {*} bonusArray 
- */
-bonus(bonusArray) {
-    for (var i = 0; i < bonusArray.length; i++) {
-        let coordX = bonusArray[i].position.x_
-        let coordY = bonusArray[i].position.y_
-        let myPlayer = controller.getCurrentPlayer()
-        if (myPlayer.role == "explorer") {
-            this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
-        } else {
-            this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus
+    /**
+     * Dessine tous les joueurs sur les plateau de jeu
+     * @param {*} playersArray 
+     */
+    players(playersArray) {
+        for (var i = 0; i < playersArray.length; i++) {
+            if (playersArray[i].role == "explorer") { //ne rend que les explorers
+                let coordX = playersArray[i].position.x
+                let coordY = playersArray[i].position.y
+                if (coordX >= 0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerAsset.width, this.playerAsset.height)
+            }
         }
     }
-}
-
-/**
- * Dessine tous les joueurs sur les plateau de jeu
- * @param {*} playersArray 
- */
-players(playersArray) {
-    for (var i = 0; i < playersArray.length; i++) {
-        if (playersArray[i].role == "explorer") { //ne rend que les explorers
-            let coordX = playersArray[i].position.x
-            let coordY = playersArray[i].position.y
-            if (coordX >= 0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerAsset.width, this.playerAsset.height)
-        }
-    }
-}
 }

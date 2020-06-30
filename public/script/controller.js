@@ -46,6 +46,8 @@ $(() => {
     controller = (() => {
         let room = {}
         let myId = null
+        let gameTimeout = null
+        let gameInterval = null
         let model = { //init model
             players: [],
             traps: [],
@@ -105,9 +107,9 @@ $(() => {
         //signale au serveur que le bouton start est cliqué
         const startButtonClicked = () => {
             let time = document.getElementById("inputBoxTime").value
-            if(time != 0 && time <= 60){
+           // if(time != 0 && time <= 60){ //a enlever
                 self.socket.emit("START", roomName,time)
-            }
+           // }
 
         }
 
@@ -116,12 +118,12 @@ $(() => {
         /**
          * signale que le jeu est prêt
          */
-        self.socket.on('gameReady', function (info) {
+        self.socket.on('gameReady', function (info,time) {
             if (info == "missingPlayers") {
                 console.log("CONTROLLER ON : partie tout seul impossible ")
             } else {
                 console.log("CONTROLLER ON : gameReady tout est bon ")
-                self.socket.emit("INIT", roomName)
+                self.socket.emit("INIT", roomName,time)
             }
 
         })
@@ -129,16 +131,25 @@ $(() => {
         /**
          * signale qu'il faut affiche le jeu
          */
-        self.socket.on('displayGame', function () {
+        self.socket.on('displayGame', function (timeStop) {
             console.log("CONTROLLER ON : displayGame ")
             gameStarted = true
             console.log("CONTROLLER ON : loading game itnerface....", model)
             vue.initGame()
-            setTimeout(setInterval(() => vue.renderGame(), 66), 200)
+            vue.launchCountdown(timeStop)
+            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(), 66), 200)
             document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));
             document.getElementById('nameContainer').parentNode.removeChild(document.getElementById('nameContainer'));
         })
 
+        self.socket.on('countdown-over', function () {
+            alert("fin de partie")
+        })
+        
+        const endGame = () => {
+            clearTimeout(gameTimeout)
+            clearInterval(gameInterval)
+        }
         const moveTo = (position, actualPlayer) => self.socket.emit("MOVE", roomName, JSON.stringify({ position: position, player: actualPlayer })) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("PLACE", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
         const getModel = () => model //renvoi le model
@@ -152,6 +163,6 @@ $(() => {
         const getName = () => room.users[getId()]
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
         //attend un peu puis lance le set interval pour être sur que tout pret
-        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId,getName } //
+        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId,getName, endGame } //
     })()
 })
