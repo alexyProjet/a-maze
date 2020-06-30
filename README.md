@@ -18,11 +18,11 @@ FEATURES:
 - Impossible de rejoindre une partie en cours
 - enleve le lobby du menu quand la partie à commencée
 - rajouter une feed back visuel quand piege et recompense validés par le serveur + indiquer qu'il faut poser 1 de chaque pour que ce soit valide
-
+- joueur disaprait quand il quitte la partie
 essayer d'avoir socket id en clé et non dans player
 
 FEATURES TO COME:
-- faire disparaitre joueur quand qq quitte prematurement + ne peut avoir que un seul trapper
+
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
 - partie avec bot
