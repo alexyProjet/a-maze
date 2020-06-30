@@ -24,10 +24,10 @@ FEATURES:
 - écran fin partie
 - couleur de perso différente
 - l'image du joueur tourne en fonction de la direction
+- Des lobbys designés
 
 FEATURES TO COME:
 
-- design lobby menu
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
 - partie avec bot
