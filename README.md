@@ -23,6 +23,7 @@ essayer d'avoir socket id en clé et non dans player
 
 FEATURES TO COME:
 
+- lobby d'attente avec options de jeu (temps, kick)
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
 - partie avec bot
