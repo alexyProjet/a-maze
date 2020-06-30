@@ -30,5 +30,6 @@ FEATURES TO COME:
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
 - animation de piege
 - timer
-- redesign des icons de pieges recompenses et anonymes
+- redesign des icons de pieges recompenses, perso et anonymes
+- couleur de perso différente
 - écran fin partie
