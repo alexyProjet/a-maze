@@ -34,4 +34,5 @@ FEATURES TO COME:
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
 - animation de piege
 - redesign des icons de pieges recompenses, perso et anonymes
+- Mesures anti-triche (quand explorer, ne renvoyer que partie de la map concernée etc mais grave laf en vrai au pire les gens tricherons t'sais)
 
