@@ -19,17 +19,17 @@ FEATURES:
 - enleve le lobby du menu quand la partie à commencée
 - rajouter une feed back visuel quand piege et recompense validés par le serveur + indiquer qu'il faut poser 1 de chaque pour que ce soit valide
 - joueur disaprait quand il quitte la partie
-essayer d'avoir socket id en clé et non dans player
+- lobby d'attente avec options de jeu (temps, kick)
+- timer
+- écran fin partie
 
 FEATURES TO COME:
 
-- lobby d'attente avec options de jeu (temps, kick)
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
 - partie avec bot
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
 - animation de piege
-- timer
 - redesign des icons de pieges recompenses, perso et anonymes
 - couleur de perso différente
-- écran fin partie
+
