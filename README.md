@@ -26,4 +26,5 @@ FEATURES TO COME:
 - affichage nom autre joueur au dessus personnage en jeu
 - genere map aléatoirement
 - partie avec bot
-- taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul
+- taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
+- animation de piege
