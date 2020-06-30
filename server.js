@@ -139,8 +139,8 @@ server.listen(3000, function () {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
 
-            trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
-            reward_instance = reward(data.reward)
+            let trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
+            let reward_instance = reward(data.reward)
 
             if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_,room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_,room)) {//si placement possible TODO
                 console.log("trap et reward placés valides")
@@ -160,49 +160,38 @@ server.listen(3000, function () {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.socketID == socket.id)
 
-            if (data.player.role == "trapper") {
-
-            } else {
+            if (data.player.role == "explorer"){
+                let isColliding=false;
                 collision(data.position, thickness / 2.0).some(function (pos, ind) {   //regarde si il y a une collision à la nouvelle position avec...
-                   let isCollidingReward=false;
-                   let isCollidingTrap=false;
-
-                    if (isCollidingTrap==true && isCollidingReward==true) {
-                        return false
-                    }
                     //... des pièges
                     rooms[room].model.traps.some(function (trap, index) {
                         if (trap.position.x_ == pos.x && trap.position.y_ == pos.y) {
-                            isCollidingTrap = true
                             if (trap.triggered == null) {
                                 trap.triggered = Date.now()
                                 console.log("player : ", data.player.id, " walk on trap : ", trap)
+                                isColliding = true
                                 plan_explosion(trap, data.player,room);
-                                isCollidingTrap = false
+                                return true
                             }
-                            return false
-                        } else {
-                            return true
                         }
                     })
                     //...des recompenses
+                    console.log("test rewards : ",rooms[room].model.rewards)
                     rooms[room].model.rewards.some(function (rew, index) {
                         if (rew.position.x_ == pos.x && rew.position.y_ == pos.y) {
-                            isCollidingReward = true
                             if (rew.triggered == null) {
                                 rew.triggered = Date.now()
                                 console.log("player : ", data.player.id, " walk on reward : ", rew)
+                                isColliding = true
                                 rewardPlayer(rew, data.player,room)
-                                isCollidingReward = false
+                                return true
                             }
-                            return false
-                        } else {
-                            return true
-                        }
+                        } 
                     })
-                    return true
+                    if(isColliding){
+                        return true
+                    }
                 })
-
                 //check collisions avec mur
                 let isCollidingWall = collision(data.position, thickness / 2.0).some( pos => rooms[room].model.map[pos.y][pos.x] == 1 ) 
                 if (!isCollidingWall) {
@@ -230,7 +219,7 @@ const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléa
 const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
 
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = newId(), oldPosition = position, socketID = null) => Object({ id, position, oldPosition, name, role, score, inventory, socketID }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, id = newId(), socketID = null) => Object({ id, position, name, role, score, inventory, socketID }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (position, score = 1, triggered = null) => Object({ position, score, triggered }) //champ reward
 const map = () => [
@@ -310,13 +299,11 @@ function isAValidPosition(x, y,room) {
  * supprime du model
  * @param {*} trap1 
  */
-const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
+const plan_explosion = (trap1, actualPlayer,room) => {
     //MAJ joueur marché sur piege
     let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
     pl.inventory = trapperInventory.slice() //l'ordre est important
-    pl.oldPosition = pl.position
-    pl.position.x = -10//n'est plus sur terrain de jeu
     console.log("player : ", pl.id, " role changed, now is : ", pl.role)
 
     //MAJ joueur auteur du piege
@@ -326,7 +313,6 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
         trapAuthor.role = roles.explorer
         console.log("player : ", trapAuthor.id, " role changed, now is : ", trapAuthor.role)
         trapAuthor.inventory = []
-        trapAuthor.position = trapAuthor.oldPosition
         if (trapAuthor.position.x < 0) {
             trapAuthor.position = randomPosition(room) //on le repositionne à ses anciennes coordonées
         }
@@ -334,7 +320,8 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
     console.log(pl.position)
     updateModels(rooms[room].model, room)
-}, fuzeTime)
+    console.log('traps :',rooms[room].model.traps)
+}
 
 /**
  * Recompense le joueur qui a recupéré la reward
@@ -342,13 +329,14 @@ const plan_explosion = (trap1, actualPlayer,room) => setTimeout(() => {
  * @param {} rewardUsed 
  * @param {*} player 
  */
-const rewardPlayer = (rewardUsed, player, room) => setTimeout(() => {
+const rewardPlayer = (rewardUsed, player, room) => {
     let pl = rooms[room].model.players.find(p => p.id == player.id)
     pl.score++
     rooms[room].model.rewards = rooms[room].model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
     updateModels(rooms[room].model,room)
-}, fuzeTime)
+    console.log('rewards :',rooms[room].model.rewards)
+}
 
 /**
  * Donne un tableau des collisions autour d'un rayon de size

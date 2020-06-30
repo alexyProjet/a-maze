@@ -1,5 +1,5 @@
 //variables Globales
-var tempTrapsRewardsArray = []
+var tempTrapsRewardsArray = { trap: null, reward: null }
 var lastRole
 var lastInventoryCount
 
@@ -55,7 +55,7 @@ class Vue {
         }).catch(error => console.log(error))
     }
 
-    initGame(){
+    initGame() {
         console.log("Initiallising game....")
         this.loadAssets()
         this.menus(controller.getCurrentPlayer().inventory)
@@ -74,25 +74,25 @@ class Vue {
         $("#startGameButton").append(btn)
 
         var box = document.createElement("input");
-        box.type = "text";       
-        
+        box.type = "text";
+
         var btnName = document.createElement("button");
         btnName.innerHTML = "ok";
         $("#nameContainer").append(box)
         $("#nameContainer").append(btnName)
 
-        btn.addEventListener ("click", function() {
+        btn.addEventListener("click", function () {
             controller.startButtonClicked()
-          });
+        });
         console.log("..END OF rendering lobby")
 
-        btnName.addEventListener ("click", function() {
+        btnName.addEventListener("click", function () {
             console.log(box.value)
             controller.setName(box.value)
-          });
+        });
     }
 
-    scoreList(){
+    scoreList() {
         document.getElementById("scoreList").innerHTML = "";
         //for controller.model.players
         let scorePrecedent = 0
@@ -111,22 +111,22 @@ class Vue {
             div.append(playerNameBalise)
             div.append(playerScoreBalise)
 
-            if(scorePrecedent < player.score){
+            if (scorePrecedent < player.score) {
                 $("#scoreList").prepend(div)
-            } else{
+            } else {
                 $("#scoreList").append(div)
             }
-            
-         }
+
+        }
     }
 
     /**
      * Rend visuellement le plateau, les joueurs, bref tout
      */
     renderGame() {
-        if( ( lastRole != controller.getCurrentPlayer().role && lastRole != null ) || lastInventoryCount != controller.getCurrentPlayer().inventory.length){
+        if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
             this.menus(controller.getCurrentPlayer().inventory)
-        } 
+        }
         this.clearAll()
         this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
@@ -147,7 +147,7 @@ class Vue {
     /**
      * Affiche les menus et les complete en fonction de 
      */
-    menus(inventory){
+    menus(inventory) {
         document.getElementById("rewardsList").innerHTML = "";
         document.getElementById("trapsList").innerHTML = "";
         this.trapsMenu = document.getElementById("trapsMenu")
@@ -156,98 +156,93 @@ class Vue {
         let trapSlotUsed = 0;
         let rewardSlotUsed = 0;
         inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
-            if(element == 0){ //c'est une recompenses
+            if (element == 0) { //c'est une recompenses
                 rewardSlotUsed++
-                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
-            }else { //c'est un piege
+                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            } else { //c'est un piege
                 trapSlotUsed++
-                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
             }
-        
+
         });
 
-        for(var i = rewardSlotUsed; i < 4; i++ ){
-            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+        for (var i = rewardSlotUsed; i < 4; i++) {
+            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
 
-        for(var i = trapSlotUsed; i < 4; i++ ){
-            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="'+this.spriteWidth+'" height="'+this.spriteHeight+'"></li>');
+        for (var i = trapSlotUsed; i < 4; i++) {
+            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
 
         //séléctionne les pieges et rewards
-        var traps=$(".traps");
-        var rewards=$(".rewards");
+        var traps = $(".traps");
+        var rewards = $(".rewards");
 
         //deviennent draggable
         traps.draggable({
-            helper:'clone',
+            helper: 'clone',
         });
-        traps.data("type","trap");
+        traps.data("type", "trap");
         rewards.draggable({
-            helper:'clone',
+            helper: 'clone',
         });
-        rewards.data("type","rewards");
+        rewards.data("type", "rewards");
 
 
-        var $canvas=$("#canva");
+        var $canvas = $("#canva");
         //le canva est droppable
         $canvas.droppable({
-            drop:dragDrop,
+            drop: dragDrop,
         });
 
         let t = this
 
-        function dragDrop(e,ui){
-            let Offset=$canvas.offset();
-            let offsetX=Offset.left;
-            let offsetY=Offset.top;
-            let x=Math.round( (parseInt(ui.offset.left-offsetX)-1) / t.spriteWidth );
-            let y=Math.round( (parseInt(ui.offset.top-offsetY))/t.spriteHeight );
-            var data=ui.draggable.data("type");
+        function dragDrop(e, ui) {
+            let Offset = $canvas.offset();
+            let offsetX = Offset.left;
+            let offsetY = Offset.top;
+            let x = Math.round((parseInt(ui.offset.left - offsetX) - 1) / t.spriteWidth);
+            let y = Math.round((parseInt(ui.offset.top - offsetY)) / t.spriteHeight);
+            var data = ui.draggable.data("type");
 
-            if(data == "trap"){
-                tempTrapsRewardsArray.push(["trap",{x_:x, y_:y}])
+            if (data == "trap") {
+                tempTrapsRewardsArray["trap"] = { x_: x, y_: y }
             } else {
-                tempTrapsRewardsArray.push(["rewards",{x_:x, y_:y}])
+                tempTrapsRewardsArray["reward"] = { x_: x, y_: y }
             }
         }
-        
+
     }
 
     /**
      * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
      * on l'affiche grâce à cette fonction
      */
-    tempTrapsAndRewards(){
+    tempTrapsAndRewards() {
         let trapIndex = -1
         let rewardsIndex = -1
-        for (var i = 0; i < tempTrapsRewardsArray.length; i++) {
-            if (tempTrapsRewardsArray[i][0] == "trap") {
-                trapIndex=i//recupere index
-                let x = tempTrapsRewardsArray[i][1].x_ * this.spriteWidth
-                let y = tempTrapsRewardsArray[i][1].y_ * this.spriteWidth
-                this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
-            } else {
-                rewardsIndex=i 
-                let x = tempTrapsRewardsArray[i][1].x_ * this.spriteWidth
-                let y = tempTrapsRewardsArray[i][1].y_ * this.spriteWidth
-                this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
-            }
+        let x
+        let y
+
+        if (tempTrapsRewardsArray["trap"] != null) {
+            x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
+            y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
+            this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
+        }
+        if (tempTrapsRewardsArray["reward"] != null) {
+            x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
+            y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
+            this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
         }
         //si envoi
-        if(trapIndex != -1 && rewardsIndex != -1){
-            controller.place(tempTrapsRewardsArray[trapIndex][1] , tempTrapsRewardsArray[rewardsIndex][1], controller.getCurrentPlayer())
-            //supprime le trap et reward car plus besoin
-            if(trapIndex > rewardsIndex){ //si index plus grand, faut supprimer le plus grand en premier pour pas avori de bug
-                tempTrapsRewardsArray.splice(trapIndex, 1)
-                tempTrapsRewardsArray.splice(rewardsIndex, 1)
-            } else {
-                tempTrapsRewardsArray.splice(rewardsIndex, 1)
-                tempTrapsRewardsArray.splice(trapIndex, 1)
-            }
+        if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
+            controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
+
+            tempTrapsRewardsArray["trap"] = null
+            tempTrapsRewardsArray["reward"] = null
+
             document.getElementById("rewardsList").innerHTML = "";
             document.getElementById("trapsList").innerHTML = "";
-            console.log("effacé menus")
             this.menus(controller.getCurrentPlayer().inventory)
         }
     }
@@ -287,7 +282,7 @@ class Vue {
      */
     traps(trapArray) {
         for (var i = 0; i < trapArray.length; i++) {
-            if(trapArray[i]){
+            if (trapArray[i]) {
                 let coordX = trapArray[i].position.x_
                 let coordY = trapArray[i].position.y_
                 let myPlayer = controller.getCurrentPlayer()
@@ -323,11 +318,10 @@ class Vue {
      */
     players(playersArray) {
         for (var i = 0; i < playersArray.length; i++) {
-            if(playersArray[i]){
+            if (playersArray[i].role == "explorer") { //ne rend que les explorers
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                //console.log(coordX,coordY)
-                if(coordX >=0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight-this.biais, this.playerAsset.width, this.playerAsset.height)
+                if (coordX >= 0) this.context.drawImage(this.playerAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerAsset.width, this.playerAsset.height)
             }
         }
     }
