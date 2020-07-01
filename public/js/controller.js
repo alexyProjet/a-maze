@@ -70,6 +70,14 @@ $(() => {
             console.log("CONTROLLER ON : UpdateModel recu", model.players)
         })
 
+        /**
+         * plus qu'un seul joueur en jeu/salon -> destruction du salon + redirection
+         */
+        this.socket.on('exit-one-player-left', room => {
+            alert("Plus de joueur dans le jeu, vous avez été déconnecté.");
+            window.location.replace("/");
+        })
+
         self.socket.on('trap-animation', function (position) {
             console.log("activation de animation trap")
             vue.trapAnimation(position)
@@ -118,15 +126,15 @@ $(() => {
             }
         }
 
-            const moveTo = (position, actualPlayer) => self.socket.emit("move-player", roomName, JSON.stringify({ position: position, player: actualPlayer })) //send la position
-            const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
-            const getModel = () => model //renvoi le model
-            const setName = (name) => self.socket.emit("set-name", roomName, name)
-            const getRoomUsers = () => Object.assign({}, room.users) //renvoi le les users de la room
-            const getRoomLeader = () => room.roomLeader //renvoi le les users de la room
-            const getId = () => myId
-            const getName = () => room.users[getId()]
-            const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
-            return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName } //
-        })()
+        const moveTo = (position, actualPlayer) => self.socket.emit("move-player", roomName, JSON.stringify({ position: position, player: actualPlayer })) //send la position
+        const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
+        const getModel = () => model //renvoi le model
+        const setName = (name) => self.socket.emit("set-name", roomName, name)
+        const getRoomUsers = () => Object.assign({}, room.users) //renvoi le les users de la room
+        const getRoomLeader = () => room.roomLeader //renvoi le les users de la room
+        const getId = () => myId
+        const getName = () => room.users[getId()]
+        const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
+        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName } //
+    })()
 })

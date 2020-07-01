@@ -83,8 +83,8 @@ server.listen(3000, function () {
                 if (rooms[room].state != "inGame") { //si deconnexion en lobby
                     let name = rooms[room].users[socket.id]
                     if (Object.keys(rooms[room].users).length == 1) { //si plus personne, on detruit le salon
-                        delete rooms[room]
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
+                        delete rooms[room]
                         io.emit('remove-room-from-lobby-menu', room)
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part,  nouveau leader
                         let newLeader = null
@@ -104,9 +104,9 @@ server.listen(3000, function () {
                     }
                 } else { //si deconnexion en jeu
                     if (Object.keys(rooms[room].users).length >= 2) { //si plus personne, on detruit le salon
+                        console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         delete rooms[room]
                         io.in(room).emit("exit-one-player-left")
-                        console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
                         let newLeader = null
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ",room," tentative de réaffectation...")
@@ -249,7 +249,6 @@ server.listen(3000, function () {
                 //check collisions avec murs
                 let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
                 if (!isCollidingWall) {
-                    console.log("MOUVEMENT", data.position)
                     let dir = getDirectionFromPositions(player.position,data.position)
                     if(dir !=null) player.direction = dir
                     player.position = data.position
