@@ -1,9 +1,0 @@
--lobby (en cours)
--pas de joueur physique quand est trapper
--list scores
--nom autres joueur affichés
--genere map aléatoirement
-
--bruit et phrase pour relancer jeu genre le loud nigra
-
-essayer d'avoir socket id en clé et non dans player

@@ -9,6 +9,8 @@ app.use(express.urlencoded({ extended: true }))
 
 const rooms = {}
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
+const fuzeTime = 150 //temps de suspense
+const thickness = 0.5 // taille joueur et piege, rayon à verifier
 
 app.get('/', (req, res) => {
     console.log("/")
@@ -26,7 +28,7 @@ app.post('/room', (req, res) => {
     }
     rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby" }
     res.redirect(req.body.room)
-    io.emit("newRoom", req.body.room)
+    io.emit("new-roon", req.body.room)
     console.log("SERVEUR io.EMIT : new room created", req.body.room)
 })
 
@@ -38,18 +40,10 @@ app.get('/:room', (req, res) => {
     console.log("SERVEUR : /:room", req.params.room)
 })
 
-function getUserRooms(socket) {
-    return Object.entries(rooms).reduce((names, [name, room]) => {
-        if (room.users[socket.id] != null) names.push(name)
-        return names
-    }, [])
-}
-
 server.listen(3000, function () {
     console.log(`En écoute sur ${server.address().port}`);
 
     io.on('connection', function (socket) {
-
         //recu du controller, enregistre le nouveau joueur
         socket.on('new-user', (room, name) => {
             if (rooms[room].state != "inGame") { //si dans le lobby
@@ -60,16 +54,15 @@ server.listen(3000, function () {
                     rooms[room].roomLeader = socket.id
                 }
                 // console.log("SERVEUR : rooms content ",rooms)
-                io.in(room).emit("user-connected", name, rooms[room])
-                console.log("SERVEUR EMIT : user-connected", name)
+                io.in(room).emit("user-connected-in-lobby", name, rooms[room])
+                console.log("SERVEUR EMIT : user-connected-in-lobby", name)
             } else {
-                io.to(socket.id).emit("already-in-game")
+                io.to(socket.id).emit("lobby-already-in-game")
                 console.log("SERVEUR on : deja en jeu")
             }
-
         });
 
-        socket.on('setName', function (room, name) {
+        socket.on('set-name', function (room, name) {
             console.log("SERVEUR ON setName old : ", rooms[room].users[socket.id])
             rooms[room].users[socket.id] = name
             console.log("SERVEUR ON setName new : ", rooms[room].users[socket.id])
@@ -78,20 +71,20 @@ server.listen(3000, function () {
 
         // si un joueur part
         socket.on('disconnect', function () {
-            getUserRooms(socket).forEach(room => {
+            getRoomFromPlayerId(socket).forEach(room => {
                 if (rooms[room].state != "inGame") { //si deconnexion en lobby
 
                     let name = rooms[room].users[socket.id]
                     if (Object.keys(rooms[room].users).length == 1) { //si plus personne, on detruit le salon
                         delete rooms[room]
                         console.log("SERVEUR ON : disconnect lobby detruit", rooms[room])
-                        io.emit('update-lobbyMenu', room)
+                        io.emit('remove-room-from-lobby-menu', room)
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part,  nouveau leader
                         let newLeader = null
                         console.log("SERVEUR ON : disconnet roomLeader is leaving", rooms[room].roomLeader)
                         delete rooms[room].users[socket.id]
                         if (Object.keys(rooms[room].users).length == 0) {//plus personne en jeu
-                            io.in(room).emit("exit")
+                            io.in(room).emit("exit-one-player-left")
                             delete rooms[room]
                         } else {//reste assez de joueur
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
@@ -109,7 +102,7 @@ server.listen(3000, function () {
 
                     if (Object.keys(rooms[room].users).length >= 2) { //si plus personne, on detruit le salon
                         delete rooms[room]
-                        io.in(room).emit("exit")
+                        io.in(room).emit("exit-one-player-left")
                         console.log("SERVEUR ON : disconnect room detruite", rooms[room])
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
                         let newLeader = null
@@ -148,7 +141,7 @@ server.listen(3000, function () {
         });
 
         //Initialisation du joueur
-        socket.on('INIT', function (room,time) {
+        socket.on('init-player', function (room,time) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
                 ref = player(position(-10, 1), roles.trapper, 0, trapperInventory.slice()) // construit nouveau joeur a position 11 et role explorer
@@ -167,22 +160,20 @@ server.listen(3000, function () {
             io.in(room).emit('displayGame',time)
         })
 
-
         //averti tous le monde que partie commence
-        socket.on('START', function (room, time) {
+        socket.on('start-game', function (room, time) {
             if (socket.id == rooms[room].roomLeader) {
                 if (false/*Object.keys(rooms[room].users).length == 1*/) { // a enlever 
                     console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")
                     io.in(room).emit('gameReady', "missingPlayers")
                 } else {
                     console.log("SERVEUR EMIT : gameReadey ", room)
-                    io.in(room).emit('gameReady', "ok",time)
-                    io.emit('update-lobbyMenu', room)
                     rooms[room].state = "inGame"
-
                     let timeStop = new Date();
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
                     timer(timeStop.getTime(),room)
+                    io.in(room).emit('gameReady', "ok",timeStop.getTime())
+                    io.emit('remove-room-from-lobby-menu', room)
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -191,7 +182,7 @@ server.listen(3000, function () {
         })
 
         //place un piege ou recompense si l'emplacement est valide
-        socket.on('PLACE', function (room, dataJSON) {
+        socket.on('place-trap-and-reward', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
@@ -212,9 +203,11 @@ server.listen(3000, function () {
             updateModels(rooms[room].model, room)
         });
 
-        //vérifi si le deplacement du joueur est valide
-        //vérifi si collision avec piege ou recompense
-        socket.on('MOVE', function (room, dataJSON) {
+        /**
+         * Vérfie si joueur entre en collision avec mur ou entités
+         * Valide ou non le déplacement
+         */
+        socket.on('move-player', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
@@ -250,12 +243,12 @@ server.listen(3000, function () {
                         return true
                     }
                 })
-                //check collisions avec mur
+                //check collisions avec murs
                 let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
-                //tout est oks
                 if (!isCollidingWall) {
                     console.log("MOUVEMENT", data.position)
-                    player.direction = getDirectionFromPositions(player.position,data.position,player.direction)
+                    let dir = getDirectionFromPositions(player.position,data.position)
+                    if(dir !=null) player.direction = dir
                     player.position = data.position
                 }
             }
@@ -264,7 +257,25 @@ server.listen(3000, function () {
     });
 });
 
-function getDirectionFromPositions(oldPosition, newPosition,oldDirection){
+/**
+ * Return a room
+ * @param {*} socket 
+ */
+function getRoomFromPlayerId(socket) {
+    return Object.entries(rooms).reduce((roomName, [name, room]) => {
+        if (room.users[socket.id] != null) roomName.push(name)
+        console.log("SORTIE",roomName)
+        return roomName
+    }, [])
+}
+
+/**
+ * 
+ * @param {*} oldPosition 
+ * @param {*} newPosition 
+ * @param {*} oldDirection 
+ */
+function getDirectionFromPositions(oldPosition, newPosition){
     let newY = newPosition.y
     let newX = newPosition.x
     let oldY = oldPosition.y
@@ -283,10 +294,15 @@ function getDirectionFromPositions(oldPosition, newPosition,oldDirection){
             return "right"
         }
     }else{
-        return oldDirection  //si en diagonale
+        return null //si en diagonale
     }
 }
 
+/**
+ * Gestion du chronometre de la partie
+ * @param {*} stop 
+ * @param {*} room 
+ */
 function timer(stop,room){
     var x = setInterval(function() {
         var now = new Date().getTime();
@@ -315,8 +331,6 @@ function updateModels(mod, room, withmap = false) {
     io.in(room).emit('modelUpdate', JSON.stringify(mod))
 }
 
-
-
 function removeEntityAssociatedtoPlayer(player, room) {
     rooms[room].model.traps = rooms[room].model.traps.filter(function (tr) {
         return tr.parentId !== player.id;
@@ -324,51 +338,6 @@ function removeEntityAssociatedtoPlayer(player, room) {
     rooms[room].model.rewards = rooms[room].model.rewards.filter(function (rew) {
         return rew.parentId !== player.id;
     });
-}
-
-const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
-const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
-const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false,direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
-const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
-const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
-const map = () => [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-    [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1],
-    [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
-
-let model = () => Object({
-    players: [],
-    traps: [],
-    rewards: [],
-    map: map(),
-    roomLeader: null
-})
-
-const fuzeTime = 150 //temps de suspense
-const thickness = 0.5 // taille joueur et piege, rayon à verifier
-
-const roles = {
-    explorer: "explorer",
-    trapper: "trapper"
 }
 
 /**
@@ -400,6 +369,48 @@ function isAValidPosition(x, y, room) {
         }
     }
     return false
+}
+
+let model = () => Object({
+    players: [],
+    traps: [],
+    rewards: [],
+    map: map(),
+    roomLeader: null
+})
+
+const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
+const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
+const position = (x, y) => Object({ x, y }) //creer un objet position
+const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false,direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
+const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
+const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
+const map = () => [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+]
+
+const roles = {
+    explorer: "explorer",
+    trapper: "trapper"
 }
 
 /**

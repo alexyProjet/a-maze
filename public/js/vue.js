@@ -93,12 +93,11 @@ class Vue {
         console.log("END OF initiallising game....")
     }
 
-    launchCountdown(stopTime, room) {
-        let timeStop = new Date();
-        timeStop.setMinutes(timeStop.getMinutes() + parseInt(stopTime));
-        let stop = timeStop.getTime()
-        var self = this
-
+    /**
+     * Affiche le chronomètre
+     * @param {*} stop 
+     */
+    launchCountdown(stop) {
         var x = setInterval(function () {
             var now = new Date().getTime();
             var distance = stop - now;
@@ -155,7 +154,7 @@ class Vue {
         console.game("Game session ended properly.")
     }
 
-    leftLobbyPannel(){
+    leftLobbyPannel() {
         /**
          * COLONNE DE GAUCHE
          * SET PSEUDO, OPTIONS...
@@ -214,7 +213,7 @@ class Vue {
             divColonneGauche.append(divOptionsPartie)
         }
         $("#container").append(divColonneGauche)
-        
+
         btnName.addEventListener("click", function () {
             if (inputBox.value != "" && inputBox.value.length < 21) {
                 controller.setName(inputBox.value)
@@ -283,7 +282,7 @@ class Vue {
         }
         divColonneMilieu.append(btnStart)
 
-        
+
         /**
          * COLONNE DE DROITE
          * SET PSEUDO, OPTIONS...
@@ -391,7 +390,7 @@ class Vue {
         this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
         this.bonus(controller.getModel().rewards) //todo
-        this.players(controller.getModel().players,thisplayerId) //todo
+        this.players(controller.getModel().players, thisplayerId) //todo
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
@@ -603,8 +602,8 @@ class Vue {
             if (playersArray[i].role == "explorer") { //ne rend que les explorers
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                console.log("thisplayerid",thisPlayerId)
-                console.log("playerarrayid",playersArray[i].id)
+                console.log("thisplayerid", thisPlayerId)
+                console.log("playerarrayid", playersArray[i].id)
                 if (thisPlayerId == playersArray[i].id) {
                     switch (playersArray[i].direction) {
                         case 'up':
