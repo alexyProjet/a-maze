@@ -27,10 +27,12 @@ class Vue {
      * Fait correspondre les images à des noms pour le canva
      */
     async loadAssets() {
-        this.floorAsset = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_06.png", this.spriteWidth, this.spriteHeight)
-        this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
-        this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_04.png", this.spriteWidth, this.spriteHeight)
-        this.rewardAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_12.png", this.spriteWidth, this.spriteHeight)
+        this.floorAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/ground.png", this.spriteWidth, this.spriteHeight)
+        this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/block.png", this.spriteWidth, this.spriteHeight)
+        this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/trap.png", this.spriteWidth, this.spriteHeight)
+        this.rewardAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/reward.png", this.spriteWidth, this.spriteHeight)
+        this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/empty_slot.png", this.spriteWidth, this.spriteHeight)
+        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/anonymouse_block.png", this.spriteWidth, this.spriteHeight)
 
         this.playerUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
         this.playerDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
@@ -42,20 +44,12 @@ class Vue {
         this.playerEnemyRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_right.png", this.halfWidth, this.halfHeight)
         this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_left.png", this.halfWidth, this.halfHeight)
 
-        this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_16.png", this.spriteWidth, this.spriteHeight)
-        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
         this.isAssetLoadingOver = true
-
-        //this.trapAnimationAsset = await this._syncedLoadImg("https://i.gifer.com/8RDg.gif", this.spriteWidth, this.spriteHeight)
         this.explosionAnimationFrames = new Array(24);
 
-        /*for (var i = 0; i <= 25; i++) {
-            this.explosionAnimationFrames[i] = await this._syncedLoadImg("/img/PNG/Default size/Environment/trap_animation-" + i + ".png", this.spriteWidth*3, this.spriteHeight*3);
-        }*/
-
-        async function processArray(self) {
+        async function fillExplosionFramesArray(self) {
             let i=0
-            for await (let element of  self.explosionAnimationFrames) {
+            for await (let element of self.explosionAnimationFrames) {
                 self.explosionAnimationFrames[i] = new Image(self.spriteWidth * 3, self.spriteHeight * 3)
                 self.explosionAnimationFrames[i].src  = "/img/PNG/Default size/Animations/trap_animation-" + i + ".png"
                 i++
@@ -63,7 +57,7 @@ class Vue {
             }
             console.log(self.explosionAnimationFrames)
         }
-        processArray(this)
+        fillExplosionFramesArray(this)
 
     }
 

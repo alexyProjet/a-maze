@@ -17,12 +17,6 @@ $(() => {
         roomContainer.append(roomLink)
     })
 
-    //Destruction de salon et retour menu pour cause : 1 seul joeur restant
-    this.socket.on('exit-one-player-left', room => {
-        alert("Plus de joueur dans le jeu, vous avez été déconnecté.");
-        window.location.replace("/");
-    })
-
     //Tente de rejoindre un salon déjà en jeu
     this.socket.on('lobby-already-in-game', () => {
         console.log("Salon déjà en jeu.")

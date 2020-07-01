@@ -78,8 +78,10 @@ $(() => {
             window.location.replace("/");
         })
 
+        /**
+         * Animation de piège
+         */
         self.socket.on('trap-animation', function (position) {
-            console.log("activation de animation trap")
             vue.trapAnimation(position)
         })
 
