@@ -12,15 +12,15 @@ const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 const fuzeTime = 150 //temps de suspense
 const thickness = 0.5 // taille joueur et piege, rayon à verifier
 
+/**
+ * Rendu de la page dans le menu des salons
+ */
 app.get('/', (req, res) => {
-    console.log("/")
-    res.render('lobby', { rooms: rooms, roomType: "lobbyMenu", roomName: "lobbyMenu" })
+    res.render('lobby', { rooms: rooms, roomName: "lobbyMenu" })
 })
 
 /**
- * lorsque clic bouton "creer room"
- * averti tout autre clients que nouvelle room
- * redirige le createur vers sa nouvelle room
+ * Gestion de création de salon
  */
 app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
@@ -29,105 +29,101 @@ app.post('/room', (req, res) => {
     rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby" }
     res.redirect(req.body.room)
     io.emit("new-roon", req.body.room)
-    console.log("SERVEUR io.EMIT : new room created", req.body.room)
+    console.log("SERVEUR : nouveau salon créé", req.body.room)
 })
 
+/**
+ * Gestion de redirection ou non quand force entrée dans un salon
+ * Si le salon est en jeu -> redirection
+ * Sinon rejoint le salon
+ */
 app.get('/:room', (req, res) => {
     if (rooms[req.params.room] == null) {
         return res.redirect('/')
     }
-    res.render('game', { roomName: req.params.room, roomType: "lobby" })
-    console.log("SERVEUR : /:room", req.params.room)
+    res.render('game', { roomName: req.params.room })
 })
 
 server.listen(3000, function () {
     console.log(`En écoute sur ${server.address().port}`);
 
     io.on('connection', function (socket) {
-        //recu du controller, enregistre le nouveau joueur
+
+        /**
+         * Enregistrement du nouvel utilisateur connecté
+         */
         socket.on('new-user', (room, name) => {
+            console.log("SERVEUR : nouveau joueur : ", name," dans le salon : ", room)
             if (rooms[room].state != "inGame") { //si dans le lobby
-                console.log("SERVEUR ON : new-user", name, room)
                 socket.join(room)
                 rooms[room].users[socket.id] = name
                 if (Object.keys(rooms[room].users).length == 1) {
                     rooms[room].roomLeader = socket.id
                 }
-                // console.log("SERVEUR : rooms content ",rooms)
                 io.in(room).emit("user-connected-in-lobby", name, rooms[room])
-                console.log("SERVEUR EMIT : user-connected-in-lobby", name)
             } else {
                 io.to(socket.id).emit("lobby-already-in-game")
-                console.log("SERVEUR on : deja en jeu")
             }
         });
 
+        /**
+         * MAJ du pseudo demandé par l'utilisateur
+         */
         socket.on('set-name', function (room, name) {
-            console.log("SERVEUR ON setName old : ", rooms[room].users[socket.id])
+            console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id]," Nouveau : ",name)
             rooms[room].users[socket.id] = name
-            console.log("SERVEUR ON setName new : ", rooms[room].users[socket.id])
             io.to(room).emit("lobby-changes-occured", rooms[room])
         })
 
-        // si un joueur part
+        /**
+         * Gestion de tous les cas possibles de deconnexion
+         */
         socket.on('disconnect', function () {
             getRoomFromPlayerId(socket).forEach(room => {
                 if (rooms[room].state != "inGame") { //si deconnexion en lobby
-
                     let name = rooms[room].users[socket.id]
                     if (Object.keys(rooms[room].users).length == 1) { //si plus personne, on detruit le salon
                         delete rooms[room]
-                        console.log("SERVEUR ON : disconnect lobby detruit", rooms[room])
+                        console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         io.emit('remove-room-from-lobby-menu', room)
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part,  nouveau leader
                         let newLeader = null
-                        console.log("SERVEUR ON : disconnet roomLeader is leaving", rooms[room].roomLeader)
+                        console.log("SERVEUR : Deconnexion du maitre de salon dans : ",room," tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         if (Object.keys(rooms[room].users).length == 0) {//plus personne en jeu
                             io.in(room).emit("exit-one-player-left")
                             delete rooms[room]
                         } else {//reste assez de joueur
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
-                            console.log("SERVEUR ON : disconnect new roomLeader is", rooms[room].roomLeader, rooms[room].users)
                             io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                         }
                     } else {
-                        console.log("SERVEUR ON : disconnect ", rooms[room].users[socket.id])
+                        console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         delete rooms[room].users[socket.id]
                         io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                     }
-                    
-
                 } else { //si deconnexion en jeu
-
                     if (Object.keys(rooms[room].users).length >= 2) { //si plus personne, on detruit le salon
                         delete rooms[room]
                         io.in(room).emit("exit-one-player-left")
-                        console.log("SERVEUR ON : disconnect room detruite", rooms[room])
+                        console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
                         let newLeader = null
-                        console.log("SERVEUR ON : disconnet roomLeader is leaving", rooms[room].roomLeader)
+                        console.log("SERVEUR : Deconnexion du maitre de salon dans : ",room," tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
-                            console.log("SERVEUR ON : disconnect new roomLeader is", rooms[room].roomLeader, rooms[room].users)
-
                             //si le joueur était trapper, random devient trapper à sa place
                             if (getPlayerFromId(socket.id, room).role == "trapper") {
                                 getPlayerFromId(rooms[room].roomLeader, room).role = "trapper"
                             }
-
                             getPlayerFromId(rooms[room].roomLeader, room).isRoomLeader = true
-
                             removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
                             rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
                                 return pl.id !== socket.id;
                             });
-
                             updateModels(rooms[room].model, room, withmap = true)
-                        
                     } else {
-                        console.log("SERVEUR ON : disconnect ", rooms[room].users[socket.id])
-
+                        console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
                         rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
                             return pl.id !== socket.id;
@@ -140,7 +136,9 @@ server.listen(3000, function () {
             })
         });
 
-        //Initialisation du joueur
+        /**
+         * Initialisation d'un joueur
+         */
         socket.on('init-player', function (room,time) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
@@ -157,22 +155,24 @@ server.listen(3000, function () {
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ", room)
             updateModels(rooms[room].model, room, withmap = true)
-            io.in(room).emit('displayGame',time)
+            io.in(room).emit('display-game',time)
         })
 
-        //averti tous le monde que partie commence
+        /**
+         * Averti du début de partie
+         */
         socket.on('start-game', function (room, time) {
             if (socket.id == rooms[room].roomLeader) {
                 if (false/*Object.keys(rooms[room].users).length == 1*/) { // a enlever 
                     console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")
-                    io.in(room).emit('gameReady', "missingPlayers")
+                    io.in(room).emit('game-ready', "missingPlayers")
                 } else {
                     console.log("SERVEUR EMIT : gameReadey ", room)
                     rooms[room].state = "inGame"
                     let timeStop = new Date();
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
                     timer(timeStop.getTime(),room)
-                    io.in(room).emit('gameReady', "ok",timeStop.getTime())
+                    io.in(room).emit('game-ready', "ok",timeStop.getTime())
                     io.emit('remove-room-from-lobby-menu', room)
                 }
             } else {
@@ -181,7 +181,9 @@ server.listen(3000, function () {
 
         })
 
-        //place un piege ou recompense si l'emplacement est valide
+        /**
+         * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
+         */
         socket.on('place-trap-and-reward', function (room, dataJSON) {
             let data = JSON.parse(dataJSON)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
@@ -221,6 +223,7 @@ server.listen(3000, function () {
                                 trap.triggered = Date.now()
                                 console.log("player : ", data.player.id, " walk on trap : ", trap)
                                 isColliding = true
+                                io.to(socket.id).emit("trap-animation",trap.position)
                                 plan_explosion(trap, data.player, room);
                                 return true
                             }
@@ -319,7 +322,6 @@ function timer(stop,room){
       }, 1000);
 }
 
-
 /**
  * Met à jour le model
  * @param {*} mod 
@@ -327,8 +329,7 @@ function timer(stop,room){
  * @param {*} withmap 
  */
 function updateModels(mod, room, withmap = false) {
-    //console.log("SERVEUR EMIT : model content ",mod)
-    io.in(room).emit('modelUpdate', JSON.stringify(mod))
+    io.in(room).emit('model-update', JSON.stringify(mod))
 }
 
 function removeEntityAssociatedtoPlayer(player, room) {
@@ -420,29 +421,25 @@ const roles = {
  * supprime du model
  * @param {*} trap1 
  */
-const plan_explosion = (trap1, actualPlayer, room) => {
-    //MAJ joueur marché sur piege
+const plan_explosion = (trap1, actualPlayer, room)  => setTimeout(() => {
+    //MAJ le joueur qui a marché sur le piege
     let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
     pl.inventory = trapperInventory.slice() //l'ordre est important
-    console.log("player : ", pl.id, " role changed, now is : ", pl.role)
-
-    //MAJ joueur auteur du piege
+    //MAJ le joueur auteur du piege
     let trapAuthor = getPlayerFromId(trap1.parentId, room)
     trapAuthor.score++
     if (trapAuthor.role == roles.trapper) {
         trapAuthor.role = roles.explorer
-        console.log("player : ", trapAuthor.id, " role changed, now is : ", trapAuthor.role)
         trapAuthor.inventory = []
         if (trapAuthor.position.x < 0) {
             trapAuthor.position = randomPosition(room) //on le repositionne à ses anciennes coordonées
         }
     }
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
-    console.log(pl.position)
+    //emit animation explose coord
     updateModels(rooms[room].model, room)
-    console.log('traps :', rooms[room].model.traps)
-}
+},fuzeTime)
 
 /**
  * Recompense le joueur qui a recupéré la reward
@@ -472,7 +469,7 @@ const collision = (pos, size) => [
 ]
 
 /**
- * Donne un joueur à partir d'un id
+ * Renvoi un joueur à partir d'un id
  * @param {*} id 
  */
 const getPlayerFromId = (id, room) => rooms[room].model.players.filter(Boolean).filter(p => p.id == id)[0]

@@ -30,7 +30,7 @@ class Vue {
         this.floorAsset = await this._syncedLoadImg("/img/PNG/Default size/Ground/ground_06.png", this.spriteWidth, this.spriteHeight)
         this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Blocks/block_03.png", this.spriteWidth, this.spriteHeight)
         this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_04.png", this.spriteWidth, this.spriteHeight)
-        this.bonusAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_12.png", this.spriteWidth, this.spriteHeight)
+        this.rewardAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_12.png", this.spriteWidth, this.spriteHeight)
 
         this.playerUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
         this.playerDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
@@ -45,6 +45,26 @@ class Vue {
         this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_16.png", this.spriteWidth, this.spriteHeight)
         this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/environment_07.png", this.spriteWidth, this.spriteHeight) //ground 07 apperement mais il existe pas enculé >:(
         this.isAssetLoadingOver = true
+
+        //this.trapAnimationAsset = await this._syncedLoadImg("https://i.gifer.com/8RDg.gif", this.spriteWidth, this.spriteHeight)
+        this.explosionAnimationFrames = new Array(24);
+
+        /*for (var i = 0; i <= 25; i++) {
+            this.explosionAnimationFrames[i] = await this._syncedLoadImg("/img/PNG/Default size/Environment/trap_animation-" + i + ".png", this.spriteWidth*3, this.spriteHeight*3);
+        }*/
+
+        async function processArray(self) {
+            let i=0
+            for await (let element of  self.explosionAnimationFrames) {
+                self.explosionAnimationFrames[i] = new Image(self.spriteWidth * 3, self.spriteHeight * 3)
+                self.explosionAnimationFrames[i].src  = "/img/PNG/Default size/Animations/trap_animation-" + i + ".png"
+                i++
+                console.log(self.explosionAnimationFrames[i])
+            }
+            console.log(self.explosionAnimationFrames)
+        }
+        processArray(this)
+
     }
 
     /**
@@ -54,7 +74,6 @@ class Vue {
      * @param {*} height_ 
      */
     async _syncedLoadImg(src_, width_, height_) {
-        let ctx = this.context
         return await new Promise((resolve, reject) => {
             let result = new Image(width_, height_)
             result.src = src_
@@ -65,6 +84,10 @@ class Vue {
         }).catch(error => console.log(error))
     }
 
+    /**
+     * 
+     * -------------------------------------- DIVERS --------------------------------------
+     */
     gameBaliseShown(value) {
         if (value) {
             document.getElementById('trapsRewardsMenu').style.display = 'block';
@@ -80,23 +103,10 @@ class Vue {
 
     }
 
-    initGame() {
-        console.log("Initiallising game....")
-        if (document.getElementById("colonne-milieu-div") != null) {
-            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
-            document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
-            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
-        }
-        this.loadAssets()
-        this.menus(controller.getCurrentPlayer().inventory)
-        this.gameBaliseShown(true)
-        console.log("END OF initiallising game....")
+    clearAll() {
+        this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
 
-    /**
-     * Affiche le chronomètre
-     * @param {*} stop 
-     */
     launchCountdown(stop) {
         var x = setInterval(function () {
             var now = new Date().getTime();
@@ -118,43 +128,16 @@ class Vue {
             }
         }, 1000);
     }
+    /**
+     * 
+     * -------------------------------------- RENDU DU SALON --------------------------------------
+     */
 
-    renderEndGame() {
-        //tout efface sauf score et mettre score au milieu
-        document.getElementById('trapsRewardsMenu').parentNode.removeChild(document.getElementById('trapsRewardsMenu'));
-        document.getElementById('indication').parentNode.removeChild(document.getElementById('indication'));
-        document.getElementById('canvaContainer').parentNode.removeChild(document.getElementById('canvaContainer'));
-        document.getElementById('scoreLabel').parentNode.removeChild(document.getElementById('scoreLabel'));
-        $("#scoreListContainer").css(
-            {
-                "padding-left": "0",
-                "padding-right": "0",
-                "margin-left": "18%",
-                "margin-right": "18%",
-                "display": "block",
-                "width": "64%"
-            });
-        $("#container").css(
-            {
-                "margin-left": "auto",
-                "margin-right": "auto",
-                "width": "80%",
-                "height": "100%"
-            });
-
-        var resultatBalise = document.createElement("p");
-        resultatBalise.setAttribute("id", "endResults");
-
-        var resultatText = document.createTextNode("Classement");
-        resultatBalise.appendChild(resultatText);
-
-        $("#scoreListContainer").prepend(resultatBalise)
-
-        gameStarted = false;
-        console.game("Game session ended properly.")
-    }
-
-    leftLobbyPannel() {
+    /**
+     * Rendu du panneau gauche dans le salon
+     * gauche : Options de joueur et options de partie (seulement pour le maitre de salon)
+     */
+    renderLeftLobbyPannel() {
         /**
          * COLONNE DE GAUCHE
          * SET PSEUDO, OPTIONS...
@@ -196,6 +179,7 @@ class Vue {
             let inputBoxTime = document.createElement("input");
             inputBoxTime.setAttribute("id", "inputBoxTime")
             inputBoxTime.type = "text";
+            inputBoxTime.value = 10;
 
 
             let dureeLabel = document.createElement("p");
@@ -222,10 +206,15 @@ class Vue {
             }
 
         });
-        this.middleAndRightLobbyPannel()
+        this.renderMiddleAndRightLobbyPannel()
     }
 
-    middleAndRightLobbyPannel() {
+    /**
+     * Rendu des panneaux du centre et de droite dans le salon
+     * centre : liste des joueurs dans le salon
+     * droite : pseudo du joueur
+     */
+    renderMiddleAndRightLobbyPannel() {
         //cacher container
         console.log("rendering lobby..")
         this.gameBaliseShown(false)
@@ -312,7 +301,6 @@ class Vue {
         });
         console.log("..END OF rendering lobby")
     }
-
     /**
      * Empeche la saisie de caractere autres que des entiers dans la box de durée
      * @param {*} textbox 
@@ -335,12 +323,75 @@ class Vue {
         });
     }
 
+    /**
+     * 
+     * -------------------------------------- RENDU D'UNE PARTIE --------------------------------------
+     */
 
-    scoreList() {
+    /**
+     * Initialise la page de jeu et supprime les elements de salon
+     */
+    initGame() {
+
+        console.log("Initialisation de la partie....")
+        if (document.getElementById("colonne-milieu-div") != null) {
+            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
+            document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
+            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
+        }
+        this.loadAssets()
+        this.renderInGameMenus(controller.getCurrentPlayer().inventory)
+        this.gameBaliseShown(true)
+        console.log("Initialisation terminée....")
+    }
+
+    /**
+     * Ecran de fin de partie
+     */
+    renderEndGame() {
+        //tout efface sauf score et mettre score au milieu
+        document.getElementById('trapsRewardsMenu').parentNode.removeChild(document.getElementById('trapsRewardsMenu'));
+        document.getElementById('indication').parentNode.removeChild(document.getElementById('indication'));
+        document.getElementById('canvaContainer').parentNode.removeChild(document.getElementById('canvaContainer'));
+        document.getElementById('scoreLabel').parentNode.removeChild(document.getElementById('scoreLabel'));
+        $("#scoreListContainer").css(
+            {
+                "padding-left": "0",
+                "padding-right": "0",
+                "margin-left": "18%",
+                "margin-right": "18%",
+                "display": "block",
+                "width": "64%"
+            });
+        $("#container").css(
+            {
+                "margin-left": "auto",
+                "margin-right": "auto",
+                "width": "80%",
+                "height": "100%"
+            });
+
+        var resultatBalise = document.createElement("p");
+        resultatBalise.setAttribute("id", "endResults");
+
+        var resultatText = document.createTextNode("Classement");
+        resultatBalise.appendChild(resultatText);
+
+        $("#scoreListContainer").prepend(resultatBalise)
+
+        gameStarted = false;
+        console.game("Game session ended properly.")
+    }
+
+    /**
+     * Rend la liste des scores
+     */
+    renderScoreList() {
         document.getElementById("scoreList").innerHTML = "";
         //for controller.model.players
         let scorePrecedent = 0
         for (const player of controller.getModel().players) {
+
             var div = document.createElement("div");
             div.setAttribute("class", "scoreDiv");
 
@@ -348,7 +399,9 @@ class Vue {
             divName.setAttribute("class", "score-container");
             var playerNameBalise = document.createElement("p");
             playerNameBalise.setAttribute("class", "scoreName");
-            var text = document.createTextNode(player.name);
+            let nameText = player.name
+            if (player.id == controller.getId()) nameText = nameText + " (vous)"
+            var text = document.createTextNode(nameText);
             playerNameBalise.appendChild(text);
             divName.append(playerNameBalise)
 
@@ -365,17 +418,15 @@ class Vue {
             playerScoreBalise.setAttribute("class", "scoreText");
             text = document.createTextNode(player.score);
             playerScoreBalise.appendChild(text);
-
             div.append(divName)
             div.append(playerScoreBalise)
-
 
             if (scorePrecedent < player.score) {
                 $("#scoreList").prepend(div)
             } else {
                 $("#scoreList").append(div)
             }
-
+            scorePrecedent = player.score
         }
     }
 
@@ -384,29 +435,29 @@ class Vue {
      */
     renderGame(thisplayerId) {
         if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
-            this.menus(controller.getCurrentPlayer().inventory)
+            this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         }
         this.clearAll()
         this.map(controller.getModel().map) //todo rajouter les paramètres
         this.traps(controller.getModel().traps) //todo
-        this.bonus(controller.getModel().rewards) //todo
+        this.rewards(controller.getModel().rewards) //todo
         this.players(controller.getModel().players, thisplayerId) //todo
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
         lastInventoryCount = controller.getCurrentPlayer().inventory.length
-        this.scoreList()
+        this.renderScoreList()
     }
 
-    clearAll() {
-        this.context.clearRect(0, 0, this.canva.width, this.canva.height);
-    }
+    /**
+     * 
+     * -------------------------------------- RENDU DES ELEMENTS DE JEU --------------------------------------
+     */
 
-    //a appeler par controller ?
     /**
      * Affiche les menus et les complete en fonction de 
      */
-    menus(inventory) {
+    renderInGameMenus(inventory) {
         document.getElementById("rewardsList").innerHTML = "";
         document.getElementById("trapsList").innerHTML = "";
 
@@ -475,8 +526,8 @@ class Vue {
     }
 
     /**
-     * Si il ya un piege ou une recompense en cours de placement pas encore validé par controller donc pas sur le serveur
-     * on l'affiche grâce à cette fonction
+     * Gère le stockage et l'envoi des pièges et récompenses placées par l'utilisateur
+     * Vérfie qu'il y a bien 1 piège et 1 récompenses placées
      */
     tempTrapsAndRewards(role) {
         let trapIndex = -1
@@ -512,7 +563,7 @@ class Vue {
             this.context.globalAlpha = 0.5;
             x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
             y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
-            this.context.drawImage(this.bonusAsset, x, y, this.bonusAsset.width, this.bonusAsset.height)
+            this.context.drawImage(this.rewardAsset, x, y, this.rewardAsset.width, this.rewardAsset.height)
             this.context.globalAlpha = 1.0;
         }
         //si envoi
@@ -524,14 +575,12 @@ class Vue {
 
             document.getElementById("rewardsList").innerHTML = "";
             document.getElementById("trapsList").innerHTML = "";
-            this.menus(controller.getCurrentPlayer().inventory)
+            this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         }
     }
 
-
     /**
-     * Dessine la map
-     * @param {*} mapArray de 0 et 1
+     * Dessine le plateau de jeu
      */
     map(mapArray) {
         for (var i = 0; i < mapArray.length; i++) {
@@ -545,8 +594,8 @@ class Vue {
     }
 
     /**
-     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
-     */
+    * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
+    */
     darken() {
         let myPlayer = controller.getCurrentPlayer()
         let coordX = myPlayer.position.x
@@ -554,6 +603,7 @@ class Vue {
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
         this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
+        this.context.fillStyle = "black";
         this.context.fill();
     }
 
@@ -578,32 +628,51 @@ class Vue {
 
     /**
      * Dessine les recompenses
-     * @param {*} bonusArray 
+     * @param {*} rewardsArray 
      */
-    bonus(bonusArray) {
-        for (var i = 0; i < bonusArray.length; i++) {
-            let coordX = bonusArray[i].position.x_
-            let coordY = bonusArray[i].position.y_
+    rewards(rewardsArray) {
+        for (var i = 0; i < rewardsArray.length; i++) {
+            let coordX = rewardsArray[i].position.x_
+            let coordY = rewardsArray[i].position.y_
             let myPlayer = controller.getCurrentPlayer()
             if (myPlayer.role == "explorer") {
                 this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             } else {
-                this.context.drawImage(this.bonusAsset, coordX * this.bonusAsset.width, coordY * this.bonusAsset.height, this.bonusAsset.width, this.bonusAsset.height) // Entité bonus
+                this.context.drawImage(this.rewardAsset, coordX * this.rewardAsset.width, coordY * this.rewardAsset.height, this.rewardAsset.width, this.rewardAsset.height) // Entité reward
             }
         }
     }
+
+    /**
+     * anime le piege
+     */
+    trapAnimation(position) {
+        let self = this
+        let x = position.x_
+        let y = position.y_
+        let i = 0
+        console.log("coord : ",x,y)
+        function anim() {
+            self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth)-self.spriteWidth, (y * self.spriteHeight)-self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
+            i++;
+            if (i < self.explosionAnimationFrames.length) {
+                requestAnimationFrame(anim);
+            }
+        }
+        anim(0)
+    }
+
 
     /**
      * Dessine tous les joueurs sur les plateau de jeu
      * @param {*} playersArray 
      */
     players(playersArray, thisPlayerId) {
+
         for (var i = 0; i < playersArray.length; i++) {
             if (playersArray[i].role == "explorer") { //ne rend que les explorers
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                console.log("thisplayerid", thisPlayerId)
-                console.log("playerarrayid", playersArray[i].id)
                 if (thisPlayerId == playersArray[i].id) {
                     switch (playersArray[i].direction) {
                         case 'up':
