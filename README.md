@@ -1,11 +1,11 @@
-30.06.20
+01.07.20
 
 Créé avec NodeJs, socket.io, pug, exclusivement en Javascript 
-
-pour lancer partie :
+--------------------------------------------------------------
+pour lancer une partie :
 node.js server.js
 localhost:3000
-
+--------------------------------------------------------------
 But du jeu :
 
 2 Rôles : Trapper et Explorer
@@ -21,6 +21,7 @@ Trapper : Vous voyez le labyrinthe dans son intégralité.
         Si quelqu'un marche sur vos pièges, vous devenez explorer et gagnez 1 point
         (info : si vous redevenez explorer et que certains de vos pièges sont encore sur le terrain ils vous rapporteront des points si quelqu'un marche dessus)
 
+--------------------------------------------------------------
 FEATURES:
 - Système complet de salons et gestion de salons (suppression, ajout, mis à jour en temps réel, connexion/deconnexion, menu de salons, etc...)
 - Roles de trapper et explorer entièrement fonctionnels
