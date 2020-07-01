@@ -21,6 +21,10 @@ Trapper : Vous voyez le labyrinthe dans son intégralité.
         Si quelqu'un marche sur vos pièges, vous devenez explorer et gagnez 1 point
         (info : si vous redevenez explorer et que certains de vos pièges sont encore sur le terrain ils vous rapporteront des points si quelqu'un marche dessus)
 
+A corriger:
+--------------------------------------------------------------
+
+- darken bug de rayon selon tailel de fenêtre
 
 FEATURES:
 --------------------------------------------------------------
