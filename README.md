@@ -6,10 +6,23 @@ pour lancer partie :
 node.js server.js
 localhost:3000
 
+But du jeu :
+
+2 Rôles : Trapper et Explorer
+
+Explorer : Vous vous aventurez dans un labyrinthe dont vous ne pouvez voir qu'une partie. Vous devez trouver des récompenses... mais attention, il y a également des pièges posés par d'autres joueurs et vous ne pouvez pas les distinguer. 
+Si vous récupérez une récompense, vous gagnez 1 point.
+Si vous marchez sur une piège, vous devenez Trapper
+
+Trapper : Vous voyez le labyrinthe dans son intégralité.
+Vous voyez où sont les pièges et les récompenses.
+Vous pouvez placer autant de pièges que de récompenses sur le terrain (dans le limite de 4 de chaque)
+Si quelqu'un marche sur vos pièges, vous devenez explorer et gagnez 1 point
+(info : si vous redevenez explorer et que certains de vos pièges sont encore sur le terrain ils vous rapporteront des points si quelqu'un marche dessus)
 
 FEATURES:
-- Création, rejoindre lobby, partie individuel (basic)
-- Trapper : poser des pieges et recompenses (obligation de poser 1 piege et 1 recompenses pour que ce soit valide, devient explorer quand qq a marché sur son piege
+- Système complet Salons
+- Trapper : poser des pieges et des récompenses (obligation de poser 1 piege et 1 recompenses pour que ce soit valide, devient explorer quand qq a marché sur son piege
 - explorer: cercle autour de lui, recupere 1 point par recompenses devient trapper quand marche sur piege
 - scores
 - collisions avec environment superbement fonctionnels
