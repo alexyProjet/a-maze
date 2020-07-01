@@ -1,9 +1,9 @@
 30.06.20
 
-pour lancer partie
+Créé avec NodeJs, socket.io, pug, exclusivement en Javascript 
 
+pour lancer partie :
 node.js server.js
-
 localhost:3000
 
 
@@ -25,6 +25,7 @@ FEATURES:
 - couleur de perso différente
 - l'image du joueur tourne en fonction de la direction
 - Des lobbys designés
+- animation de piege
 
 FEATURES TO COME:
 
@@ -32,5 +33,4 @@ FEATURES TO COME:
 - genere map aléatoirement
 - partie avec bot
 - taunt automatique par le serveur encourage joueurs meilleurs et se moque joueurs nul (bruitages recompenses et pieges)
-- animation de piege
-- redesign des icons de pieges recompenses, perso et anonymes
+- redesign des icons de pieges recompenses et anonymes
