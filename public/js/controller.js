@@ -48,6 +48,10 @@ $(() => {
             console.log("Nouvelle utilisateur : ", name, "dans : ", roomReceived)
         })
 
+        self.socket.on('scores-update', function () {
+            vue.renderScoreList()
+        })
+
         //Utilisateur se deconnecte
         self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
             console.log(name, "disconnected")
@@ -106,6 +110,7 @@ $(() => {
             gameStarted = true
             vue.initGame()
             vue.launchCountdown(timeStop)
+            vue.renderScoreList()
             //attend un peu puis lance le set interval pour être sur que tout pret
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myId), 66), 200)
             document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));

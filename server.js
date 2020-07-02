@@ -103,7 +103,7 @@ server.listen(3000, function () {
                         io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                     }
                 } else { //si deconnexion en jeu
-                    if (Object.keys(rooms[room].users).length >= 2) { //si plus personne, on detruit le salon
+                    if (Object.keys(rooms[room].users).length <= 2) { //si plus personne, on detruit le salon
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         delete rooms[room]
                         io.in(room).emit("exit-one-player-left")
@@ -131,7 +131,7 @@ server.listen(3000, function () {
                         delete rooms[room].users[socket.id]
                         updateModels(rooms[room].model, room, withmap = true)
                     }
-
+                    io.to(room).emit("scores-update")
                 }
             })
         });
@@ -448,9 +448,15 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
     pl.inventory = trapperInventory.slice() //l'ordre est important
+
     //MAJ le joueur auteur du piege
     let trapAuthor = getPlayerFromId(trap1.parentId, room)
-    trapAuthor.score++
+    if(trap1.parentId == pl.id){ //si marche sur son propre piege -2 points
+        trapAuthor.score = trapAuthor.score - 2
+    }else{
+        trapAuthor.score++
+    }
+
     if (trapAuthor.role == roles.trapper) {
         trapAuthor.role = roles.explorer
         trapAuthor.inventory = []
@@ -459,8 +465,8 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
         }
     }
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
-    //emit animation explose coord
     updateModels(rooms[room].model, room)
+    io.to(room).emit("scores-update")
 }, fuzeTime)
 
 /**
@@ -471,11 +477,15 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
  */
 const rewardPlayer = (rewardUsed, player, room) => {
     let pl = rooms[room].model.players.find(p => p.id == player.id)
-    pl.score++
+
+    if(rewardUsed.parentId != pl.id){ //si marche sur son propre piege -2 points
+        pl.score++
+    }
+
     rooms[room].model.rewards = rooms[room].model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
     updateModels(rooms[room].model, room)
-    console.log('rewards :', rooms[room].model.rewards)
+    io.to(room).emit("scores-update")
 }
 
 /**

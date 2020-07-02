@@ -444,7 +444,6 @@ class Vue {
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
         lastInventoryCount = controller.getCurrentPlayer().inventory.length
-        this.renderScoreList()
     }
 
     /**
@@ -462,6 +461,9 @@ class Vue {
         this.trapsMenu = document.getElementById("trapsMenu")
         this.rewardsMenu = document.getElementById("rewardsMenu")
 
+        /**
+         * Affichage du menu des pieges/recompenses
+        */
         let trapSlotUsed = 0;
         let rewardSlotUsed = 0;
         inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
@@ -474,7 +476,6 @@ class Vue {
             }
 
         });
-
         for (var i = rewardSlotUsed; i < 4; i++) {
             $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
@@ -482,7 +483,6 @@ class Vue {
         for (var i = trapSlotUsed; i < 4; i++) {
             $("#trapsList").append('<li><img class="trapsEmpty" src="/img/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
-
         //séléctionne les pieges et rewards
         var traps = $(".traps");
         var rewards = $(".rewards");
