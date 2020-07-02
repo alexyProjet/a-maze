@@ -53,7 +53,7 @@ server.listen(3000, function () {
          * Enregistrement du nouvel utilisateur connecté
          */
         socket.on('new-user', (room, name) => {
-            console.log("SERVEUR : nouveau joueur : ", name," dans le salon : ", room)
+            console.log("SERVEUR : nouveau joueur : ", name, " dans le salon : ", room)
             if (rooms[room].state != "inGame") { //si dans le lobby
                 socket.join(room)
                 rooms[room].users[socket.id] = name
@@ -70,7 +70,7 @@ server.listen(3000, function () {
          * MAJ du pseudo demandé par l'utilisateur
          */
         socket.on('set-name', function (room, name) {
-            console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id]," Nouveau : ",name)
+            console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id], " Nouveau : ", name)
             rooms[room].users[socket.id] = name
             io.to(room).emit("lobby-changes-occured", rooms[room])
         })
@@ -88,7 +88,7 @@ server.listen(3000, function () {
                         io.emit('remove-room-from-lobby-menu', room)
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part,  nouveau leader
                         let newLeader = null
-                        console.log("SERVEUR : Deconnexion du maitre de salon dans : ",room," tentative de réaffectation...")
+                        console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         if (Object.keys(rooms[room].users).length == 0) {//plus personne en jeu
                             io.in(room).emit("exit-one-player-left")
@@ -109,19 +109,19 @@ server.listen(3000, function () {
                         io.in(room).emit("exit-one-player-left")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
                         let newLeader = null
-                        console.log("SERVEUR : Deconnexion du maitre de salon dans : ",room," tentative de réaffectation...")
+                        console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
-                            rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
-                            //si le joueur était trapper, random devient trapper à sa place
-                            if (getPlayerFromId(socket.id, room).role == "trapper") {
-                                getPlayerFromId(rooms[room].roomLeader, room).role = "trapper"
-                            }
-                            getPlayerFromId(rooms[room].roomLeader, room).isRoomLeader = true
-                            removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
-                            rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
-                                return pl.id !== socket.id;
-                            });
-                            updateModels(rooms[room].model, room, withmap = true)
+                        rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
+                        //si le joueur était trapper, random devient trapper à sa place
+                        if (getPlayerFromId(socket.id, room).role == "trapper") {
+                            getPlayerFromId(rooms[room].roomLeader, room).role = "trapper"
+                        }
+                        getPlayerFromId(rooms[room].roomLeader, room).isRoomLeader = true
+                        removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
+                        rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
+                            return pl.id !== socket.id;
+                        });
+                        updateModels(rooms[room].model, room, withmap = true)
                     } else {
                         console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
@@ -139,7 +139,7 @@ server.listen(3000, function () {
         /**
          * Initialisation d'un joueur
          */
-        socket.on('init-player', function (room,time) {
+        socket.on('init-player', function (room, time) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
                 ref = player(position(-10, 1), roles.trapper, 0, trapperInventory.slice()) // construit nouveau joeur a position 11 et role explorer
@@ -155,7 +155,7 @@ server.listen(3000, function () {
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ", room)
             updateModels(rooms[room].model, room, withmap = true)
-            io.in(room).emit('display-game',time)
+            io.in(room).emit('display-game', time)
         })
 
         /**
@@ -171,8 +171,8 @@ server.listen(3000, function () {
                     rooms[room].state = "inGame"
                     let timeStop = new Date();
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
-                    timer(timeStop.getTime(),room)
-                    io.in(room).emit('game-ready', "ok",timeStop.getTime())
+                    timer(timeStop.getTime(), room)
+                    io.in(room).emit('game-ready', "ok", timeStop.getTime())
                     io.emit('remove-room-from-lobby-menu', room)
                 }
             } else {
@@ -193,12 +193,13 @@ server.listen(3000, function () {
 
             if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
                 console.log("SERVEUR on place : positions identiques invalides")
-            } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible TODO
+            } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
                 console.log("trap et reward placés valides")
                 rooms[room].model.traps.push(trap_instance)
                 rooms[room].model.rewards.push(reward_instance)
                 getPlayerFromId(player.id, room).inventory.pop()
                 getPlayerFromId(player.id, room).inventory.pop()
+                console.log( rooms[room].model.traps)
             } else {
                 console.log("trap et reward placés NON valides")
             }
@@ -223,7 +224,7 @@ server.listen(3000, function () {
                                 trap.triggered = Date.now()
                                 console.log("player : ", data.player.id, " walk on trap : ", trap)
                                 isColliding = true
-                                io.to(socket.id).emit("trap-animation",trap.position)
+                                io.to(socket.id).emit("trap-animation", trap.position)
                                 plan_explosion(trap, data.player, room);
                                 return true
                             }
@@ -249,10 +250,11 @@ server.listen(3000, function () {
                 //check collisions avec murs
                 let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
                 if (!isCollidingWall) {
-                    let dir = getDirectionFromPositions(player.position,data.position)
-                    if(dir !=null) player.direction = dir
+                    let dir = getDirectionFromPositions(player.position, data.position)
+                    if (dir != null) player.direction = dir
                     player.position = data.position
                 }
+
             }
             updateModels(rooms[room].model, room)
         })
@@ -266,7 +268,7 @@ server.listen(3000, function () {
 function getRoomFromPlayerId(socket) {
     return Object.entries(rooms).reduce((roomName, [name, room]) => {
         if (room.users[socket.id] != null) roomName.push(name)
-        console.log("SORTIE",roomName)
+        console.log("SORTIE", roomName)
         return roomName
     }, [])
 }
@@ -277,25 +279,25 @@ function getRoomFromPlayerId(socket) {
  * @param {*} newPosition 
  * @param {*} oldDirection 
  */
-function getDirectionFromPositions(oldPosition, newPosition){
+function getDirectionFromPositions(oldPosition, newPosition) {
     let newY = newPosition.y
     let newX = newPosition.x
     let oldY = oldPosition.y
     let oldX = oldPosition.x
-    
-    if(oldX == newX){
-        if(oldY > newY){
+
+    if (oldX == newX) {
+        if (oldY > newY) {
             return "up"
-        }else{
+        } else {
             return "down"
         }
-    }else if(oldY == newY){
-        if(oldX > newX){
+    } else if (oldY == newY) {
+        if (oldX > newX) {
             return "left"
-        }else{
+        } else {
             return "right"
         }
-    }else{
+    } else {
         return null //si en diagonale
     }
 }
@@ -305,20 +307,20 @@ function getDirectionFromPositions(oldPosition, newPosition){
  * @param {*} stop 
  * @param {*} room 
  */
-function timer(stop,room){
-    var x = setInterval(function() {
+function timer(stop, room) {
+    var x = setInterval(function () {
         var now = new Date().getTime();
-        
+
         var distance = stop - now;
         var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
         //Lorsque fini
         if (distance <= 0) {
-          clearInterval(x);
-          io.to(room).emit("countdown-over")
+            clearInterval(x);
+            io.to(room).emit("countdown-over")
         }
-      }, 1000);
+    }, 1000);
 }
 
 /**
@@ -328,7 +330,25 @@ function timer(stop,room){
  * @param {*} withmap 
  */
 function updateModels(mod, room, withmap = false) {
-    io.in(room).emit('model-update', JSON.stringify(mod))
+    //envoie à explroer model filtré
+    //envoi à trapper model normal
+    //for users in room
+    //if trapper ...
+    mod.players.forEach(pl => {
+        let socketId = pl.id
+        //mesure anti-triche, les explorer n'ont pas à avoir la lsite des pieges et traps mais seulement la liste d'entités
+        if (pl.role == "explorer") {
+            let newModel = Object.assign({},mod)
+            newModel.entities = newModel.rewards.concat(newModel.traps)
+            newModel.traps = []
+            newModel.rewards = []
+            io.to(socketId).emit('model-update', JSON.stringify(newModel));
+        } else {
+            io.to(socketId).emit('model-update', JSON.stringify(mod));
+            //io.in(room).emit('model-update', JSON.stringify(mod))
+        }
+    })
+
 }
 
 function removeEntityAssociatedtoPlayer(player, room) {
@@ -357,6 +377,7 @@ function randomPosition(room) {
 
 /**
  * Vérfie qu'il n'y a que du sol à la position donnée
+ * (cad : pas de pieges, pas recompenses, pas d'autres joueurs)
  * @param {*} x 
  * @param {*} y 
  */
@@ -364,7 +385,8 @@ function isAValidPosition(x, y, room) {
     if (rooms[room].model.map[y][x] == 0) {
         let trap = rooms[room].model.traps.filter(tr => tr.position == position(x, y))
         let rew = rooms[room].model.rewards.filter(rew => rew.position == position(x, y))
-        if (trap.length == 0 && rew.length == 0) {
+        let otherPlayers = rooms[room].model.players.filter(pl => pl.position == position(x, y))
+        if (trap.length == 0 && rew.length == 0 && otherPlayers.length == 0) {
             return true
         }
     }
@@ -375,6 +397,7 @@ let model = () => Object({
     players: [],
     traps: [],
     rewards: [],
+    entities: [],
     map: map(),
     roomLeader: null
 })
@@ -382,7 +405,7 @@ let model = () => Object({
 const distance = (a, b) => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)//distance entre deux points
 const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false,direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false, direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
 const map = () => [
@@ -420,7 +443,7 @@ const roles = {
  * supprime du model
  * @param {*} trap1 
  */
-const plan_explosion = (trap1, actualPlayer, room)  => setTimeout(() => {
+const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     //MAJ le joueur qui a marché sur le piege
     let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
     pl.role = roles.trapper
@@ -435,10 +458,10 @@ const plan_explosion = (trap1, actualPlayer, room)  => setTimeout(() => {
             trapAuthor.position = randomPosition(room) //on le repositionne à ses anciennes coordonées
         }
     }
-    rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.id != trap1.id)
+    rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
     //emit animation explose coord
     updateModels(rooms[room].model, room)
-},fuzeTime)
+}, fuzeTime)
 
 /**
  * Recompense le joueur qui a recupéré la reward

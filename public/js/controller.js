@@ -15,6 +15,7 @@ $(() => {
         let model = { //init model
             players: [],
             traps: [],
+            entities: [],
             rewards: [],
             map: [[]],
             currentPlayer: '',

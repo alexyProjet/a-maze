@@ -48,10 +48,10 @@ class Vue {
 
         this.explosionAnimationFrames = new Array(24);
         async function fillExplosionFramesArray(self) {
-            let i=0
+            let i = 0
             for await (let element of self.explosionAnimationFrames) {
                 self.explosionAnimationFrames[i] = new Image(self.spriteWidth * 3, self.spriteHeight * 3)
-                self.explosionAnimationFrames[i].src  = "/img/Animations/trap/trap_animation-" + i + ".png"
+                self.explosionAnimationFrames[i].src = "/img/Animations/trap/trap_animation-" + i + ".png"
                 i++
                 console.log(self.explosionAnimationFrames[i])
             }
@@ -432,10 +432,14 @@ class Vue {
             this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         }
         this.clearAll()
-        this.map(controller.getModel().map) //todo rajouter les paramètres
-        this.traps(controller.getModel().traps) //todo
-        this.rewards(controller.getModel().rewards) //todo
-        this.players(controller.getModel().players, thisplayerId) //todo
+        this.map(controller.getModel().map)
+        if (controller.getCurrentPlayer().role == "trapper") {
+            this.traps(controller.getModel().traps)
+            this.rewards(controller.getModel().rewards)
+        } else {
+            this.entities(controller.getModel().entities)
+        }
+        this.players(controller.getModel().players, thisplayerId)
         if (controller.getCurrentPlayer().role == "explorer") this.darken()
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
@@ -596,7 +600,8 @@ class Vue {
         let coordY = myPlayer.position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
-        this.context.arc(coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, 100, 0, Math.PI * 2, true);
+        //x,y,rayon,angles...
+        this.context.arc(coordX * this.spriteWidth + this.biais, coordY * this.spriteHeight + this.biais, this.spriteHeight * 2.5, 0, Math.PI * 2, true);
         this.context.fillStyle = "black";
         this.context.fill();
     }
@@ -611,11 +616,7 @@ class Vue {
                 let coordX = trapArray[i].position.x_
                 let coordY = trapArray[i].position.y_
                 let myPlayer = controller.getCurrentPlayer()
-                if (myPlayer.role == "explorer") {
-                    this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
-                } else {
-                    this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
-                }
+                this.context.drawImage(this.trapAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.trapAsset.width, this.trapAsset.height) // Entité piège
             }
         }
     }
@@ -629,10 +630,21 @@ class Vue {
             let coordX = rewardsArray[i].position.x_
             let coordY = rewardsArray[i].position.y_
             let myPlayer = controller.getCurrentPlayer()
-            if (myPlayer.role == "explorer") {
-                this.context.drawImage(this.anonymousEntityAsset, coordX * this.anonymousEntityAsset.width, coordY * this.anonymousEntityAsset.height, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
-            } else {
-                this.context.drawImage(this.rewardAsset, coordX * this.rewardAsset.width, coordY * this.rewardAsset.height, this.rewardAsset.width, this.rewardAsset.height) // Entité reward
+            this.context.drawImage(this.rewardAsset, coordX * this.rewardAsset.width, coordY * this.rewardAsset.height, this.rewardAsset.width, this.rewardAsset.height) // Entité reward
+        }
+    }
+
+    /**
+     * Dessine les pièges sur le plateau
+     * @param {*} entitiesArray 
+     */
+    entities(entitiesArray) {
+        for (var i = 0; i < entitiesArray.length; i++) {
+            if (entitiesArray[i]) {
+                let coordX = entitiesArray[i].position.x_
+                let coordY = entitiesArray[i].position.y_
+                let myPlayer = controller.getCurrentPlayer()
+                this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             }
         }
     }
@@ -645,9 +657,9 @@ class Vue {
         let x = position.x_
         let y = position.y_
         let i = 0
-        console.log("coord : ",x,y)
+        console.log("coord : ", x, y)
         function anim() {
-            self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth)-self.spriteWidth, (y * self.spriteHeight)-self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
+            self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
             i++;
             if (i < self.explosionAnimationFrames.length) {
                 requestAnimationFrame(anim);
@@ -689,7 +701,7 @@ class Vue {
                     //canva.fillStyle = "white"; a bidouiller
                     this.context.font = '12px Roboto';
                     let textSize = this.context.measureText(name).width
-                    this.context.fillText(name, coordX * this.spriteWidth - (textSize/2.0) + (this.halfWidth/2.0), coordY * this.spriteHeight-this.biais);
+                    this.context.fillText(name, coordX * this.spriteWidth - (textSize / 2.0) + (this.halfWidth / 2.0), coordY * this.spriteHeight - this.biais);
                     switch (playersArray[i].direction) {
                         case 'up':
                             this.context.drawImage(this.playerEnemyUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
