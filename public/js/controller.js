@@ -125,6 +125,11 @@ $(() => {
             vue.renderEndGame()
         })
 
+        self.socket.on('shake-game', function () {
+            vue.shake()
+        })
+
+
         //Signale au serveur que le bouton start est cliqué
         const startButtonClicked = () => {
             let time = document.getElementById("inputBoxTime").value

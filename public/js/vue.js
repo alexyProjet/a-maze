@@ -581,6 +581,13 @@ class Vue {
     }
 
     /**
+     * Shake the game
+     * @param {*} mapArray 
+     */
+    shake(){
+        $( "#canva" ).effect( "shake", {times:3,distance:5,direction:'left'},300 );
+    }
+    /**
      * Dessine le plateau de jeu
      */
     map(mapArray) {

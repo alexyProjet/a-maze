@@ -330,10 +330,6 @@ function timer(stop, room) {
  * @param {*} withmap 
  */
 function updateModels(mod, room, withmap = false) {
-    //envoie à explroer model filtré
-    //envoi à trapper model normal
-    //for users in room
-    //if trapper ...
     mod.players.forEach(pl => {
         let socketId = pl.id
         //mesure anti-triche, les explorer n'ont pas à avoir la lsite des pieges et traps mais seulement la liste d'entités
@@ -345,7 +341,6 @@ function updateModels(mod, room, withmap = false) {
             io.to(socketId).emit('model-update', JSON.stringify(newModel));
         } else {
             io.to(socketId).emit('model-update', JSON.stringify(mod));
-            //io.in(room).emit('model-update', JSON.stringify(mod))
         }
     })
 
@@ -471,6 +466,7 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
     updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
+    io.to(room).emit("shake-game")
 }, fuzeTime)
 
 function explodeTrapWallNeighboor(trapPosition,room){
