@@ -27,22 +27,22 @@ class Vue {
      * Fait correspondre les images à des noms pour le canva
      */
     async loadAssets() {
-        this.floorAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/ground.png", this.spriteWidth, this.spriteHeight)
-        this.wallAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/block.png", this.spriteWidth, this.spriteHeight)
-        this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/trap.png", this.spriteWidth, this.spriteHeight)
-        this.rewardAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/reward.png", this.spriteWidth, this.spriteHeight)
-        this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/empty_slot.png", this.spriteWidth, this.spriteHeight)
-        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/anonymous_block.png", this.spriteWidth, this.spriteHeight)
+        this.floorAsset = await this._syncedLoadImg("/img/Environment/ground.png", this.spriteWidth, this.spriteHeight)
+        this.wallAsset = await this._syncedLoadImg("/img/Environment/block.png", this.spriteWidth, this.spriteHeight)
+        this.trapAsset = await this._syncedLoadImg("/img/Environment/trap.png", this.spriteWidth, this.spriteHeight)
+        this.rewardAsset = await this._syncedLoadImg("/img/Environment/reward.png", this.spriteWidth, this.spriteHeight)
+        this.emptySlotAsset = await this._syncedLoadImg("/img/Environment/empty_slot.png", this.spriteWidth, this.spriteHeight)
+        this.anonymousEntityAsset = await this._syncedLoadImg("/img/Environment/anonymous_block.png", this.spriteWidth, this.spriteHeight)
 
-        this.playerUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
-        this.playerDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
-        this.playerRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_right.png", this.halfWidth, this.halfHeight)
-        this.playerLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_left.png", this.halfWidth, this.halfHeight)
+        this.playerUpAsset = await this._syncedLoadImg("/img/Player/Main/player_up.png", this.halfWidth, this.halfHeight)
+        this.playerDownAsset = await this._syncedLoadImg("/img/Player/Main/player_down.png", this.halfWidth, this.halfHeight)
+        this.playerRightAsset = await this._syncedLoadImg("/img/Player/Main/player_right.png", this.halfWidth, this.halfHeight)
+        this.playerLeftAsset = await this._syncedLoadImg("/img/Player/Main/player_left.png", this.halfWidth, this.halfHeight)
 
-        this.playerEnemyUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_up.png", this.halfWidth, this.halfHeight)
-        this.playerEnemyDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_down.png", this.halfWidth, this.halfHeight)
-        this.playerEnemyRightAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_right.png", this.halfWidth, this.halfHeight)
-        this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_left.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyUpAsset = await this._syncedLoadImg("/img/Player/Ennemy/player_enemy_up.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyDownAsset = await this._syncedLoadImg("/img/Player/Ennemy/player_enemy_down.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyRightAsset = await this._syncedLoadImg("/img/Player/Ennemy/player_enemy_right.png", this.halfWidth, this.halfHeight)
+        this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/Player/Ennemy/player_enemy_left.png", this.halfWidth, this.halfHeight)
 
         this.isAssetLoadingOver = true
 
@@ -51,7 +51,7 @@ class Vue {
             let i=0
             for await (let element of self.explosionAnimationFrames) {
                 self.explosionAnimationFrames[i] = new Image(self.spriteWidth * 3, self.spriteHeight * 3)
-                self.explosionAnimationFrames[i].src  = "/img/PNG/Default size/Animations/trap_animation-" + i + ".png"
+                self.explosionAnimationFrames[i].src  = "/img/Animations/trap/trap_animation-" + i + ".png"
                 i++
                 console.log(self.explosionAnimationFrames[i])
             }
@@ -244,7 +244,7 @@ class Vue {
             console.log(JSON.stringify(controller.getRoomLeader()))
             if (entrie[0] == controller.getRoomLeader()) {
                 var imgLeader = document.createElement("img")
-                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
+                imgLeader.src = '/img/misc/crown.png';
                 imgLeader.setAttribute('width', '24px');
                 imgLeader.setAttribute('height', '24px');
                 imgLeader.setAttribute('id', 'leaderImg');
@@ -401,7 +401,7 @@ class Vue {
 
             if (player.isRoomLeader) {
                 var imgLeader = document.createElement("img")
-                imgLeader.src = '/img/PNG/Default size/misc/crown.png';
+                imgLeader.src = '/img/misc/crown.png';
                 imgLeader.setAttribute('width', '24px');
                 imgLeader.setAttribute('height', '24px');
                 imgLeader.setAttribute('id', 'leaderImg');
@@ -463,20 +463,20 @@ class Vue {
         inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
             if (element == 0) { //c'est une recompenses
                 rewardSlotUsed++
-                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/reward.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+                $("#rewardsList").append('<li><img class="rewards" src="/img/Environment/reward.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
             } else { //c'est un piege
                 trapSlotUsed++
-                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/trap.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+                $("#trapsList").append('<li><img class="traps" src="/img/Environment/trap.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
             }
 
         });
 
         for (var i = rewardSlotUsed; i < 4; i++) {
-            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
 
         for (var i = trapSlotUsed; i < 4; i++) {
-            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
 
         //séléctionne les pieges et rewards
