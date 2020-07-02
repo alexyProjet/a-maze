@@ -225,6 +225,7 @@ server.listen(3000, function () {
                                 console.log("player : ", data.player.id, " walk on trap : ", trap)
                                 isColliding = true
                                 io.to(socket.id).emit("trap-animation", trap.position)
+                                io.to(room).emit("shake-game")
                                 plan_explosion(trap, data.player, room);
                                 return true
                             }
@@ -461,12 +462,10 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     }
     //Fait exploser mur à côté
     explodeTrapWallNeighboor(trap1.position,room)
-
-
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
     updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
-    io.to(room).emit("shake-game")
+    
 }, fuzeTime)
 
 function explodeTrapWallNeighboor(trapPosition,room){
