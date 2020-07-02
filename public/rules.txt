@@ -11,7 +11,7 @@
 <span class="marge"><br>Placez autant de pièges que de récompenses sur le terrain (dans le limite de 4 de chaque)</span>
 <span class="marge"><br>Quelqu'un marche sur un de vos pièges, vous devenez explorer et gagnez 1 point</span>
 <br>
-<span class="marge"><br>(info : Redevenir explorer ne fait pas perdre vos pièges encore actifs</span>
+<span class="marge"><br>(info : Redevenir explorer ne fait pas perdre vos pièges encore actifs)</span>
 <br>
 <br>
 <b>Spécificité : </b> 

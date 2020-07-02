@@ -44,6 +44,8 @@ class Vue {
         this.playerEnemyRightAsset = await this._syncedLoadImg("/img/Player/Ennemy/player_enemy_right.png", this.halfWidth, this.halfHeight)
         this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/Player/Ennemy/player_enemy_left.png", this.halfWidth, this.halfHeight)
 
+        this.trapExplodedMarkAsset = await this._syncedLoadImg("/img/Environment/trap_exploded_mark.png", this.spriteWidth, this.spriteHeight)
+        this.wallDestroyedAsset = await this._syncedLoadImg("/img/Environment/wall_destroyed.png", this.spriteWidth, this.spriteHeight)
         this.isAssetLoadingOver = true
 
         this.explosionAnimationFrames = new Array(24);
@@ -217,9 +219,9 @@ class Vue {
 
         let pseudoP = document.createElement("div")
         pseudoP.setAttribute("id", "rulesP")
-        
+
         //let rules = document.createTextNode( );
-       // pseudoP.appendChild(pseudo);
+        // pseudoP.appendChild(pseudo);
 
         divRulesContainer.append(pseudoP);
         divColonneDroite.append(divRulesContainer);
@@ -228,9 +230,8 @@ class Vue {
         $("#rulesP").load("rules.txt");
     }
     /**
-     * Rendu des panneaux du centre et de droite dans le salon
+     * Rendu des panneaux du central (liste joueur)
      * centre : liste des joueurs dans le salon
-     * droite : pseudo du joueur
      */
     renderMiddleLobbyPannel() {
         //cacher container
@@ -241,10 +242,6 @@ class Vue {
             //document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
             document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
         }
-        /**
-         * COLONNE DU MILIEU
-         * liste de joueurs dans le lobby
-         */
         let btnStart = document.createElement("button");
         btnStart.setAttribute("id", "btnStart")
         btnStart.innerHTML = "Lancer la partie";
@@ -258,14 +255,17 @@ class Vue {
         let usersArray = Object.entries(controller.getRoomUsers())
         usersArray.forEach(entrie => {
             let userName = entrie[1]
-            console.log("user est : ", userName)
             let li = document.createElement("li");
             li.setAttribute("class", "userInList")
             let pBalise = document.createElement("p");
-            let name = document.createTextNode(userName);
+            let name =""
+            
+            if (entrie[0] == controller.getId()) {
+                name = document.createTextNode(userName + "(toi)");
+            }else {
+                name = document.createTextNode(userName);
+            }
             pBalise.appendChild(name);
-            console.log("en0", entrie[0])
-            console.log(JSON.stringify(controller.getRoomLeader()))
             if (entrie[0] == controller.getRoomLeader()) {
                 var imgLeader = document.createElement("img")
                 imgLeader.src = '/img/misc/crown.png';
@@ -274,6 +274,7 @@ class Vue {
                 imgLeader.setAttribute('id', 'leaderImg');
                 pBalise.append(imgLeader)
             }
+
 
             li.appendChild(pBalise);
             ulListUsers.append(li)
@@ -396,7 +397,7 @@ class Vue {
             var playerNameBalise = document.createElement("p");
             playerNameBalise.setAttribute("class", "scoreName");
             let nameText = player.name
-            if (player.id == controller.getId()) nameText = nameText + " (vous)"
+            if (player.id == controller.getId()) nameText = nameText + " (toi)"
             var text = document.createTextNode(nameText);
             playerNameBalise.appendChild(text);
             divName.append(playerNameBalise)
@@ -586,11 +587,15 @@ class Vue {
         for (var i = 0; i < mapArray.length; i++) {
             for (var j = 0; j < mapArray[i].length; j++) {
                 this.context.drawImage(this.floorAsset, j * this.floorAsset.width, i * this.floorAsset.height, this.floorAsset.width, this.floorAsset.height) //rend le sol
-                if (mapArray[i][j] == 1) {
+                if (mapArray[i][j] == 1) { //mur
                     this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
                 }
-                //2 -> trace explosion
-                //3 -> mur effondré
+                if (mapArray[i][j] == 2) { //mur détruit
+                    this.context.drawImage(this.wallDestroyedAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
+                }
+                if (mapArray[i][j] == 3) { //trace bombe explosée
+                    this.context.drawImage(this.trapExplodedMarkAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
+                }
             }
         }
     }

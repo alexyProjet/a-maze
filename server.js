@@ -465,9 +465,7 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
         }
     }
     //Fait exploser mur à côté
-    //check droite gauche, aude ssus, en dessous
-        //modifie map en 1->3 ou mur pete
-        //1 -> 2 ou bombe explose
+    explodeTrapWallNeighboor(trap1.position,room)
 
 
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
@@ -475,6 +473,28 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     io.to(room).emit("scores-update")
 }, fuzeTime)
 
+function explodeTrapWallNeighboor(trapPosition,room){
+    let neighboors = []
+    let map =  rooms[room].model.map
+    let y = trapPosition.x_
+    let x = trapPosition.y_
+    //2 = mur detruit
+    //3= trace d'explosion
+    if(map[x+1][y] == 1){
+        map[x+1][y] = 2
+    }
+    if(map[x-1][y] == 1){
+        map[x-1][y] = 2
+    }
+    if(map[x][y+1] == 1){
+        map[x][y+1] = 2
+    }
+    if(map[x][y-1] == 1){
+        map[x][y-1] = 2
+    }
+    //indique qu'il faut une trace d'explosion
+    map[x][y] = 3
+}
 /**
  * Recompense le joueur qui a recupéré la reward
  * supprime du model
