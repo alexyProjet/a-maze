@@ -24,7 +24,8 @@ Trapper : Vous voyez le labyrinthe dans son intégralité.
 A corriger:
 --------------------------------------------------------------
 
-- darken bug de rayon selon tailel de fenêtre
+- darken bug de rayon selon taille de fenêtre
+- scorelist se refresh que quand un score modifié
 
 FEATURES:
 --------------------------------------------------------------
