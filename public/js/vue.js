@@ -32,7 +32,7 @@ class Vue {
         this.trapAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/trap.png", this.spriteWidth, this.spriteHeight)
         this.rewardAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/reward.png", this.spriteWidth, this.spriteHeight)
         this.emptySlotAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/empty_slot.png", this.spriteWidth, this.spriteHeight)
-        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/anonymouse_block.png", this.spriteWidth, this.spriteHeight)
+        this.anonymousEntityAsset = await this._syncedLoadImg("/img/PNG/Default size/Environment/anonymous_block.png", this.spriteWidth, this.spriteHeight)
 
         this.playerUpAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_up.png", this.halfWidth, this.halfHeight)
         this.playerDownAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_down.png", this.halfWidth, this.halfHeight)
@@ -45,8 +45,8 @@ class Vue {
         this.playerEnemyLeftAsset = await this._syncedLoadImg("/img/PNG/Default size/Player/player_enemy_left.png", this.halfWidth, this.halfHeight)
 
         this.isAssetLoadingOver = true
-        this.explosionAnimationFrames = new Array(24);
 
+        this.explosionAnimationFrames = new Array(24);
         async function fillExplosionFramesArray(self) {
             let i=0
             for await (let element of self.explosionAnimationFrames) {
@@ -463,20 +463,20 @@ class Vue {
         inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
             if (element == 0) { //c'est une recompenses
                 rewardSlotUsed++
-                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/environment_12.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+                $("#rewardsList").append('<li><img class="rewards" src="/img/PNG/Default size/Environment/reward.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
             } else { //c'est un piege
                 trapSlotUsed++
-                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/environment_04.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+                $("#trapsList").append('<li><img class="traps" src="/img/PNG/Default size/Environment/trap.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
             }
 
         });
 
         for (var i = rewardSlotUsed; i < 4; i++) {
-            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            $("#rewardsList").append('<li><img class="rewardsEmpty" src="/img/PNG/Default size/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
 
         for (var i = trapSlotUsed; i < 4; i++) {
-            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/environment_16.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
+            $("#trapsList").append('<li><img class="trapsEmpty" src="/img/PNG/Default size/Environment/empty_slot.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
         }
 
         //séléctionne les pieges et rewards
@@ -667,7 +667,7 @@ class Vue {
             if (playersArray[i].role == "explorer") { //ne rend que les explorers
                 let coordX = playersArray[i].position.x
                 let coordY = playersArray[i].position.y
-                if (thisPlayerId == playersArray[i].id) {
+                if (thisPlayerId == playersArray[i].id) { //si joueur actuel
                     switch (playersArray[i].direction) {
                         case 'up':
                             this.context.drawImage(this.playerUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerUpAsset.width, this.playerUpAsset.height)
@@ -684,7 +684,12 @@ class Vue {
                         default:
                             console.log(`Erreur dans la direction`);
                     }
-                } else {
+                } else { // si joueurs ennemies
+                    let name = playersArray[i].name
+                    //canva.fillStyle = "white"; a bidouiller
+                    this.context.font = '12px Roboto';
+                    let textSize = this.context.measureText(name).width
+                    this.context.fillText(name, coordX * this.spriteWidth - (textSize/2.0) + (this.halfWidth/2.0), coordY * this.spriteHeight-this.biais);
                     switch (playersArray[i].direction) {
                         case 'up':
                             this.context.drawImage(this.playerEnemyUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
