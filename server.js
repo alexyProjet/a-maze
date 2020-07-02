@@ -464,6 +464,12 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
             trapAuthor.position = randomPosition(room) //on le repositionne à ses anciennes coordonées
         }
     }
+    //Fait exploser mur à côté
+    //check droite gauche, aude ssus, en dessous
+        //modifie map en 1->3 ou mur pete
+        //1 -> 2 ou bombe explose
+
+
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
     updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")

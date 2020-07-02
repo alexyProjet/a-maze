@@ -1,0 +1,21 @@
+<b>Explorer : </b>
+<span class="marge"><br>Vous vous aventurez dans un labyrinthe dont vous ne pouvez voir qu'une partie.</span>
+<span class="marge"><br>Trouvez des récompenses... mais attention, il y a également des pièges
+		posés par d'autres joueurs que vous ne pouvez différencier des récompenses. </span>
+<span class="marge"><br>1 récompense = 1 point..</span>
+<span class="marge"><br>Si vous marchez sur une piège, vous devenez Trapper</span>
+<br>
+<br>
+<b>Trapper : </b> 
+<span class="marge"><br>Vous voyez le labyrinthe entier, l'emplacement des pièges et des récompenses.</span>
+<span class="marge"><br>Placez autant de pièges que de récompenses sur le terrain (dans le limite de 4 de chaque)</span>
+<span class="marge"><br>Quelqu'un marche sur un de vos pièges, vous devenez explorer et gagnez 1 point</span>
+<br>
+<span class="marge"><br>(info : Redevenir explorer ne fait pas perdre vos pièges encore actifs</span>
+<br>
+<br>
+<b>Spécificité : </b> 
+<span class="marge"><br>Marcher sur votre propre piège fait perdre 2 points</span>
+<span class="marge"><br>Vos propres récompenses ne vous rapportent rien.</span>
+<br>
+<br><b> But du jeu :</b>  Avoir le meilleur score

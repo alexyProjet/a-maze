@@ -200,15 +200,39 @@ class Vue {
             }
 
         });
-        this.renderMiddleAndRightLobbyPannel()
     }
 
+    /**
+     * COLONNE DE DROITE
+     * SET PSEUDO, OPTIONS...
+     */
+    renderRightLobbyPannel() {
+
+        let divColonneDroite = document.createElement("div")
+        divColonneDroite.setAttribute("id", "colonne-droite-div")
+
+        let divRulesContainer = document.createElement("div")
+        divRulesContainer.setAttribute("id", "rules-container")
+        divRulesContainer.innerHTML = "<h1 id='rulesH1'>Règles</h1>"
+
+        let pseudoP = document.createElement("div")
+        pseudoP.setAttribute("id", "rulesP")
+        
+        //let rules = document.createTextNode( );
+       // pseudoP.appendChild(pseudo);
+
+        divRulesContainer.append(pseudoP);
+        divColonneDroite.append(divRulesContainer);
+        $("#container").append(divColonneDroite)
+
+        $("#rulesP").load("rules.txt");
+    }
     /**
      * Rendu des panneaux du centre et de droite dans le salon
      * centre : liste des joueurs dans le salon
      * droite : pseudo du joueur
      */
-    renderMiddleAndRightLobbyPannel() {
+    renderMiddleLobbyPannel() {
         //cacher container
         console.log("rendering lobby..")
         this.gameBaliseShown(false)
@@ -265,30 +289,8 @@ class Vue {
         }
         divColonneMilieu.append(btnStart)
 
-
-        /**
-         * COLONNE DE DROITE
-         * SET PSEUDO, OPTIONS...
-         */
-        let divColonneDroite = document.createElement("div")
-        divColonneDroite.setAttribute("id", "colonne-droite-div")
-
-
-        let divpseudoContainer = document.createElement("div")
-        divpseudoContainer.setAttribute("id", "pseudo-container")
-        divpseudoContainer.innerHTML = "<h1 id='pseudoH1'>Ton pseudo</h1>"
-
-        let h2Pseudo = document.createElement("h2")
-        h2Pseudo.setAttribute("id", "pseudoH2")
-        let pseudo = document.createTextNode(controller.getName());
-        h2Pseudo.appendChild(pseudo);
-
-        divpseudoContainer.append(h2Pseudo);
-        divColonneDroite.append(divpseudoContainer);
-
-
         $("#container").append(divColonneMilieu)
-        $("#container").append(divColonneDroite)
+
 
         btnStart.addEventListener("click", function () {
             controller.startButtonClicked()
@@ -587,6 +589,8 @@ class Vue {
                 if (mapArray[i][j] == 1) {
                     this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
                 }
+                //2 -> trace explosion
+                //3 -> mur effondré
             }
         }
     }

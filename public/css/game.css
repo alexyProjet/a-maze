@@ -188,23 +188,25 @@ body{
 	display: inline-block;  
 }
 
-#pseudo-container{
+#rules-container{
 	position: absolute;
-	height:25%;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
 }
 
-#pseudoH1{
+#rulesH1{
 	color: #26272C;
 }
 
-#pseudoH2{
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+#rulesP{
+	font-family: 'Roboto', sans-serif;
+	width:90%;
+	color: #F96E46;
+}
+
+.marge {
+	margin-left: 10%;
+	left: 5%;
+	color: #26272C;
+	position: relative;
 }
 
 #divOptions{

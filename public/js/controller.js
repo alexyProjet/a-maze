@@ -39,12 +39,13 @@ $(() => {
             if (Object.keys(room).length == 0) {  //premiere connexion de l'utilisateur, room est vide
                 room = roomReceived
                 vue.renderLeftLobbyPannel()
+                vue.renderRightLobbyPannel()
             } else {
                 room = roomReceived
             }
 
             room = roomReceived
-            vue.renderMiddleAndRightLobbyPannel()
+            vue.renderMiddleLobbyPannel()
             console.log("Nouvelle utilisateur : ", name, "dans : ", roomReceived)
         })
 
@@ -56,7 +57,7 @@ $(() => {
         self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
             console.log(name, "disconnected")
             room = roomReceived
-            vue.renderMiddleAndRightLobbyPannel()
+            vue.renderMiddleLobbyPannel()
         })
 
         //Changement dans le lobby
