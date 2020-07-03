@@ -44,7 +44,8 @@ app.get('/:room', (req, res) => {
     res.render('game', { roomName: req.params.room })
 })
 
-const server = app.listen(3000, function () {
+var port = process.env.PORT || 8080
+const server = app.listen(port, function () {
     console.log(`En écoute sur ${server.address().port}`);
 
     io.on('connection', function (socket) {
