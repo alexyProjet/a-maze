@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-//var server = require('http').Server(app);
+var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
 app.set('views', './views')
 app.set('view engine', 'pug')
@@ -45,7 +45,8 @@ app.get('/:room', (req, res) => {
 })
 
 var port = process.env.PORT || 8080
-const server = app.listen(port, function () {
+
+server.listen(port, function () {
     console.log(`En écoute sur ${server.address().port}`);
 
     io.on('connection', function (socket) {
