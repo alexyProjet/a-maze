@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-var server = require('http').Server(app);
+//var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
 app.set('views', './views')
 app.set('view engine', 'pug')
@@ -44,7 +44,7 @@ app.get('/:room', (req, res) => {
     res.render('game', { roomName: req.params.room })
 })
 
-server.listen(3000, function () {
+const server = app.listen(3000, function () {
     console.log(`En écoute sur ${server.address().port}`);
 
     io.on('connection', function (socket) {
