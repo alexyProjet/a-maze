@@ -746,7 +746,7 @@ class Vue {
         if (isEnnemy) {
 
         } else {
-            this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.biais, position.y * this.spriteHeight - this.biais, this.playerUpAsset.width, this.playerUpAsset.height)
+            this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth/2.0, position.y * this.spriteHeight - this.halfWidth/2.0, this.playerUpAsset.width, this.playerUpAsset.height)
         }
         this.darken(position)
     }
@@ -755,7 +755,7 @@ class Vue {
 
         controller.getModel().players.forEach(pl => {
             if(pl.id != controller.getId()){
-                this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth - this.biais, pl.position.y * this.spriteHeight - this.biais, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
+                this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth, pl.position.y * this.spriteHeight, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
             }
             //player(true,pos)
         })

@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }))
 const rooms = {}
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 const fuzeTime = 150 //temps de suspense
-const thickness = 0.5 // taille joueur et piege, rayon à verifier
+const playerHalfSize = 0.25 // taille joueur et piege, rayon à verifier
 
 /**
  * Rendu de la page dans le menu des salons
@@ -220,7 +220,7 @@ server.listen(port, function () {
 
             if (data.player.role == "explorer") {
                 let isColliding = false;
-                collision(data.position, thickness / 2.0).some(function (pos, ind) {   //regarde si il y a une collision à la nouvelle position avec...
+                collision(data.position, playerHalfSize).some(function (pos, ind) {   //regarde si il y a une collision à la nouvelle position avec...
                     //... des pièges
                     rooms[room].model.traps.some(function (trap, index) {
                         if (trap.position.x_ == pos.x && trap.position.y_ == pos.y) {
@@ -253,8 +253,8 @@ server.listen(port, function () {
                     }
                 })
                 //check collisions avec murs
-               // let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
-                if (!rooms[room].model.map[Math.floor(data.position.y)][Math.floor(data.position.x)] == 1) {
+                let isCollidingWall = collision(data.position, playerHalfSize).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
+                if (!isCollidingWall) {
                     let dir = getDirectionFromPositions(player.position, data.position)
                     if (dir != null) player.direction = dir
                     player.position = data.position
@@ -376,7 +376,7 @@ function randomPosition(room) {
         y = Math.floor(Math.random() * (rooms[room].model.map.length - 1)) + 1
     } while (!(isAValidPosition(x, y, room)))
 
-    return position(x, y)
+    return position(x+0.5, y+0.5)
 }
 
 /**
@@ -525,10 +525,10 @@ const rewardPlayer = (rewardUsed, player, room) => {
 const collision = (pos, size) => {
 
     let a = [
-        position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// haut ET gauche
-        position(Math.floor(pos.x + size), Math.floor(pos.y)),// haut droite
+        position(Math.floor(pos.x - size), Math.floor(pos.y - size)),// haut ET gauche
+        position(Math.floor(pos.x - size), Math.floor(pos.y + size)),// haut droite
         position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
-        position(Math.floor(pos.x), Math.floor(pos.y + size))// bas gauche
+        position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
     ]
     console.log(a)
     return a

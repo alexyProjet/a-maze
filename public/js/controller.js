@@ -179,106 +179,155 @@ $(() => {
         myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
         oldY = myPlayerPosition.y
         oldX = myPlayerPosition.x
-        checkNeighboors()
         setInterval(routine, refreshRate)
         console.log("listener initialised", oldX, oldY, myPlayerPosition)
     }
 
     var isWallPresent = { up: false, down: false, right: false, left: false }
+    const position = (x, y) => Object({ x, y }) //creer un objet position
 
-    function checkNeighboors() {
-        console.log("check collision")
-        let x = Math.floor(myPlayerPosition.y)
-        let y = Math.floor(myPlayerPosition.x)
-        isWallPresent.up = false
-        isWallPresent.down = false
-        isWallPresent.right = false
-        isWallPresent.left = false
-        if (controller.getModel().map[x - 1][y] == 1) { //haut
-            isWallPresent.up = true
-
-        }
-        if (controller.getModel().map[x + 1][y] == 1) { //bas
-            isWallPresent.down = true
-
-        }
-        if (controller.getModel().map[x][y + 1] == 1) { //droite
-            isWallPresent.right = true
-
-        }
-        if (controller.getModel().map[x][y - 1] == 1) { //gauche
-            isWallPresent.left = true
-
-        }
-        console.log("COLLISION DOWN", isWallPresent.down)
-        console.log("COLLISION LEFT", isWallPresent.left)
-        console.log("COLLISION RIGHT", isWallPresent.right)
-        console.log("COLLISION UP", isWallPresent.up)
+    const collisionUpDown = (pos, size) => {
+        let a = [
+            position(Math.floor(pos.x - size), Math.floor(pos.y - size)),// haut ET gauche
+            position(Math.floor(pos.x - size), Math.floor(pos.y + size)),// haut droite
+            position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
+            position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
+        ]
+        console.log(a)
+        return a
     }
 
+    const collisionRightLeft = (pos, size) => {
+        let a = [
+            position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
+            position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
+        ]
+        console.log(a)
+        return a
+    }
+
+    const playerHalfSize = 0.25
     function routine() {
         if (gameStarted) {
             if (zKey) {
                 let newY = myPlayerPosition.y - speed
-                if(qKey || dKey)  myPlayerPosition.y - speed/2.0
                 let newX = myPlayerPosition.x
-                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
-                    oldY = myPlayerPosition.y
-                    oldX = myPlayerPosition.x
-                    myPlayerPosition.y = newY //c'est Okay on avance
-                } else if (!isWallPresent.up) { //Si pas mur
+                if (qKey || dKey) newY = myPlayerPosition.y - speed / 2.0
+
+                if (Math.floor(newY) != Math.floor(oldY)) { //Si changement de case
+                    console.log("NEW CASE", newX, newY)
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.y = newY
                     controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
-                    checkNeighboors()
-                } 
+                }
+
+                if (newY - Math.floor(newY) > playerHalfSize) { //si pas mur et veut avancer
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.y = newY //c'est Okay on avance
+                } else {
+                    let isColliding = collisionUpDown(position(newX, newY), playerHalfSize).some(pos => controller.getModel().map[pos.y][pos.x] == 1)
+                    if (!isColliding) {
+                        oldY = myPlayerPosition.y
+                        oldX = myPlayerPosition.x
+                        myPlayerPosition.y = newY //c'est Okay on avance
+                    } else {
+                        console.log("UP STOPPED CAR COLLISION")
+                        zKey = false
+                    }
+                }
+
             } else if (sKey) {
                 let newY = myPlayerPosition.y + speed
-                if(qKey || dKey)  myPlayerPosition.y + speed/2.0
                 let newX = myPlayerPosition.x
-                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
-                    oldY = myPlayerPosition.y
-                    oldX = myPlayerPosition.x
-                    myPlayerPosition.y = newY //c'est Okay on avance
-                } else if (!isWallPresent.down) { //Si veut avancer sur una case pas murée
+                if (qKey || dKey) newY = myPlayerPosition.y + speed / 2.0
+
+                if (Math.floor(newY) != Math.floor(oldY)) { //Si changement de case
+                    console.log("NEW CASE", newX, newY)
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.y = newY
                     controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
-                    checkNeighboors()
+                }
+
+                if (Math.floor(newY + 1) - newY > playerHalfSize) { //si pas mur et veut avancer
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.y = newY //c'est Okay on avance
+                } else {
+                    let isColliding = collisionUpDown(position(newX, newY), playerHalfSize).some(pos => controller.getModel().map[pos.y][pos.x] == 1)
+                    if (!isColliding) {
+                        oldY = myPlayerPosition.y
+                        oldX = myPlayerPosition.x
+                        myPlayerPosition.y = newY //c'est Okay on avance
+                    } else {
+                        console.log("DOWN STOPPED CAR COLLISION")
+                        sKey = false
+                    }
                 }
             }
             if (qKey) {
                 let newY = myPlayerPosition.y
                 let newX = myPlayerPosition.x - speed
-                if(zKey || sKey)  newX = myPlayerPosition.x - speed/2.0
-                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
-                    oldY = myPlayerPosition.y
-                    oldX = myPlayerPosition.x
-                    myPlayerPosition.x = newX //c'est Okay on avance
-                } else if (!isWallPresent.left) { //Si veut avancer sur una case pas murée
+                if (sKey || zKey) newX = myPlayerPosition.x - speed / 2.0
+
+                if (Math.floor(newX) != Math.floor(oldX)) { //Si changement de case
+                    console.log("NEW CASE", newX, newY)
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.x = newX
                     controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
-                    checkNeighboors()
                 }
+
+                if (newX - Math.floor(newX) > playerHalfSize) { //si pas mur et veut avancer
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.x = newX //c'est Okay on avance
+
+                } else {
+                    let isColliding = collisionUpDown(position(newX, newY), playerHalfSize).some(pos => controller.getModel().map[pos.y][pos.x] == 1)
+                    if (!isColliding) {
+                        oldY = myPlayerPosition.y
+                        oldX = myPlayerPosition.x
+                        myPlayerPosition.x = newX //c'est Okay on avance
+                    } else {
+                        console.log("LEFT STOPPED CAR COLLISION")
+                        qKey = false
+                    }
+                }
+                console.log("Q touche : ", newX)
+
             } else if (dKey) {
                 let newY = myPlayerPosition.y
                 let newX = myPlayerPosition.x + speed
-                if(zKey || sKey)  newX = myPlayerPosition.x + speed/2.0
-                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
-                    oldY = myPlayerPosition.y
-                    oldX = myPlayerPosition.x
-                    myPlayerPosition.x = newX //c'est Okay on avance
-                } else if (!isWallPresent.right) { //Si veut avancer sur una case pas murée
+                if (sKey || zKey) newX = myPlayerPosition.x + speed / 2.0
+
+                if (Math.floor(newX) != Math.floor(oldX)) { //Si changement de case
+                    console.log("NEW CASE", newX, newY)
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.x = newX
                     controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
-                    checkNeighboors()
                 }
+
+                if (Math.floor(newX + 1) - newX > playerHalfSize) { //si pas mur et veut avancer
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.x = newX //c'est Okay on avance
+
+                } else {
+                    let isColliding = collisionUpDown(position(newX, newY), playerHalfSize).some(pos => controller.getModel().map[pos.y][pos.x] == 1)
+                    if (!isColliding) {
+                        oldY = myPlayerPosition.y
+                        oldX = myPlayerPosition.x
+                        myPlayerPosition.x = newX //c'est Okay on avance
+                    } else {
+                        console.log("RIGHT STOPPED CAR COLLISION")
+                        dKey = false
+                    }
+                }
+                console.log("d touche : ", newX)
             }
         }
     }
