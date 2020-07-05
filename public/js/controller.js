@@ -1,6 +1,6 @@
 let controller = null;
 var gameStarted = false;
-
+var refreshRate = 25
 $(() => {
 
     var name = "invité"
@@ -104,6 +104,12 @@ $(() => {
         })
 
         /**
+         * Signale que le jeu est prêt
+         */
+        self.socket.on('error-position', function () {
+            myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
+        })
+        /**
          * Signale qu'il faut affiche le jeu
          */
         self.socket.on('display-game', function (timeStop) {
@@ -112,10 +118,15 @@ $(() => {
             vue.initGame()
             vue.launchCountdown(timeStop)
             vue.renderScoreList()
+
             //attend un peu puis lance le set interval pour être sur que tout pret
-            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myId), 66), 200)
-            document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));
-            document.getElementById('nameContainer').parentNode.removeChild(document.getElementById('nameContainer'));
+            initListener()
+
+            //renderPlayerTimeOut = setTimeout(renderPlayerTimeInterval = setInterval(() => vue.player(false, myPlayerPosition), refreshRate), 200) //render userPlayer avec la var global de position
+            //document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));
+            // document.getElementById('nameContainer').parentNode.removeChild(document.getElementById('nameContainer'));    
+            console.log("fin displaygame.... launching vue.renderGame()...")
+            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
 
         //Fin du chronometre
@@ -140,7 +151,7 @@ $(() => {
             }
         }
 
-        const moveTo = (position, actualPlayer) => self.socket.emit("move-player", roomName, JSON.stringify({ position: position, player: actualPlayer })) //send la position
+        const moveTo = (position, actualPlayer) => self.socket.emit("move-player", roomName, { position: position, player: actualPlayer }) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
         const getModel = () => model //renvoi le model
         const setName = (name) => self.socket.emit("set-name", roomName, name)
@@ -151,4 +162,165 @@ $(() => {
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
         return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName } //
     })()
+
+    var zKey = false;
+    var sKey = false
+    var qKey = false
+    var dKey = false
+    var speed = 0.11
+    var myPlayerPosition = null
+    var oldX = -1
+    var oldY = -1
+    var interval = null
+    var renderPlayerTimeOut = null
+
+    function initListener() {
+        console.log("initializing listener....")
+        myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
+        oldY = myPlayerPosition.y
+        oldX = myPlayerPosition.x
+        checkNeighboors()
+        setInterval(routine, refreshRate)
+        console.log("listener initialised", oldX, oldY, myPlayerPosition)
+    }
+
+    var isWallPresent = { up: false, down: false, right: false, left: false }
+
+    function checkNeighboors() {
+        console.log("check collision")
+        let x = Math.floor(myPlayerPosition.y)
+        let y = Math.floor(myPlayerPosition.x)
+        isWallPresent.up = false
+        isWallPresent.down = false
+        isWallPresent.right = false
+        isWallPresent.left = false
+        if (controller.getModel().map[x - 1][y] == 1) { //haut
+            isWallPresent.up = true
+
+        }
+        if (controller.getModel().map[x + 1][y] == 1) { //bas
+            isWallPresent.down = true
+
+        }
+        if (controller.getModel().map[x][y + 1] == 1) { //droite
+            isWallPresent.right = true
+
+        }
+        if (controller.getModel().map[x][y - 1] == 1) { //gauche
+            isWallPresent.left = true
+
+        }
+        console.log("COLLISION DOWN", isWallPresent.down)
+        console.log("COLLISION LEFT", isWallPresent.left)
+        console.log("COLLISION RIGHT", isWallPresent.right)
+        console.log("COLLISION UP", isWallPresent.up)
+    }
+
+    function routine() {
+        if (gameStarted) {
+            if (zKey) {
+                let newY = myPlayerPosition.y - speed
+                if(qKey || dKey)  myPlayerPosition.y - speed/2.0
+                let newX = myPlayerPosition.x
+                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.y = newY //c'est Okay on avance
+                } else if (!isWallPresent.up) { //Si pas mur
+                    oldY = newY
+                    oldX = newX
+                    myPlayerPosition.y = newY
+                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    checkNeighboors()
+                } 
+            } else if (sKey) {
+                let newY = myPlayerPosition.y + speed
+                if(qKey || dKey)  myPlayerPosition.y + speed/2.0
+                let newX = myPlayerPosition.x
+                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.y = newY //c'est Okay on avance
+                } else if (!isWallPresent.down) { //Si veut avancer sur una case pas murée
+                    oldY = newY
+                    oldX = newX
+                    myPlayerPosition.y = newY
+                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    checkNeighboors()
+                }
+            }
+            if (qKey) {
+                let newY = myPlayerPosition.y
+                let newX = myPlayerPosition.x - speed
+                if(zKey || sKey)  newX = myPlayerPosition.x - speed/2.0
+                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.x = newX //c'est Okay on avance
+                } else if (!isWallPresent.left) { //Si veut avancer sur una case pas murée
+                    oldY = newY
+                    oldX = newX
+                    myPlayerPosition.x = newX
+                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    checkNeighboors()
+                }
+            } else if (dKey) {
+                let newY = myPlayerPosition.y
+                let newX = myPlayerPosition.x + speed
+                if(zKey || sKey)  newX = myPlayerPosition.x + speed/2.0
+                if (Math.floor(oldY) == Math.floor(newY) && Math.floor(oldX) == Math.floor(newX)) { //si sur meme case
+                    oldY = myPlayerPosition.y
+                    oldX = myPlayerPosition.x
+                    myPlayerPosition.x = newX //c'est Okay on avance
+                } else if (!isWallPresent.right) { //Si veut avancer sur una case pas murée
+                    oldY = newY
+                    oldX = newX
+                    myPlayerPosition.x = newX
+                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    checkNeighboors()
+                }
+            }
+        }
+    }
+
+    document.body.onkeypress = function (event) {
+        switch (event.key.toLowerCase()) {
+            case 'z':
+                zKey = true;
+                break;
+            case 's':
+                sKey = true;
+                break;
+            case 'q':
+                qKey = true;
+
+                break;
+            case 'd':
+                dKey = true;
+                break;
+            default:
+                break;
+        }
+
+    };
+
+    document.body.onkeyup = function (event) {
+        switch (event.key.toLowerCase()) {
+            case 'z':
+                zKey = false;
+                break;
+            case 's':
+                sKey = false;
+                break;
+            case 'q':
+                qKey = false;
+                break;
+            case 'd':
+                dKey = false;
+                break;
+            default:
+                break;
+        }
+    };
+
 })

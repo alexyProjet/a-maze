@@ -44,7 +44,7 @@ app.get('/:room', (req, res) => {
     res.render('game', { roomName: req.params.room })
 })
 
-var port = process.env.PORT || 8080
+var port = process.env.PORT || 3000
 
 server.listen(port, function () {
     console.log(`En écoute sur ${server.address().port}`);
@@ -201,7 +201,7 @@ server.listen(port, function () {
                 rooms[room].model.rewards.push(reward_instance)
                 getPlayerFromId(player.id, room).inventory.pop()
                 getPlayerFromId(player.id, room).inventory.pop()
-                console.log( rooms[room].model.traps)
+                console.log(rooms[room].model.traps)
             } else {
                 console.log("trap et reward placés NON valides")
             }
@@ -213,7 +213,9 @@ server.listen(port, function () {
          * Valide ou non le déplacement
          */
         socket.on('move-player', function (room, dataJSON) {
-            let data = JSON.parse(dataJSON)
+
+            let data = dataJSON
+            console.log("RECU move to : ", data.position)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
             if (data.player.role == "explorer") {
@@ -234,7 +236,7 @@ server.listen(port, function () {
                         }
                     })
                     //...des recompenses
-                    console.log("test rewards : ", rooms[room].model.rewards)
+                    //console.log("test rewards : ", rooms[room].model.rewards)
                     rooms[room].model.rewards.some(function (rew, index) {
                         if (rew.position.x_ == pos.x && rew.position.y_ == pos.y) {
                             if (rew.triggered == null) {
@@ -251,15 +253,19 @@ server.listen(port, function () {
                     }
                 })
                 //check collisions avec murs
-                let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
-                if (!isCollidingWall) {
+               // let isCollidingWall = collision(data.position, thickness / 2.0).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
+                if (!rooms[room].model.map[Math.floor(data.position.y)][Math.floor(data.position.x)] == 1) {
                     let dir = getDirectionFromPositions(player.position, data.position)
                     if (dir != null) player.direction = dir
                     player.position = data.position
+                } else {
+                    io.to(socket.id).emit('error-position')
+                    console.log("erreur position", data.position)
                 }
 
             }
             updateModels(rooms[room].model, room)
+            //signaler controlelr ajouter coord du joueur
         })
     });
 });
@@ -337,7 +343,7 @@ function updateModels(mod, room, withmap = false) {
         let socketId = pl.id
         //mesure anti-triche, les explorer n'ont pas à avoir la lsite des pieges et traps mais seulement la liste d'entités
         if (pl.role == "explorer") {
-            let newModel = Object.assign({},mod)
+            let newModel = Object.assign({}, mod)
             newModel.entities = newModel.rewards.concat(newModel.traps)
             newModel.traps = []
             newModel.rewards = []
@@ -449,9 +455,9 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
 
     //MAJ le joueur auteur du piege
     let trapAuthor = getPlayerFromId(trap1.parentId, room)
-    if(trap1.parentId == pl.id){ //si marche sur son propre piege -2 points
+    if (trap1.parentId == pl.id) { //si marche sur son propre piege -2 points
         trapAuthor.score = trapAuthor.score - 2
-    }else{
+    } else {
         trapAuthor.score++
     }
 
@@ -463,31 +469,31 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
         }
     }
     //Fait exploser mur à côté
-    explodeTrapWallNeighboor(trap1.position,room)
+    explodeTrapWallNeighboor(trap1.position, room)
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
-    updateModels(rooms[room].model, room)
+    //updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
-    
+
 }, fuzeTime)
 
-function explodeTrapWallNeighboor(trapPosition,room){
+function explodeTrapWallNeighboor(trapPosition, room) {
     let neighboors = []
-    let map =  rooms[room].model.map
+    let map = rooms[room].model.map
     let y = trapPosition.x_
     let x = trapPosition.y_
     //2 = mur detruit
     //3= trace d'explosion
-    if(map[x+1][y] == 1){
-        map[x+1][y] = 2
+    if (map[x + 1][y] == 1) {
+        map[x + 1][y] = 2
     }
-    if(map[x-1][y] == 1){
-        map[x-1][y] = 2
+    if (map[x - 1][y] == 1) {
+        map[x - 1][y] = 2
     }
-    if(map[x][y+1] == 1){
-        map[x][y+1] = 2
+    if (map[x][y + 1] == 1) {
+        map[x][y + 1] = 2
     }
-    if(map[x][y-1] == 1){
-        map[x][y-1] = 2
+    if (map[x][y - 1] == 1) {
+        map[x][y - 1] = 2
     }
     //indique qu'il faut une trace d'explosion
     map[x][y] = 3
@@ -501,13 +507,13 @@ function explodeTrapWallNeighboor(trapPosition,room){
 const rewardPlayer = (rewardUsed, player, room) => {
     let pl = rooms[room].model.players.find(p => p.id == player.id)
 
-    if(rewardUsed.parentId != pl.id){ //si marche sur son propre piege -2 points
+    if (rewardUsed.parentId != pl.id) { //si marche sur son propre piege -2 points
         pl.score++
     }
 
     rooms[room].model.rewards = rooms[room].model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
-    updateModels(rooms[room].model, room)
+    //updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
 }
 
@@ -516,12 +522,17 @@ const rewardPlayer = (rewardUsed, player, room) => {
  * @param {} pos 
  * @param {*} size 
  */
-const collision = (pos, size) => [
-    position(Math.floor(pos.x), Math.floor(pos.y)),// haut gauche
-    position(Math.floor(pos.x + size), Math.floor(pos.y)),// haut droite
-    position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
-    position(Math.floor(pos.x), Math.floor(pos.y + size))// bas gauche
-]
+const collision = (pos, size) => {
+
+    let a = [
+        position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// haut ET gauche
+        position(Math.floor(pos.x + size), Math.floor(pos.y)),// haut droite
+        position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
+        position(Math.floor(pos.x), Math.floor(pos.y + size))// bas gauche
+    ]
+    console.log(a)
+    return a
+}
 
 /**
  * Renvoi un joueur à partir d'un id

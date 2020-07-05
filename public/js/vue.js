@@ -258,11 +258,11 @@ class Vue {
             let li = document.createElement("li");
             li.setAttribute("class", "userInList")
             let pBalise = document.createElement("p");
-            let name =""
-            
+            let name = ""
+
             if (entrie[0] == controller.getId()) {
                 name = document.createTextNode(userName + "(toi)");
-            }else {
+            } else {
                 name = document.createTextNode(userName);
             }
             pBalise.appendChild(name);
@@ -377,7 +377,7 @@ class Vue {
         $("#scoreListContainer").prepend(resultatBalise)
 
         gameStarted = false;
-        console.game("Game session ended properly.")
+        console.log("Game session ended properly.")
     }
 
     /**
@@ -430,7 +430,7 @@ class Vue {
     /**
      * Rend visuellement le plateau, les joueurs, bref tout
      */
-    renderGame(thisplayerId) {
+    renderGame(position) {
         if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
             this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         }
@@ -441,9 +441,11 @@ class Vue {
             this.rewards(controller.getModel().rewards)
         } else {
             this.entities(controller.getModel().entities)
+            this.player(false, position) //render le joueur principal
         }
-        this.players(controller.getModel().players, thisplayerId)
-        if (controller.getCurrentPlayer().role == "explorer") this.darken()
+        
+        this.otherPlayers()
+        //this.players(controller.getModel().players, thisplayerId)
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
         lastInventoryCount = controller.getCurrentPlayer().inventory.length
@@ -584,8 +586,8 @@ class Vue {
      * Shake the game
      * @param {*} mapArray 
      */
-    shake(){
-        $( "#canva" ).effect( "shake", {times:3,distance:4,direction:'left'},250 );
+    shake() {
+        $("#canva").effect("shake", { times: 3, distance: 4, direction: 'left' }, 250);
     }
     /**
      * Dessine le plateau de jeu
@@ -610,10 +612,10 @@ class Vue {
     /**
     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
     */
-    darken() {
-        let myPlayer = controller.getCurrentPlayer()
-        let coordX = myPlayer.position.x
-        let coordY = myPlayer.position.y
+    darken(position) {
+
+        let coordX = position.x
+        let coordY = position.y
         this.context.beginPath()
         this.context.rect(0, 0, 30 * this.spriteWidth, 20 * this.spriteHeight);
         //x,y,rayon,angles...
@@ -737,5 +739,25 @@ class Vue {
                 }
             }
         }
+    }
+
+    player(isEnnemy, position) {
+        //  console.log("player render launched",position)
+        if (isEnnemy) {
+
+        } else {
+            this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.biais, position.y * this.spriteHeight - this.biais, this.playerUpAsset.width, this.playerUpAsset.height)
+        }
+        this.darken(position)
+    }
+
+    otherPlayers() {
+
+        controller.getModel().players.forEach(pl => {
+            if(pl.id != controller.getId()){
+                this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth - this.biais, pl.position.y * this.spriteHeight - this.biais, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
+            }
+            //player(true,pos)
+        })
     }
 }
