@@ -213,11 +213,13 @@ server.listen(port, function () {
          * Vérfie si joueur entre en collision avec mur ou entités
          * Valide ou non le déplacement
          */
-        socket.on('move-player', function (room, newPosition,dir) {
-            console.log("RECU move to : ", newPosition)
+        socket.on('move-player', function (room, newPosition, dir) {
+            console.log("[MOVE-PLAYER] : recu du salon : ", room)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
-
-            if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
+            if (newPosition.x > 30 || newPosition.y > 20) {
+                console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
+            }
+            else if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
                 let isColliding = false;
                 collision(newPosition, playerHalfSize).some(function (pos, ind) {
                     //regarde si il y a une collision à la nouvelle position avec...
@@ -258,12 +260,12 @@ server.listen(port, function () {
                     player.position = newPosition
                 } else {
                     io.to(socket.id).emit('error-position')
-                    console.log("erreur position", newPosition)
+                    console.log("----> [MOVE-PLAYER] : collision avec un mur.", newPosition)
                 }
 
             } else {
                 io.to(socket.id).emit('error-position')
-                console.log("erreur position, triche probable", Math.abs(newPosition.x - player.position.x), Math.abs(newPosition.y - player.position.y))
+                console.log("----> [MOVE-PLAYER] : erreur position, triche probable", Math.abs(newPosition.x - player.position.x), Math.abs(newPosition.y - player.position.y))
             }
         })
     });
@@ -279,35 +281,6 @@ function getRoomFromPlayerId(socket) {
         console.log("SORTIE", roomName)
         return roomName
     }, [])
-}
-
-/**
- * 
- * @param {*} oldPosition 
- * @param {*} newPosition 
- * @param {*} oldDirection 
- */
-function getDirectionFromPositions(oldPosition, newPosition) {
-    let newY = newPosition.y
-    let newX = newPosition.x
-    let oldY = oldPosition.y
-    let oldX = oldPosition.x
-
-    if (oldX == newX) {
-        if (oldY > newY) {
-            return "up"
-        } else {
-            return "down"
-        }
-    } else if (oldY == newY) {
-        if (oldX > newX) {
-            return "left"
-        } else {
-            return "right"
-        }
-    } else {
-        return null //si en diagonale
-    }
 }
 
 /**
