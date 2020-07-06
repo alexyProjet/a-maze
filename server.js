@@ -11,7 +11,7 @@ const rooms = {}
 const refreshRate = 30
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 const fuzeTime = 150 //temps de suspense
-const playerHalfSize = 0.25 // taille joueur et piege, rayon à verifier
+const playerHalfSize = 0.20 // taille joueur et piege, rayon à verifier
 
 /**
  * Rendu de la page dans le menu des salons

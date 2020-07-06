@@ -73,7 +73,7 @@ $(() => {
         self.socket.on('model-update', function (data) {
             Object.assign(model, data)
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
-            console.log("CONTROLLER ON : UpdateModel recu", model.players)
+            //console.log("CONTROLLER ON : UpdateModel recu", model.players)
         })
 
         /**

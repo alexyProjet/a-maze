@@ -32,7 +32,8 @@ class Vue {
         this.trapAsset = await this._syncedLoadImg("/img/Environment/trap.png", this.spriteWidth, this.spriteHeight)
         this.rewardAsset = await this._syncedLoadImg("/img/Environment/reward.png", this.spriteWidth, this.spriteHeight)
         this.emptySlotAsset = await this._syncedLoadImg("/img/Environment/empty_slot.png", this.spriteWidth, this.spriteHeight)
-        this.anonymousEntityAsset = await this._syncedLoadImg("/img/Environment/anonymous_block.png", this.spriteWidth, this.spriteHeight)
+      
+        this.blackCube = await this._syncedLoadImg("/img/Player/Main/black.png", this.halfWidth, this.halfHeight)
 
         this.playerUpAsset = await this._syncedLoadImg("/img/Player/Main/player_up.png", this.halfWidth, this.halfHeight)
         this.playerDownAsset = await this._syncedLoadImg("/img/Player/Main/player_down.png", this.halfWidth, this.halfHeight)
@@ -690,23 +691,24 @@ class Vue {
 
     player(position) {
         let dir = controller.getCurrentPlayer().direction
-        console.log(dir)
         switch (dir) {
             case 'up':
-                this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
+                this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
                 break;
             case 'down':
-                this.context.drawImage(this.playerDownAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerDownAsset.width, this.playerDownAsset.height)
+                this.context.drawImage(this.playerDownAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight- this.halfWidth / 2.0 , this.playerDownAsset.width, this.playerDownAsset.height)
             case 'left':
-                this.context.drawImage(this.playerLeftAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerLeftAsset.width, this.playerLeftAsset.height)
+                this.context.drawImage(this.playerLeftAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerLeftAsset.width, this.playerLeftAsset.height)
                 break;
             case 'right':
-                this.context.drawImage(this.playerRightAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerRightAsset.width, this.playerRightAsset.height)
+                this.context.drawImage(this.playerRightAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerRightAsset.width, this.playerRightAsset.height)
                 break;
             default:
                 this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
         }
-
+        
+      // this.context.drawImage(this.blackCube, (position.x * this.spriteWidth) - this.halfWidth / 2.0 , (position.y * this.spriteHeight) - this.halfWidth / 2.0, this.blackCube.width, this.blackCube.height)
+        //this.context.fillRect(position.x * this.spriteWidth, position.y * this.spriteHeight, 2,2);
         this.darken(position)
     }
 
