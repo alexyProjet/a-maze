@@ -430,7 +430,7 @@ class Vue {
     /**
      * Rend visuellement le plateau, les joueurs, bref tout
      */
-    renderGame(position) {
+    renderGame(playerPosition) {
         if ((lastRole != controller.getCurrentPlayer().role && lastRole != null) || lastInventoryCount != controller.getCurrentPlayer().inventory.length) {
             this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         }
@@ -442,10 +442,10 @@ class Vue {
             this.otherPlayers(controller.getModel().players)
         } else {
             this.entities(controller.getModel().entities)
-            this.player(false, position) //render le joueur principal
+            this.player(playerPosition) //render le joueur principal
             this.otherPlayers(controller.getModel().players)
         }
-        
+
         //this.players(controller.getModel().players, thisplayerId)
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
@@ -688,77 +688,48 @@ class Vue {
     }
 
 
-    /**
-     * Dessine tous les joueurs sur les plateau de jeu
-     * @param {*} playersArray 
-     */
-    players(playersArray, thisPlayerId) {
-
-        for (var i = 0; i < playersArray.length; i++) {
-            if (playersArray[i].role == "explorer") { //ne rend que les explorers
-                let coordX = playersArray[i].position.x
-                let coordY = playersArray[i].position.y
-                if (thisPlayerId == playersArray[i].id) { //si joueur actuel
-                    switch (playersArray[i].direction) {
-                        case 'up':
-                            this.context.drawImage(this.playerUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerUpAsset.width, this.playerUpAsset.height)
-                            break;
-                        case 'down':
-                            this.context.drawImage(this.playerDownAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerDownAsset.width, this.playerDownAsset.height)
-                            break;
-                        case 'right':
-                            this.context.drawImage(this.playerRightAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerRightAsset.width, this.playerRightAsset.height)
-                            break;
-                        case 'left':
-                            this.context.drawImage(this.playerLeftAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerLeftAsset.width, this.playerLeftAsset.height)
-                            break;
-                        default:
-                            console.log(`Erreur dans la direction`);
-                    }
-                } else { // si joueurs ennemies
-                    let name = playersArray[i].name
-                    //canva.fillStyle = "white"; a bidouiller
-                    this.context.font = '12px Roboto';
-                    let textSize = this.context.measureText(name).width
-                    this.context.fillText(name, coordX * this.spriteWidth - (textSize / 2.0) + (this.halfWidth / 2.0), coordY * this.spriteHeight - this.biais);
-                    switch (playersArray[i].direction) {
-                        case 'up':
-                            this.context.drawImage(this.playerEnemyUpAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
-                            break;
-                        case 'down':
-                            this.context.drawImage(this.playerEnemyDownAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyDownAsset.width, this.playerEnemyDownAsset.height)
-                            break;
-                        case 'right':
-                            this.context.drawImage(this.playerEnemyRightAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyRightAsset.width, this.playerEnemyRightAsset.height)
-                            break;
-                        case 'left':
-                            this.context.drawImage(this.playerEnemyLeftAsset, coordX * this.spriteWidth - this.biais, coordY * this.spriteHeight - this.biais, this.playerEnemyLeftAsset.width, this.playerEnemyLeftAsset.height)
-                            break;
-                        default:
-                            console.log(`Erreur dans la direction`);
-                    }
-                }
-            }
+    player(position) {
+        let dir = controller.getCurrentPlayer().direction
+        console.log(dir)
+        switch (dir) {
+            case 'up':
+                this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
+                break;
+            case 'down':
+                this.context.drawImage(this.playerDownAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerDownAsset.width, this.playerDownAsset.height)
+            case 'left':
+                this.context.drawImage(this.playerLeftAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerLeftAsset.width, this.playerLeftAsset.height)
+                break;
+            case 'right':
+                this.context.drawImage(this.playerRightAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerRightAsset.width, this.playerRightAsset.height)
+                break;
+            default:
+                this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
         }
-    }
 
-    player(isEnnemy, position) {
-        //  console.log("player render launched",position)
-        if (isEnnemy) {
-
-        } else {
-            this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth/2.0, position.y * this.spriteHeight - this.halfWidth/2.0, this.playerUpAsset.width, this.playerUpAsset.height)
-        }
         this.darken(position)
     }
 
     otherPlayers(players) {
 
         players.forEach(pl => {
-            if(pl.id != controller.getId()){//pas notre joueur
-                this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth, pl.position.y * this.spriteHeight, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
+            if (pl.id != controller.getId()) {//pas notre joueur
+                switch (pl.direction) {
+                    case 'up':
+                        this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
+                        break;
+                    case 'down':
+                        this.context.drawImage(this.playerEnemyDownAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyDownAsset.width, this.playerEnemyDownAsset.height)
+                    case 'left':
+                        this.context.drawImage(this.playerEnemyLeftAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyLeftAsset.width, this.playerEnemyLeftAsset.height)
+                        break;
+                    case 'right':
+                        this.context.drawImage(this.playerEnemyRightAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyRightAsset.width, this.playerEnemyRightAsset.height)
+                        break;
+                    default:
+                        this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
+                }
             }
-            //player(true,pos)
         })
     }
 }

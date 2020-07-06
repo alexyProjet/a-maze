@@ -8,6 +8,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.urlencoded({ extended: true }))
 
 const rooms = {}
+const refreshRate = 30
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 const fuzeTime = 150 //temps de suspense
 const playerHalfSize = 0.25 // taille joueur et piege, rayon à verifier
@@ -26,7 +27,7 @@ app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby" }
+    rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null }
     res.redirect(req.body.room)
     io.emit("new-roon", req.body.room)
     console.log("SERVEUR : nouveau salon créé", req.body.room)
@@ -107,10 +108,10 @@ server.listen(port, function () {
                 } else { //si deconnexion en jeu
                     if (Object.keys(rooms[room].users).length <= 2) { //si plus personne, on detruit le salon
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
+                        clearInterval(rooms[room].refreshing);
                         delete rooms[room]
                         io.in(room).emit("exit-one-player-left")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
-                        let newLeader = null
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
@@ -123,7 +124,6 @@ server.listen(port, function () {
                         rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
                             return pl.id !== socket.id;
                         });
-                       // updateModels(rooms[room].model, room, withmap = true)
                     } else {
                         console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
@@ -131,7 +131,6 @@ server.listen(port, function () {
                             return pl.id !== socket.id;
                         });
                         delete rooms[room].users[socket.id]
-                        //updateModels(rooms[room].model, room, withmap = true)
                     }
                     io.to(room).emit("scores-update")
                 }
@@ -156,9 +155,9 @@ server.listen(port, function () {
             console.log("SERVEUR ON : player is  ", ref)
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ", room)
-           // updateModels(rooms[room].model, room, withmap = true)
-             
-            io.in(room).emit('display-game', time,rooms[room].model) //met à jour model tout le monde
+            // updateModels(rooms[room].model, room, withmap = true)
+
+            io.in(room).emit('display-game', time, rooms[room].model) //met à jour model tout le monde
         })
 
         /**
@@ -177,7 +176,7 @@ server.listen(port, function () {
                     timer(timeStop.getTime(), room)
                     io.in(room).emit('game-ready', "ok", timeStop.getTime())
                     io.emit('remove-room-from-lobby-menu', room)
-                    setInterval(updateModelsEveryRefreshRate, 50);
+                    updateModelsEveryRefreshRate(room);
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -207,45 +206,43 @@ server.listen(port, function () {
             } else {
                 console.log("trap et reward placés NON valides")
             }
-           // updateModels(rooms[room].model, room)
+            // updateModels(rooms[room].model, room)
         });
 
         /**
          * Vérfie si joueur entre en collision avec mur ou entités
          * Valide ou non le déplacement
          */
-        socket.on('move-player', function (room, dataJSON) {
-
-            let data = dataJSON
-            console.log("RECU move to : ", data.position)
+        socket.on('move-player', function (room, newPosition,dir) {
+            console.log("RECU move to : ", newPosition)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
-            if (data.player.role == "explorer") {
+            if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
                 let isColliding = false;
-                collision(data.position, playerHalfSize).some(function (pos, ind) {   //regarde si il y a une collision à la nouvelle position avec...
+                collision(newPosition, playerHalfSize).some(function (pos, ind) {
+                    //regarde si il y a une collision à la nouvelle position avec...
                     //... des pièges
                     rooms[room].model.traps.some(function (trap, index) {
                         if (trap.position.x_ == pos.x && trap.position.y_ == pos.y) {
                             if (trap.triggered == null) {
                                 trap.triggered = Date.now()
-                                console.log("player : ", data.player.id, " walk on trap : ", trap)
+                                console.log("player : ", player.id, " walk on trap : ", trap)
                                 isColliding = true
                                 io.to(socket.id).emit("trap-animation", trap.position)
                                 io.to(room).emit("shake-game")
-                                plan_explosion(trap, data.player, room);
+                                plan_explosion(trap, player, room);
                                 return true
                             }
                         }
                     })
                     //...des recompenses
-                    //console.log("test rewards : ", rooms[room].model.rewards)
                     rooms[room].model.rewards.some(function (rew, index) {
                         if (rew.position.x_ == pos.x && rew.position.y_ == pos.y) {
                             if (rew.triggered == null) {
                                 rew.triggered = Date.now()
-                                console.log("player : ", data.player.id, " walk on reward : ", rew)
+                                console.log("player : ", player.id, " walk on reward : ", rew)
                                 isColliding = true
-                                rewardPlayer(rew, data.player, room)
+                                rewardPlayer(rew, player, room)
                                 return true
                             }
                         }
@@ -255,19 +252,19 @@ server.listen(port, function () {
                     }
                 })
                 //check collisions avec murs
-                let isCollidingWall = collision(data.position, playerHalfSize).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
+                let isCollidingWall = collision(newPosition, playerHalfSize).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
                 if (!isCollidingWall) {
-                    let dir = getDirectionFromPositions(player.position, data.position)
-                    if (dir != null) player.direction = dir
-                    player.position = data.position
+                    player.direction = dir
+                    player.position = newPosition
                 } else {
                     io.to(socket.id).emit('error-position')
-                    console.log("erreur position", data.position)
+                    console.log("erreur position", newPosition)
                 }
 
+            } else {
+                io.to(socket.id).emit('error-position')
+                console.log("erreur position, triche probable", Math.abs(newPosition.x - player.position.x), Math.abs(newPosition.y - player.position.y))
             }
-           // updateModels(rooms[room].model, room)
-            //signaler controlelr ajouter coord du joueur
         })
     });
 });
@@ -319,17 +316,15 @@ function getDirectionFromPositions(oldPosition, newPosition) {
  * @param {*} room 
  */
 function timer(stop, room) {
-    var x = setInterval(function () {
-        var now = new Date().getTime();
+    let x = setInterval(function () {
+        let now = new Date().getTime();
 
-        var distance = stop - now;
-        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
+        let distance = stop - now;
         //Lorsque fini
         if (distance <= 0) {
             clearInterval(x);
             io.to(room).emit("countdown-over")
+            delete rooms[room]
         }
     }, 1000);
 }
@@ -341,12 +336,13 @@ function timer(stop, room) {
  * @param {*} withmap 
  */
 
-
-function updateModelsEveryRefreshRate(){
-
-    console.log("[REFRESHING MODEL] all in-game rooms...")
-    Object.keys(rooms).map(function(room, index) {
-        if(rooms[room].state == "inGame"){
+function updateModelsEveryRefreshRate(room) {
+    let x = setInterval(function () {
+        console.log("[REFRESHING MODEL] all in-game rooms...")
+        if (rooms[room] == undefined) {
+            clearInterval(x)
+        }
+        else {
             let mod = rooms[room].model
             mod.players.forEach(pl => {
                 let socketId = pl.id
@@ -362,8 +358,7 @@ function updateModelsEveryRefreshRate(){
                 }
             })
         }
-    });
-
+    }, refreshRate);
 }
 
 function removeEntityAssociatedtoPlayer(player, room) {
@@ -387,7 +382,7 @@ function randomPosition(room) {
         y = Math.floor(Math.random() * (rooms[room].model.map.length - 1)) + 1
     } while (!(isAValidPosition(x, y, room)))
 
-    return position(x+0.5, y+0.5)
+    return position(x + 0.5, y + 0.5)
 }
 
 /**
