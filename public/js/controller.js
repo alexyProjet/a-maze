@@ -48,20 +48,19 @@ $(() => {
             room = roomReceived
             vue.renderMiddleLobbyPannel()
             vue.renderRightLobbyPannel()
-            console.log("Nouvelle utilisateur : ", name, "dans : ", roomReceived)
+            console.log("[IO] Nouvelle utilisateur : ", name, "dans : ", roomReceived)
         })
 
 
         //Utilisateur se deconnecte
         self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
-            console.log(name, "disconnected")
+            console.log("[IO] ",name, "s'est deconnecté")
             room = roomReceived
             vue.renderMiddleLobbyPannel()
         })
 
         //Changement dans le lobby
         self.socket.on('lobby-changes-occured', function (roomReceived) {
-            console.log("changes occured")
             room = roomReceived
             vue.renderMiddleLobbyPannel()
             vue.renderRightLobbyPannel()
@@ -73,7 +72,6 @@ $(() => {
         self.socket.on('model-update', function (data) {
             Object.assign(model, data)
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
-            //console.log("CONTROLLER ON : UpdateModel recu", model.players)
         })
 
         /**

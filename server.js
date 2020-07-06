@@ -56,9 +56,9 @@ server.listen(port, function () {
          * Enregistrement du nouvel utilisateur connecté
          */
         socket.on('new-user', (room, name) => {
-            console.log("SERVEUR : nouveau joueur : ", name, " dans le salon : ", room)
+            console.log("[NEW-USER] : nouveau joueur : ", name, " dans le salon : ", room)
             if(rooms[room] == undefined){
-                console.log("[NEW-USER] : salon inexistant... abandon.")
+                console.log(" ----> [NEW-USER] : salon inexistant... abandon.")
                 io.to(socket.id).emit("redirectPlayer")
             } else  if (rooms[room].state != "inGame") { //si dans le lobby
                 socket.join(room)
@@ -175,7 +175,7 @@ server.listen(port, function () {
                         rooms[room].model.players.push(ref)
                     })
 
-                    updateModelsEveryRefreshRate()
+                    updateModelsEveryRefreshRate(room)
                     io.in(room).emit('display-game', timeStop,rooms[room].model)
                 }
             } else {
