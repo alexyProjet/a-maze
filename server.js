@@ -57,7 +57,10 @@ server.listen(port, function () {
          */
         socket.on('new-user', (room, name) => {
             console.log("SERVEUR : nouveau joueur : ", name, " dans le salon : ", room)
-            if (rooms[room].state != "inGame") { //si dans le lobby
+            if(rooms[room] == undefined){
+                console.log("[NEW-USER] : salon inexistant... abandon.")
+                io.to(socket.id).emit("redirectPlayer")
+            } else  if (rooms[room].state != "inGame") { //si dans le lobby
                 socket.join(room)
                 rooms[room].users[socket.id] = name
                 if (Object.keys(rooms[room].users).length == 1) {
@@ -94,7 +97,7 @@ server.listen(port, function () {
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         if (Object.keys(rooms[room].users).length == 0) {//plus personne en jeu
-                            io.in(room).emit("exit-one-player-left")
+                            io.in(room).emit("redirectPlayer")
                             delete rooms[room]
                         } else {//reste assez de joueur
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
@@ -110,7 +113,7 @@ server.listen(port, function () {
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         clearInterval(rooms[room].refreshing);
                         delete rooms[room]
-                        io.in(room).emit("exit-one-player-left")
+                        io.in(room).emit("redirectPlayer")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
@@ -230,7 +233,7 @@ server.listen(port, function () {
                                 trap.triggered = Date.now()
                                 console.log("player : ", player.id, " walk on trap : ", trap)
                                 isColliding = true
-                                io.to(socket.id).emit("trap-animation", trap.position)
+                                io.to(room).emit("trap-animation", trap.position)
                                 io.to(room).emit("shake-game")
                                 plan_explosion(trap, player, room);
                                 return true
@@ -244,6 +247,7 @@ server.listen(port, function () {
                                 rew.triggered = Date.now()
                                 console.log("player : ", player.id, " walk on reward : ", rew)
                                 isColliding = true
+                                io.to(room).emit("reward-animation", rew.position)
                                 rewardPlayer(rew, player, room)
                                 return true
                             }
@@ -311,11 +315,12 @@ function timer(stop, room) {
 
 function updateModelsEveryRefreshRate(room) {
     let x = setInterval(function () {
-        console.log("[REFRESHING MODEL] all in-game rooms...")
+
         if (rooms[room] == undefined) {
             clearInterval(x)
         }
         else {
+            console.log("[REFRESHING MODEL] room : ", room)
             let mod = rooms[room].model
             mod.players.forEach(pl => {
                 let socketId = pl.id

@@ -15,7 +15,7 @@ head
     ul
     #room-container
       each room in Object.keys(rooms)
-        button(onclick='window.location.replace("/'+ room +'")').room(id=room) #{room}
+        button(onclick='window.location.replace("/'+ room +'")').room(id=room)
     div#createRoom-container
       form(action='/room', method='POST')#createRoom
         input(name='room', type='text', required='')

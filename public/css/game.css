@@ -14,6 +14,7 @@
 }
 
 #trapsRewardsMenu{
+	display: none;
 	float: left;
 	margin-left: 3%;
 	width:15%;
@@ -22,7 +23,8 @@
 #scoreListContainer{
 	float: right;
 	width:18%;
-	height:80%
+	height:80%;
+	display: none;
 }
 
 #RewardsMenu, #trapsMenu{
@@ -107,6 +109,7 @@ body{
 #indication {
 	margin-top: 10px;
 	height: 6%;
+	display: none;
 }
 
 #colonne-gauche-div{

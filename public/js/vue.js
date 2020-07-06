@@ -51,6 +51,7 @@ class Vue {
         this.isAssetLoadingOver = true
 
         this.explosionAnimationFrames = new Array(24);
+        this.rewardAnimationFrames = new Array(83);
         async function fillExplosionFramesArray(self) {
             let i = 0
             for await (let element of self.explosionAnimationFrames) {
@@ -61,7 +62,18 @@ class Vue {
             }
             console.log(self.explosionAnimationFrames)
         }
+        async function fillRewardFramesArray(self) {
+            let i = 0
+            for await (let element of self.rewardAnimationFrames) {
+                self.rewardAnimationFrames[i] = new Image(self.spriteWidth * 2, self.spriteHeight * 2)
+                self.rewardAnimationFrames[i].src = "/img/Animations/reward/gold-" + i + ".png"
+                i++
+                console.log(self.rewardAnimationFrames[i])
+            }
+            console.log(self.rewardAnimationFrames)
+        }
         fillExplosionFramesArray(this)
+        fillRewardFramesArray(this)
 
     }
 
@@ -177,7 +189,7 @@ class Vue {
             let inputBoxTime = document.createElement("input");
             inputBoxTime.setAttribute("id", "inputBoxTime")
             inputBoxTime.type = "text";
-            inputBoxTime.value = 10;
+            inputBoxTime.value = 6;
 
 
             let dureeLabel = document.createElement("p");
@@ -688,26 +700,44 @@ class Vue {
         anim(0)
     }
 
+    /**
+     * anime la recompense
+     */
+    rewardAnimation(position) {
+        let self = this
+        let x = position.x_
+        let y = position.y_
+        let i = 0
+        console.log("coord : ", x, y)
+        function anim() {
+            self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
+            i++;
+            if (i < self.rewardAnimationFrames.length) {
+                requestAnimationFrame(anim);
+            }
+        }
+        anim(0)
+    }
 
     player(position) {
         let dir = controller.getCurrentPlayer().direction
         switch (dir) {
             case 'up':
-                this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
+                this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
                 break;
             case 'down':
-                this.context.drawImage(this.playerDownAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight- this.halfWidth / 2.0 , this.playerDownAsset.width, this.playerDownAsset.height)
+                this.context.drawImage(this.playerDownAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerDownAsset.width, this.playerDownAsset.height)
             case 'left':
-                this.context.drawImage(this.playerLeftAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerLeftAsset.width, this.playerLeftAsset.height)
+                this.context.drawImage(this.playerLeftAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerLeftAsset.width, this.playerLeftAsset.height)
                 break;
             case 'right':
-                this.context.drawImage(this.playerRightAsset, position.x * this.spriteWidth- this.halfWidth / 2.0 , position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerRightAsset.width, this.playerRightAsset.height)
+                this.context.drawImage(this.playerRightAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerRightAsset.width, this.playerRightAsset.height)
                 break;
             default:
                 this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
         }
-        
-      // this.context.drawImage(this.blackCube, (position.x * this.spriteWidth) - this.halfWidth / 2.0 , (position.y * this.spriteHeight) - this.halfWidth / 2.0, this.blackCube.width, this.blackCube.height)
+
+        // this.context.drawImage(this.blackCube, (position.x * this.spriteWidth) - this.halfWidth / 2.0 , (position.y * this.spriteHeight) - this.halfWidth / 2.0, this.blackCube.width, this.blackCube.height)
         //this.context.fillRect(position.x * this.spriteWidth, position.y * this.spriteHeight, 2,2);
         this.darken(position)
     }
@@ -715,7 +745,10 @@ class Vue {
     otherPlayers(players) {
 
         players.forEach(pl => {
-            if (pl.id != controller.getId()) {//pas notre joueur
+            if (pl.id != controller.getId() && pl.role != "trapper") {//pas notre joueur
+                this.context.font = "8px Roboto";
+                let txtLength = this.context.measureText(pl.name).width;
+                this.context.fillText(pl.name, pl.position.x * this.spriteWidth - this.halfWidth / 2.0 - txtLength/2.0, pl.position.y * this.spriteHeight - this.halfWidth);
                 switch (pl.direction) {
                     case 'up':
                         this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)

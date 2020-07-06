@@ -64,7 +64,8 @@ $(() => {
         self.socket.on('lobby-changes-occured', function (roomReceived) {
             console.log("changes occured")
             room = roomReceived
-            vue.renderMiddleAndRightLobbyPannel()
+            vue.renderMiddleLobbyPannel()
+            vue.renderRightLobbyPannel()
         })
 
         /**
@@ -79,8 +80,8 @@ $(() => {
         /**
          * plus qu'un seul joueur en jeu/salon -> destruction du salon + redirection
          */
-        this.socket.on('exit-one-player-left', room => {
-            alert("Plus de joueur dans le jeu, vous avez été déconnecté.");
+        this.socket.on('redirectPlayer', room => {
+            alert("Plus de joueur dans le jeu ou ancien salon, vous avez été déconnecté.");
             window.location.replace("/");
         })
 
@@ -89,6 +90,13 @@ $(() => {
          */
         self.socket.on('trap-animation', function (position) {
             vue.trapAnimation(position)
+        })
+
+        /**
+         * Animation de recompense
+         */
+        self.socket.on('reward-animation', function (position) {
+            vue.rewardAnimation(position)
         })
 
         /**
