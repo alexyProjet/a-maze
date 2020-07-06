@@ -46,6 +46,7 @@ $(() => {
 
             room = roomReceived
             vue.renderMiddleLobbyPannel()
+            vue.renderRightLobbyPannel()
             console.log("Nouvelle utilisateur : ", name, "dans : ", roomReceived)
         })
 
@@ -90,6 +91,7 @@ $(() => {
          */
         self.socket.on('trap-animation', function (position) {
             vue.trapAnimation(position)
+            
         })
 
         /**

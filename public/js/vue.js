@@ -223,7 +223,9 @@ class Vue {
      * SET PSEUDO, OPTIONS...
      */
     renderRightLobbyPannel() {
-
+        if ( document.getElementById('colonne-droite-div') != null) {
+            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
+        }
         let divColonneDroite = document.createElement("div")
         divColonneDroite.setAttribute("id", "colonne-droite-div")
 
@@ -251,10 +253,9 @@ class Vue {
         //cacher container
         console.log("rendering lobby..")
         this.gameBaliseShown(false)
+
         if (document.getElementById("colonne-milieu-div") != null) {
             document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
-            //document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
-            document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
         }
         let btnStart = document.createElement("button");
         btnStart.setAttribute("id", "btnStart")
@@ -684,15 +685,19 @@ class Vue {
     /**
      * anime le piege
      */
-    trapAnimation(position) {
+    trapAnimation() {
         let self = this
         let x = position.x_
         let y = position.y_
         let i = 0
-        console.log("coord : ", x, y)
+        let player = controller.getCurrentPlayer()
         function anim() {
             self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
             i++;
+            if(player.role == "explorer"){
+                vue.darken(player.position)
+            }
+            
             if (i < self.explosionAnimationFrames.length) {
                 requestAnimationFrame(anim);
             }
@@ -708,10 +713,13 @@ class Vue {
         let x = position.x_
         let y = position.y_
         let i = 0
-        console.log("coord : ", x, y)
+        let player = controller.getCurrentPlayer()
         function anim() {
             self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
             i++;
+            if(player.role == "explorer"){
+                vue.darken(player.position)
+            }
             if (i < self.rewardAnimationFrames.length) {
                 requestAnimationFrame(anim);
             }
