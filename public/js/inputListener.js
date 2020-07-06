@@ -8,6 +8,7 @@ var myPlayerPosition = null
 var oldX = -1
 var oldY = -1
 var refreshRate = 25
+const playerHalfSize = 0.20
 
 function initListener() {
     console.log("initializing listener....")
@@ -18,17 +19,20 @@ function initListener() {
     console.log("listener initialised", oldX, oldY, myPlayerPosition)
 }
 
+
+
+
 var isWallPresent = { up: false, down: false, right: false, left: false }
 const position = (x, y) => Object({ x, y }) //creer un objet position
 
 const collisions = (pos, size) => [
-        position(Math.floor(pos.x - size), Math.floor(pos.y - size)),// haut ET gauche
-        position(Math.floor(pos.x - size), Math.floor(pos.y + size)),// haut droite
-        position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
-        position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
-    ]
+    position(Math.floor(pos.x - size), Math.floor(pos.y - size)),// haut ET gauche
+    position(Math.floor(pos.x - size), Math.floor(pos.y + size)),// haut droite
+    position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
+    position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
+]
 
-const playerHalfSize = 0.20
+
 function routine() {
     if (gameStarted && controller.getCurrentPlayer().role != "trapper") {
         if (zKey) {

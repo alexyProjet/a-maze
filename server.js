@@ -68,7 +68,7 @@ server.listen(port, function () {
                 }
                 io.in(room).emit("user-connected-in-lobby", name, rooms[room])
             } else {
-                io.to(socket.id).emit("lobby-already-in-game")
+                io.to(socket.id).emit("redirectPlayer")
             }
         });
 
@@ -139,31 +139,8 @@ server.listen(port, function () {
             })
         });
 
-        /**
-         * Initialisation d'un joueur
-         */
-        socket.on('init-player', function (room, time) {
-            let ref
-            if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
-                ref = player(randomPosition(room), roles.trapper, 0, trapperInventory.slice())
-            } else {
-                ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
-            }
-            ref.id = socket.id
-            ref.name = rooms[room].users[socket.id]
-            if (socket.id == rooms[room].roomLeader) {
-                ref.isRoomLeader = true
-            }
-            console.log("SERVEUR ON : player is  ", ref)
-            rooms[room].model.players.push(ref)
-            console.log("SERVEUR ON : START in room ", room)
-            // updateModels(rooms[room].model, room, withmap = true)
-
-            io.in(room).emit('display-game', time, rooms[room].model) //met à jour model tout le monde
-        })
-
-        /**
-         * Averti du début de partie
+                /**
+         * Client demande le debut de partie, si oui alors on prépare
          */
         socket.on('start-game', function (room, time) {
             if (socket.id == rooms[room].roomLeader) {
@@ -171,14 +148,35 @@ server.listen(port, function () {
                     console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")
                     io.in(room).emit('game-ready', "missingPlayers")
                 } else {
-                    console.log("SERVEUR EMIT : gameReady ", room)
+                    
                     rooms[room].state = "inGame"
                     let timeStop = new Date();
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
                     timer(timeStop.getTime(), room)
+
                     io.in(room).emit('game-ready', "ok", timeStop.getTime())
-                    io.emit('remove-room-from-lobby-menu', room)
-                    updateModelsEveryRefreshRate(room);
+                    io.in(room).emit('remove-room-from-lobby-menu', room)
+
+//for les clés dans users ->push player avec id
+                    let idArray = Object.keys(rooms[room].users)
+
+                    idArray.forEach(id => {
+                        let ref 
+                        if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
+                            ref = player(randomPosition(room), roles.trapper, 0, trapperInventory.slice())
+                        } else {
+                            ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
+                        }
+                        ref.id = id
+                        ref.name = rooms[room].users[id]
+                        if (id == rooms[room].roomLeader) {
+                            ref.isRoomLeader = true
+                        }
+                        rooms[room].model.players.push(ref)
+                    })
+
+                    updateModelsEveryRefreshRate()
+                    io.in(room).emit('display-game', timeStop,rooms[room].model)
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -215,10 +213,10 @@ server.listen(port, function () {
          * Valide ou non le déplacement
          */
         socket.on('move-player', function (room, newPosition, dir) {
-            console.log("[MOVE-PLAYER] : recu du salon : ", room)
+            //console.log("[MOVE-PLAYER] : recu du salon : ", room)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
             if (newPosition.x > 30 || newPosition.y > 20) {
-                console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
+               // console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
             }
             else if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
                 let isColliding = false;

@@ -105,40 +105,6 @@ $(() => {
         self.socket.on('error-position', function () {
             myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
         })
-
-        /**
-         * Signale que le jeu est prêt et demande un joueur
-         */
-        self.socket.on('game-ready', function (info, time) {
-            if (info == "missingPlayers") {
-                console.log("CONTROLLER : partie tout seul impossible ")
-            } else {
-                console.log("CONTROLLER : game-ready tout est bon ")
-                self.socket.emit("init-player", roomName, time)
-            }
-        })
-
-        /**
-         * Signale qu'il faut affiche le jeu
-         */
-        self.socket.on('display-game', function (timeStop, dataModel) {
-            console.log("CONTROLLER: display-game ")
-            Object.assign(model, dataModel)
-            model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
-            console.log("CONTROLLER ON : UpdateModel recu", model.players)
-
-            gameStarted = true
-            vue.initGame()
-            vue.launchCountdown(timeStop)
-            vue.renderScoreList()
-
-            //attend un peu puis lance le set interval pour être sur que tout pret
-            initListener()
-
-            console.log("fin displaygame.... launching vue.renderGame()...")
-            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
-        })
-
         //Fin du chronometre
         self.socket.on('countdown-over', function () {
             clearTimeout(gameTimeout)
@@ -160,6 +126,31 @@ $(() => {
                 alert("Le nombre de minutes ne peut être > 60 et = 0")
             }
         }
+
+
+        /**
+         * Signale qu'il faut affiche le jeu
+         */
+        self.socket.on('display-game', function (timeStop, mod) {
+            console.log("CONTROLLER: display-game ")
+            Object.assign(model, mod)
+            model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
+            console.log("CONTROLLER ON : UpdateModel recu", model.players)
+
+            gameStarted = true
+            vue.initGame()
+            vue.launchCountdown(timeStop)
+            vue.renderScoreList()
+
+            //attend un peu puis lance le set interval pour être sur que tout pret
+            initListener()
+
+            console.log("fin displaygame.... launching vue.renderGame()...")
+            gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
+        })
+
+
+
 
         const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
