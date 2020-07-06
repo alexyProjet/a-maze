@@ -123,7 +123,7 @@ server.listen(port, function () {
                         rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
                             return pl.id !== socket.id;
                         });
-                        updateModels(rooms[room].model, room, withmap = true)
+                       // updateModels(rooms[room].model, room, withmap = true)
                     } else {
                         console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
@@ -131,7 +131,7 @@ server.listen(port, function () {
                             return pl.id !== socket.id;
                         });
                         delete rooms[room].users[socket.id]
-                        updateModels(rooms[room].model, room, withmap = true)
+                        //updateModels(rooms[room].model, room, withmap = true)
                     }
                     io.to(room).emit("scores-update")
                 }
@@ -156,8 +156,9 @@ server.listen(port, function () {
             console.log("SERVEUR ON : player is  ", ref)
             rooms[room].model.players.push(ref)
             console.log("SERVEUR ON : START in room ", room)
-            updateModels(rooms[room].model, room, withmap = true)
-            io.in(room).emit('display-game', time)
+           // updateModels(rooms[room].model, room, withmap = true)
+             
+            io.in(room).emit('display-game', time,rooms[room].model) //met à jour model tout le monde
         })
 
         /**
@@ -169,13 +170,14 @@ server.listen(port, function () {
                     console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")
                     io.in(room).emit('game-ready', "missingPlayers")
                 } else {
-                    console.log("SERVEUR EMIT : gameReadey ", room)
+                    console.log("SERVEUR EMIT : gameReady ", room)
                     rooms[room].state = "inGame"
                     let timeStop = new Date();
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
                     timer(timeStop.getTime(), room)
                     io.in(room).emit('game-ready', "ok", timeStop.getTime())
                     io.emit('remove-room-from-lobby-menu', room)
+                    setInterval(updateModelsEveryRefreshRate, 50);
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -205,7 +207,7 @@ server.listen(port, function () {
             } else {
                 console.log("trap et reward placés NON valides")
             }
-            updateModels(rooms[room].model, room)
+           // updateModels(rooms[room].model, room)
         });
 
         /**
@@ -264,7 +266,7 @@ server.listen(port, function () {
                 }
 
             }
-            updateModels(rooms[room].model, room)
+           // updateModels(rooms[room].model, room)
             //signaler controlelr ajouter coord du joueur
         })
     });
@@ -333,25 +335,34 @@ function timer(stop, room) {
 }
 
 /**
- * Met à jour le model
+ * Met à jour le model tous les refreshRate ms
  * @param {*} mod 
  * @param {*} room 
  * @param {*} withmap 
  */
-function updateModels(mod, room, withmap = false) {
-    mod.players.forEach(pl => {
-        let socketId = pl.id
-        //mesure anti-triche, les explorer n'ont pas à avoir la lsite des pieges et traps mais seulement la liste d'entités
-        if (pl.role == "explorer") {
-            let newModel = Object.assign({}, mod)
-            newModel.entities = newModel.rewards.concat(newModel.traps)
-            newModel.traps = []
-            newModel.rewards = []
-            io.to(socketId).emit('model-update', JSON.stringify(newModel));
-        } else {
-            io.to(socketId).emit('model-update', JSON.stringify(mod));
+
+
+function updateModelsEveryRefreshRate(){
+
+    console.log("[REFRESHING MODEL] all in-game rooms...")
+    Object.keys(rooms).map(function(room, index) {
+        if(rooms[room].state == "inGame"){
+            let mod = rooms[room].model
+            mod.players.forEach(pl => {
+                let socketId = pl.id
+                //mesure anti-triche, les explorer n'ont pas à avoir la lsite des pieges et traps mais seulement la liste d'entités
+                if (pl.role == "explorer") {
+                    let newModel = Object.assign({}, mod)
+                    newModel.entities = newModel.rewards.concat(newModel.traps)
+                    newModel.traps = []
+                    newModel.rewards = []
+                    io.to(socketId).emit('model-update', newModel);
+                } else {
+                    io.to(socketId).emit('model-update', mod);
+                }
+            })
         }
-    })
+    });
 
 }
 

@@ -439,12 +439,13 @@ class Vue {
         if (controller.getCurrentPlayer().role == "trapper") {
             this.traps(controller.getModel().traps)
             this.rewards(controller.getModel().rewards)
+            this.otherPlayers(controller.getModel().players)
         } else {
             this.entities(controller.getModel().entities)
             this.player(false, position) //render le joueur principal
+            this.otherPlayers(controller.getModel().players)
         }
         
-        this.otherPlayers()
         //this.players(controller.getModel().players, thisplayerId)
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
@@ -751,10 +752,10 @@ class Vue {
         this.darken(position)
     }
 
-    otherPlayers() {
+    otherPlayers(players) {
 
-        controller.getModel().players.forEach(pl => {
-            if(pl.id != controller.getId()){
+        players.forEach(pl => {
+            if(pl.id != controller.getId()){//pas notre joueur
                 this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth, pl.position.y * this.spriteHeight, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)
             }
             //player(true,pos)

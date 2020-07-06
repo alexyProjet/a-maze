@@ -71,7 +71,7 @@ $(() => {
         * ---------------------- Gestion d'une partie ----------------------------------
         */
         self.socket.on('model-update', function (data) {
-            Object.assign(model, JSON.parse(data))
+            Object.assign(model, data)
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
             console.log("CONTROLLER ON : UpdateModel recu", model.players)
         })
@@ -92,7 +92,14 @@ $(() => {
         })
 
         /**
-         * Signale que le jeu est prêt
+         * erreur de position d'un joueur
+         */
+        self.socket.on('error-position', function () {
+            myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
+        })
+
+        /**
+         * Signale que le jeu est prêt et demande un joueur
          */
         self.socket.on('game-ready', function (info, time) {
             if (info == "missingPlayers") {
@@ -104,16 +111,14 @@ $(() => {
         })
 
         /**
-         * Signale que le jeu est prêt
-         */
-        self.socket.on('error-position', function () {
-            myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
-        })
-        /**
          * Signale qu'il faut affiche le jeu
          */
-        self.socket.on('display-game', function (timeStop) {
+        self.socket.on('display-game', function (timeStop, dataModel) {
             console.log("CONTROLLER: display-game ")
+            Object.assign(model, dataModel)
+            model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
+            console.log("CONTROLLER ON : UpdateModel recu", model.players)
+
             gameStarted = true
             vue.initGame()
             vue.launchCountdown(timeStop)
@@ -122,9 +127,6 @@ $(() => {
             //attend un peu puis lance le set interval pour être sur que tout pret
             initListener()
 
-            //renderPlayerTimeOut = setTimeout(renderPlayerTimeInterval = setInterval(() => vue.player(false, myPlayerPosition), refreshRate), 200) //render userPlayer avec la var global de position
-            //document.getElementById('startGameButton').parentNode.removeChild(document.getElementById('startGameButton'));
-            // document.getElementById('nameContainer').parentNode.removeChild(document.getElementById('nameContainer'));    
             console.log("fin displaygame.... launching vue.renderGame()...")
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
@@ -197,15 +199,6 @@ $(() => {
         return a
     }
 
-    const collisionRightLeft = (pos, size) => {
-        let a = [
-            position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
-            position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
-        ]
-        console.log(a)
-        return a
-    }
-
     const playerHalfSize = 0.25
     function routine() {
         if (gameStarted) {
@@ -219,7 +212,7 @@ $(() => {
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.y = newY
-                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    //controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
                 }
 
                 if (newY - Math.floor(newY) > playerHalfSize) { //si pas mur et veut avancer
@@ -248,7 +241,7 @@ $(() => {
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.y = newY
-                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    //controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
                 }
 
                 if (Math.floor(newY + 1) - newY > playerHalfSize) { //si pas mur et veut avancer
@@ -277,7 +270,7 @@ $(() => {
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.x = newX
-                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                   // controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
                 }
 
                 if (newX - Math.floor(newX) > playerHalfSize) { //si pas mur et veut avancer
@@ -308,7 +301,7 @@ $(() => {
                     oldY = newY
                     oldX = newX
                     myPlayerPosition.x = newX
-                    controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
+                    //controller.moveTo(myPlayerPosition, controller.getCurrentPlayer()) //signale au controller le deplacement*/
                 }
 
                 if (Math.floor(newX + 1) - newX > playerHalfSize) { //si pas mur et veut avancer
@@ -328,6 +321,10 @@ $(() => {
                     }
                 }
                 console.log("d touche : ", newX)
+            }
+            if (qKey || zKey || sKey || dKey) {
+                console.log("[INPUT LISTENER] : Update player pos")
+                controller.moveTo(myPlayerPosition, controller.getCurrentPlayer())
             }
         }
     }
