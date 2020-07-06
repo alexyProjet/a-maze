@@ -32,7 +32,8 @@ class Vue {
         this.trapAsset = await this._syncedLoadImg("/img/Environment/trap.png", this.spriteWidth, this.spriteHeight)
         this.rewardAsset = await this._syncedLoadImg("/img/Environment/reward.png", this.spriteWidth, this.spriteHeight)
         this.emptySlotAsset = await this._syncedLoadImg("/img/Environment/empty_slot.png", this.spriteWidth, this.spriteHeight)
-      
+        this.anonymousEntityAsset = await this._syncedLoadImg("/img/Environment/anonymous_block.png", this.spriteWidth, this.spriteHeight)
+
         this.blackCube = await this._syncedLoadImg("/img/Player/Main/black.png", this.halfWidth, this.halfHeight)
 
         this.playerUpAsset = await this._syncedLoadImg("/img/Player/Main/player_up.png", this.halfWidth, this.halfHeight)
@@ -441,13 +442,12 @@ class Vue {
             this.traps(controller.getModel().traps)
             this.rewards(controller.getModel().rewards)
             this.otherPlayers(controller.getModel().players)
-        } else {
+        } else { //explorer
             this.entities(controller.getModel().entities)
-            this.player(playerPosition) //render le joueur principal
             this.otherPlayers(controller.getModel().players)
+            this.player(playerPosition) //render le joueur principal
         }
 
-        //this.players(controller.getModel().players, thisplayerId)
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
         lastInventoryCount = controller.getCurrentPlayer().inventory.length

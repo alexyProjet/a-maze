@@ -143,7 +143,7 @@ server.listen(port, function () {
         socket.on('init-player', function (room, time) {
             let ref
             if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
-                ref = player(position(-10, 1), roles.trapper, 0, trapperInventory.slice()) // construit nouveau joeur a position 11 et role explorer
+                ref = player(randomPosition(room), roles.trapper, 0, trapperInventory.slice())
             } else {
                 ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
             }
