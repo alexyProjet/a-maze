@@ -7,8 +7,7 @@ var speed = 0.15
 var myPlayerPosition = null
 var oldX = -1
 var oldY = -1
-var interval = null
-var renderPlayerTimeOut = null
+var refreshRate = 25
 
 function initListener() {
     console.log("initializing listener....")

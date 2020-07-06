@@ -223,7 +223,7 @@ class Vue {
      * SET PSEUDO, OPTIONS...
      */
     renderRightLobbyPannel() {
-        if ( document.getElementById('colonne-droite-div') != null) {
+        if (document.getElementById('colonne-droite-div') != null) {
             document.getElementById('colonne-droite-div').parentNode.removeChild(document.getElementById('colonne-droite-div'));
         }
         let divColonneDroite = document.createElement("div")
@@ -451,15 +451,21 @@ class Vue {
         }
         this.clearAll()
         this.map(controller.getModel().map)
+
         if (controller.getCurrentPlayer().role == "trapper") {
             this.traps(controller.getModel().traps)
             this.rewards(controller.getModel().rewards)
             this.otherPlayers(controller.getModel().players)
+            this.animation()
         } else { //explorer
             this.entities(controller.getModel().entities)
             this.otherPlayers(controller.getModel().players)
             this.player(playerPosition) //render le joueur principal
+            this.animation()
+            this.darken(playerPosition)
         }
+
+        this.renderScoreList()
 
         this.tempTrapsAndRewards(controller.getCurrentPlayer().role)
         lastRole = controller.getCurrentPlayer().role
@@ -685,46 +691,45 @@ class Vue {
     /**
      * anime le piege
      */
-    trapAnimation() {
+    animation() {
         let self = this
-        let x = position.x_
-        let y = position.y_
+        let x = null
+        let y = null
         let i = 0
-        let player = controller.getCurrentPlayer()
-        function anim() {
-            self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
-            i++;
-            if(player.role == "explorer"){
-                vue.darken(player.position)
-            }
-            
-            if (i < self.explosionAnimationFrames.length) {
-                requestAnimationFrame(anim);
-            }
-        }
-        anim(0)
-    }
 
-    /**
-     * anime la recompense
-     */
-    rewardAnimation(position) {
-        let self = this
-        let x = position.x_
-        let y = position.y_
-        let i = 0
-        let player = controller.getCurrentPlayer()
-        function anim() {
-            self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
-            i++;
-            if(player.role == "explorer"){
-                vue.darken(player.position)
+        let trapsRewards = controller.getTrapsRewardsToAnimate()
+
+        if (trapsRewards.trap != null) {
+            x = trapsRewards.trap.x_
+            y = trapsRewards.trap.y_
+            function anim() {
+                self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
+                i++
+               if(controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
+                if (i < self.explosionAnimationFrames.length) {
+                    requestAnimationFrame(anim);
+                }
             }
-            if (i < self.rewardAnimationFrames.length) {
-                requestAnimationFrame(anim);
+            trapsRewards.trap = null
+            anim(0)
+
+        } else
+            if (trapsRewards.reward != null) {
+                x = trapsRewards.reward.x_
+                y = trapsRewards.reward.y_
+                function anim() {
+                    self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
+                    i++
+                    if(controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
+                    if (i < self.rewardAnimationFrames.length) {
+                        requestAnimationFrame(anim);
+                    }
+                }
+                anim(0)
+                trapsRewards.reward = null
             }
-        }
-        anim(0)
+
+
     }
 
     player(position) {
@@ -747,7 +752,7 @@ class Vue {
 
         // this.context.drawImage(this.blackCube, (position.x * this.spriteWidth) - this.halfWidth / 2.0 , (position.y * this.spriteHeight) - this.halfWidth / 2.0, this.blackCube.width, this.blackCube.height)
         //this.context.fillRect(position.x * this.spriteWidth, position.y * this.spriteHeight, 2,2);
-        this.darken(position)
+
     }
 
     otherPlayers(players) {
@@ -756,7 +761,7 @@ class Vue {
             if (pl.id != controller.getId() && pl.role != "trapper") {//pas notre joueur
                 this.context.font = "8px Roboto";
                 let txtLength = this.context.measureText(pl.name).width;
-                this.context.fillText(pl.name, pl.position.x * this.spriteWidth - this.halfWidth / 2.0 - txtLength/2.0, pl.position.y * this.spriteHeight - this.halfWidth);
+                this.context.fillText(pl.name, pl.position.x * this.spriteWidth - this.halfWidth / 2.0 - txtLength / 2.0, pl.position.y * this.spriteHeight - this.halfWidth);
                 switch (pl.direction) {
                     case 'up':
                         this.context.drawImage(this.playerEnemyUpAsset, pl.position.x * this.spriteWidth - this.halfWidth / 2.0, pl.position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerEnemyUpAsset.width, this.playerEnemyUpAsset.height)

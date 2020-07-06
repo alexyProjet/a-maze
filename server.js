@@ -135,7 +135,6 @@ server.listen(port, function () {
                         });
                         delete rooms[room].users[socket.id]
                     }
-                    io.to(room).emit("scores-update")
                 }
             })
         });
@@ -209,7 +208,6 @@ server.listen(port, function () {
             } else {
                 console.log("trap et reward placés NON valides")
             }
-            // updateModels(rooms[room].model, room)
         });
 
         /**

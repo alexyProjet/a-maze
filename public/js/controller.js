@@ -1,11 +1,12 @@
 let controller = null;
 var gameStarted = false;
-var refreshRate = 25
+
 $(() => {
 
     var name = "invité"
     var self = this;
     self.socket = io();
+    var trapsRewardsToAnimate = { trap: null, reward: null }
 
     controller = (() => {
         let room = {}
@@ -50,9 +51,6 @@ $(() => {
             console.log("Nouvelle utilisateur : ", name, "dans : ", roomReceived)
         })
 
-        self.socket.on('scores-update', function () {
-            vue.renderScoreList()
-        })
 
         //Utilisateur se deconnecte
         self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
@@ -90,15 +88,15 @@ $(() => {
          * Animation de piège
          */
         self.socket.on('trap-animation', function (position) {
-            vue.trapAnimation(position)
-            
+            trapsRewardsToAnimate.trap = position
+
         })
 
         /**
          * Animation de recompense
          */
         self.socket.on('reward-animation', function (position) {
-            vue.rewardAnimation(position)
+            trapsRewardsToAnimate.reward = position
         })
 
         /**
@@ -163,7 +161,7 @@ $(() => {
             }
         }
 
-        const moveTo = (position,dir) => self.socket.emit("move-player", roomName, position,dir) //send la position
+        const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
         const getModel = () => model //renvoi le model
         const setName = (name) => self.socket.emit("set-name", roomName, name)
@@ -172,7 +170,8 @@ $(() => {
         const getId = () => myId
         const getName = () => room.users[getId()]
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
-        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName } //
+        const getTrapsRewardsToAnimate = () => trapsRewardsToAnimate //renvoi le current player
+        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName, getTrapsRewardsToAnimate } //
     })()
 
 
