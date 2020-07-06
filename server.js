@@ -154,7 +154,6 @@ server.listen(port, function () {
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
                     timer(timeStop.getTime(), room)
 
-                    io.in(room).emit('game-ready', "ok", timeStop.getTime())
                     io.in(room).emit('remove-room-from-lobby-menu', room)
 
 //for les clés dans users ->push player avec id
@@ -176,7 +175,7 @@ server.listen(port, function () {
                     })
 
                     updateModelsEveryRefreshRate(room)
-                    io.in(room).emit('display-game', timeStop,rooms[room].model)
+                    io.in(room).emit('display-game', timeStop.getTime(),rooms[room].model)
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
