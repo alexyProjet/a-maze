@@ -617,7 +617,7 @@ class Vue {
         for (var i = 0; i < mapArray.length; i++) {
             for (var j = 0; j < mapArray[i].length; j++) {
                 this.context.drawImage(this.floorAsset, j * this.floorAsset.width, i * this.floorAsset.height, this.floorAsset.width, this.floorAsset.height) //rend le sol
-                if (mapArray[i][j] == 1) { //mur
+                if (mapArray[i][j] == 1 || mapArray[i][j] == -1) { //mur
                     this.context.drawImage(this.wallAsset, j * this.wallAsset.width, i * this.wallAsset.height, this.wallAsset.width, this.wallAsset.height) //canva block_03 c'est un mur
                 }
                 if (mapArray[i][j] == 2) { //mur détruit

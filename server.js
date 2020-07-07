@@ -255,7 +255,9 @@ server.listen(port, function () {
                     }
                 })
                 //check collisions avec murs
-                let isCollidingWall = collision(newPosition, playerHalfSize).some(pos => rooms[room].model.map[pos.y][pos.x] == 1)
+                let isCollidingWall = collision(newPosition, playerHalfSize).some(pos => {
+                    return rooms[room].model.map[pos.y][pos.x] == 1 || rooms[room].model.map[pos.y][pos.x] == -1
+                })
                 if (!isCollidingWall) {
                     player.direction = dir
                     player.position = newPosition
@@ -415,12 +417,18 @@ function bordersPresents(maze){
         if(maze[0][i] == 0 || maze[yLength-1][i] == 0) {
             console.log(" ----------------> failed")
             return false
+        }else{
+            maze[0][i] = -1
+            maze[yLength-1][i] = -1
         }
     }
     for(let i = 1; i < yLength -1 ; i++){
         if(maze[i][0] == 0 || maze[i][xLength-1] == 0) {
             console.log(" ----------------> failed")
             return false
+        }else{
+            maze[i][0] = -1
+            maze[i][xLength-1] = -1
         }
     }
     console.log(" ----------------> success")
