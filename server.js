@@ -11,6 +11,7 @@ app.set('view engine', 'pug')
 app.use(express.static(__dirname + '/public'));
 app.use(express.urlencoded({ extended: true }))
 
+const mapSize = {width:30,height:20}
 const rooms = {}
 const refreshRate = 30
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
@@ -180,8 +181,6 @@ server.listen(port, function () {
                     updateModelsEveryRefreshRate(room)
                     io.in(room).emit('display-game', timeStop.getTime(), rooms[room].model)
                 }
-            } else {
-                console.log("SERVEUR : seul le roomLeader peut lancer la partie")
             }
 
         })
@@ -262,7 +261,7 @@ server.listen(port, function () {
                     player.position = newPosition
                 } else {
                     io.to(socket.id).emit('error-position')
-                    console.log("----> [MOVE-PLAYER] : collision avec un mur.", newPosition)
+                   // console.log("----> [MOVE-PLAYER] : collision avec un mur.", newPosition)
                 }
 
             } else {
@@ -395,9 +394,37 @@ const player = (position, role, score = 0, inventory = [], name = null, id = nul
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
 const map = () => {
-    let maze = generate({ width: 29, height: 19 });
-    console.log(maze);
+    console.log("[ GENERATING MAP ]")
+//cette librairie est pratique mais bug, il faut donc checker les bords qui parfois ne sont pas rendus
+    let maze = generate({ width: 29, height: 19 , empty: '0', wall: '1' });
+    while(!bordersPresents(maze)){
+        maze = generate({ width: 29, height: 19 , empty: '0', wall: '1' });
+        console.log(" ---> [ GENERATING MAP ] failed... retrying !")
+    }
+    console.log(" ---> [ GENERATING MAP ] succes !")
     return maze
+}
+
+function bordersPresents(maze){
+    
+    let xLength = maze[0].length
+    let yLength = maze.length
+    console.log(" ----------------> debut bordersPresents")
+
+    for(let i = 0; i < xLength -1 ; i++){
+        if(maze[0][i] == 0 || maze[yLength-1][i] == 0) {
+            console.log(" ----------------> failed")
+            return false
+        }
+    }
+    for(let i = 1; i < yLength -1 ; i++){
+        if(maze[i][0] == 0 || maze[i][xLength-1] == 0) {
+            console.log(" ----------------> failed")
+            return false
+        }
+    }
+    console.log(" ----------------> success")
+    return true
 }
 
 const roles = {
