@@ -2,6 +2,10 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
+var generate = require("@indutny/maze")
+
+
+
 app.set('views', './views')
 app.set('view engine', 'pug')
 app.use(express.static(__dirname + '/public'));
@@ -57,10 +61,10 @@ server.listen(port, function () {
          */
         socket.on('new-user', (room, name) => {
             console.log("[NEW-USER] : nouveau joueur : ", name, " dans le salon : ", room)
-            if(rooms[room] == undefined){
+            if (rooms[room] == undefined) {
                 console.log(" ----> [NEW-USER] : salon inexistant... abandon.")
                 io.to(socket.id).emit("redirectPlayer")
-            } else  if (rooms[room].state != "inGame") { //si dans le lobby
+            } else if (rooms[room].state != "inGame") { //si dans le lobby
                 socket.join(room)
                 rooms[room].users[socket.id] = name
                 if (Object.keys(rooms[room].users).length == 1) {
@@ -139,16 +143,16 @@ server.listen(port, function () {
             })
         });
 
-                /**
-         * Client demande le debut de partie, si oui alors on prépare
-         */
+        /**
+ * Client demande le debut de partie, si oui alors on prépare
+ */
         socket.on('start-game', function (room, time) {
             if (socket.id == rooms[room].roomLeader) {
                 if (false/*Object.keys(rooms[room].users).length == 1*/) { // a enlever 
                     console.log("SERVEUR EMIT : gameReadey 1 seul joueur annulation")
                     io.in(room).emit('game-ready', "missingPlayers")
                 } else {
-                    
+
                     rooms[room].state = "inGame"
                     let timeStop = new Date();
                     timeStop.setMinutes(timeStop.getMinutes() + parseInt(time));
@@ -156,11 +160,11 @@ server.listen(port, function () {
 
                     io.in(room).emit('remove-room-from-lobby-menu', room)
 
-//for les clés dans users ->push player avec id
+                    //for les clés dans users ->push player avec id
                     let idArray = Object.keys(rooms[room].users)
 
                     idArray.forEach(id => {
-                        let ref 
+                        let ref
                         if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
                             ref = player(randomPosition(room), roles.trapper, 0, trapperInventory.slice())
                         } else {
@@ -173,9 +177,8 @@ server.listen(port, function () {
                         }
                         rooms[room].model.players.push(ref)
                     })
-
                     updateModelsEveryRefreshRate(room)
-                    io.in(room).emit('display-game', timeStop.getTime(),rooms[room].model)
+                    io.in(room).emit('display-game', timeStop.getTime(), rooms[room].model)
                 }
             } else {
                 console.log("SERVEUR : seul le roomLeader peut lancer la partie")
@@ -215,7 +218,7 @@ server.listen(port, function () {
             //console.log("[MOVE-PLAYER] : recu du salon : ", room)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
             if (newPosition.x > 30 || newPosition.y > 20) {
-               // console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
+                // console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
             }
             else if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
                 let isColliding = false;
@@ -315,7 +318,7 @@ function updateModelsEveryRefreshRate(room) {
             clearInterval(x)
         }
         else {
-            console.log("[REFRESHING MODEL] room : ", room)
+            // console.log("[REFRESHING MODEL] room : ", room)
             let mod = rooms[room].model
             mod.players.forEach(pl => {
                 let socketId = pl.id
@@ -391,28 +394,11 @@ const position = (x, y) => Object({ x, y }) //creer un objet position
 const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false, direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
-const map = () => [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-    [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1],
-    [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+const map = () => {
+    let maze = generate({ width: 29, height: 19 });
+    console.log(maze);
+    return maze
+}
 
 const roles = {
     explorer: "explorer",

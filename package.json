@@ -17,10 +17,17 @@
   },
   "homepage": "https://github.com/alexyProjet/a-maze#readme",
   "dependencies": {
+    "@indutny/maze": "^1.0.0",
     "ejs": "^3.1.3",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
+    "maze-generation": "^2.0.0",
     "pug": "^3.0.0",
     "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "@sbj42/maze-generator": "^2.0.6",
+    "@sbj42/maze-generator-backtrack": "^0.1.6",
+    "@sbj42/maze-generator-kruskal": "^0.1.2"
   }
 }
