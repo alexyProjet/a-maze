@@ -3,7 +3,7 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
 var generate = require("@indutny/maze")
-
+const fs = require('fs');
 
 
 app.set('views', './views')
@@ -11,12 +11,13 @@ app.set('view engine', 'pug')
 app.use(express.static(__dirname + '/public'));
 app.use(express.urlencoded({ extended: true }))
 
-const mapSize = {width:30,height:20}
+const mapSize = { width: 30, height: 20 }
 const rooms = {}
 const refreshRate = 30
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
 const fuzeTime = 150 //temps de suspense
 const playerHalfSize = 0.20 // taille joueur et piege, rayon à verifier
+var songsContainer = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers  mp3
 
 /**
  * Rendu de la page dans le menu des salons
@@ -34,7 +35,6 @@ app.post('/room', (req, res) => {
     }
     rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null }
     res.redirect(req.body.room)
-    io.emit("new-roon", req.body.room)
     console.log("SERVEUR : nouveau salon créé", req.body.room)
 })
 
@@ -54,7 +54,7 @@ var port = process.env.PORT || 3000
 
 server.listen(port, function () {
     console.log(`En écoute sur ${server.address().port}`);
-
+    loadSongs()
     io.on('connection', function (socket) {
 
         /**
@@ -71,6 +71,7 @@ server.listen(port, function () {
                 if (Object.keys(rooms[room].users).length == 1) {
                     rooms[room].roomLeader = socket.id
                 }
+                io.to(socket.id).emit("songs-list-update", songsContainer) //renvoi le songsContainer
                 io.in(room).emit("user-connected-in-lobby", name, rooms[room])
             } else {
                 io.to(socket.id).emit("redirectPlayer")
@@ -263,7 +264,7 @@ server.listen(port, function () {
                     player.position = newPosition
                 } else {
                     io.to(socket.id).emit('error-position')
-                   // console.log("----> [MOVE-PLAYER] : collision avec un mur.", newPosition)
+                    // console.log("----> [MOVE-PLAYER] : collision avec un mur.", newPosition)
                 }
 
             } else {
@@ -273,6 +274,23 @@ server.listen(port, function () {
         })
     });
 });
+
+function loadSongs() {
+    var dirTrap = './public/sound/trap-fx/';
+    fs.readdir(dirTrap, (err, files) => {
+        files.forEach(file => {
+            songsContainer.trap.push(file)
+        });
+    });
+    var dirReward = './public/sound/reward-fx/';
+    fs.readdir(dirReward, (err, files) => {
+        files.forEach(file => {
+            songsContainer.reward.push(file)
+        });
+    });
+    songsContainer.trapMain = "trap_main.mp3"
+    songsContainer.rewardMain = "reward_main.mp3"
+}
 
 /**
  * Return a room
@@ -397,38 +415,38 @@ const trap = (parentId, position, triggered = null, id = newId()) => Object({ pa
 const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
 const map = () => {
     console.log("[ GENERATING MAP ]")
-//cette librairie est pratique mais bug, il faut donc checker les bords qui parfois ne sont pas rendus
-    let maze = generate({ width: 29, height: 19 , empty: '0', wall: '1' });
-    while(!bordersPresents(maze)){
-        maze = generate({ width: 29, height: 19 , empty: '0', wall: '1' });
+    //cette librairie est pratique mais bug, il faut donc checker les bords qui parfois ne sont pas rendus
+    let maze = generate({ width: 29, height: 19, empty: '0', wall: '1' });
+    while (!bordersPresents(maze)) {
+        maze = generate({ width: 29, height: 19, empty: '0', wall: '1' });
         console.log(" ---> [ GENERATING MAP ] failed... retrying !")
     }
     console.log(" ---> [ GENERATING MAP ] succes !")
     return maze
 }
 
-function bordersPresents(maze){
-    
+function bordersPresents(maze) {
+
     let xLength = maze[0].length
     let yLength = maze.length
     console.log(" ----------------> debut bordersPresents")
 
-    for(let i = 0; i < xLength -1 ; i++){
-        if(maze[0][i] == 0 || maze[yLength-1][i] == 0) {
+    for (let i = 0; i < xLength - 1; i++) {
+        if (maze[0][i] == 0 || maze[yLength - 1][i] == 0) {
             console.log(" ----------------> failed")
             return false
-        }else{
+        } else {
             maze[0][i] = -1
-            maze[yLength-1][i] = -1
+            maze[yLength - 1][i] = -1
         }
     }
-    for(let i = 1; i < yLength -1 ; i++){
-        if(maze[i][0] == 0 || maze[i][xLength-1] == 0) {
+    for (let i = 1; i < yLength - 1; i++) {
+        if (maze[i][0] == 0 || maze[i][xLength - 1] == 0) {
             console.log(" ----------------> failed")
             return false
-        }else{
+        } else {
             maze[i][0] = -1
-            maze[i][xLength-1] = -1
+            maze[i][xLength - 1] = -1
         }
     }
     console.log(" ----------------> success")
@@ -474,9 +492,15 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     //updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
 
+    io.to(room).emit("play-sound", "trapMain", songsContainer.trapMain)
+    setTimeout(function(){ 
+        io.to(actualPlayer.id).emit("play-sound", "trap", Math.floor(Math.random() * (+(songsContainer.trap.length - 1) - +0)) + +(songsContainer.trap.length - 1))
+     }, 1000);
+    
+
 }, fuzeTime)
 
-function explodeTrapWallNeighboor(trapPosition, room) {
+function explodeTrapWallNeighboor(trapPosition, room,) {
     let neighboors = []
     let map = rooms[room].model.map
     let y = trapPosition.x_
@@ -515,6 +539,7 @@ const rewardPlayer = (rewardUsed, player, room) => {
     console.log("player : ", pl.id, " score is : ", pl.score)
     //updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
+    io.to(player.id).emit("play-sound", "rewardMain",songsContainer.trapReward)
 }
 
 /**

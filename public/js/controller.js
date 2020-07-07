@@ -7,6 +7,8 @@ $(() => {
     var self = this;
     self.socket = io();
     var trapsRewardsToAnimate = { trap: null, reward: null }
+    var songsLists = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers  mp3
+
 
     controller = (() => {
         let room = {}
@@ -31,9 +33,65 @@ $(() => {
             socket.emit('new-user', roomName, name);
         });
 
+
         /**
         * ---------------------- Gestion du salon ----------------------------------
         */
+        //Met à jour la liste des sons
+        self.socket.on('songs-list-update', function (songsContainer) {
+            songsContainer.trap.forEach(song => {
+                let sound = new Howl({
+                    src: ['../sound/trap-fx/' + song],
+                    autoplay: false,
+                    loop: false,
+                    volume: 0.5,
+                });
+                songsLists.trap.push(sound)
+            })
+
+            songsContainer.reward.forEach(song => {
+                let sound = new Howl({
+                    src: ['../sound/reward-fx/' + song],
+                    autoplay: false,
+                    loop: false,
+                    volume: 0.5,
+                });
+                songsLists.reward.push(sound)
+            })
+
+            let sound = new Howl({
+                src: ['../sound/mains/' + songsContainer.rewardMain],
+                autoplay: false,
+                loop: false,
+                volume: 0.5,
+            });
+            songsLists.rewardMain = sound
+
+            sound = new Howl({
+                src: ['../sound/mains/' + songsContainer.trapMain],
+                autoplay: false,
+                loop: false,
+                volume: 0.5,
+            });
+            songsLists.trapMain = sound
+        })
+
+        /**
+         * 
+         */
+        self.socket.on('play-sound', function (type, data) {
+            console.log("RECU JOUE SON", data)
+            if (type == "trapMain") {
+                songsLists.trapMain.play()
+            } else if (type == "trap") {
+                songsLists.trap[data].play()
+            } else if(type == "rewardMain") {
+                songsLists.rewardMain.play()
+            } else if (type == "reward") {
+                songsLists.reward[data].play()
+            }
+        })
+
         //Nouvel utilisateur dans le salon
         self.socket.on('user-connected-in-lobby', function (name, roomReceived) {
             myId = socket.id
@@ -54,7 +112,7 @@ $(() => {
 
         //Utilisateur se deconnecte
         self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
-            console.log("[IO] ",name, "s'est deconnecté")
+            console.log("[IO] ", name, "s'est deconnecté")
             room = roomReceived
             vue.renderMiddleLobbyPannel()
         })
@@ -146,7 +204,6 @@ $(() => {
             console.log("fin displaygame.... launching vue.renderGame()...")
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
-
 
 
 
