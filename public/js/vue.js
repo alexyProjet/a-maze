@@ -51,7 +51,10 @@ class Vue {
         this.isAssetLoadingOver = true
 
         this.explosionAnimationFrames = new Array(24);
-        this.rewardAnimationFrames = new Array(83);
+        this.rewardAnimationFrames = new Array(26);
+        this.moinsDeuxAnimationFrames = new Array(26);
+        this.moinsUnAnimationFrames = new Array(26);
+
         async function fillExplosionFramesArray(self) {
             let i = 0
             for await (let element of self.explosionAnimationFrames) {
@@ -72,9 +75,26 @@ class Vue {
             }
             console.log(self.rewardAnimationFrames)
         }
+        async function fillMoinsDeuxFramesArray(self) {
+            let i = 0
+            for await (let element of self.moinsDeuxAnimationFrames) {
+                self.moinsDeuxAnimationFrames[i] = new Image(self.spriteWidth * 2, self.spriteHeight * 2)
+                self.moinsDeuxAnimationFrames[i].src = "/img/Animations/malus/malus-2/malus-" + i + ".png"
+                i++
+            }
+        }
+        async function fillMoinsUnFramesArray(self) {
+            let i = 0
+            for await (let element of self.moinsUnAnimationFrames) {
+                self.moinsUnAnimationFrames[i] = new Image(self.spriteWidth * 2, self.spriteHeight * 2)
+                self.moinsUnAnimationFrames[i].src = "/img/Animations/malus/malus-1/malus-" + i + ".png"
+                i++
+            }
+        }
         fillExplosionFramesArray(this)
         fillRewardFramesArray(this)
-
+        fillMoinsDeuxFramesArray(this)
+        fillMoinsUnFramesArray(this)
     }
 
     /**
@@ -688,8 +708,39 @@ class Vue {
         }
     }
 
+
+    animateMalus(position,number) {
+        let x = position.x_
+        let y = position.y_
+        let self = this
+        let i = 0
+
+        function animMoinsUn() {
+            self.context.drawImage(self.moinsUnAnimationFrames[i], (x * self.spriteWidth), (y * self.spriteHeight) - self.spriteHeight, self.moinsUnAnimationFrames[i].width, self.moinsUnAnimationFrames[i].height)
+            i++
+            if (i < self.moinsUnAnimationFrames.length) {
+                requestAnimationFrame(animMoinsUn);
+            }
+        }
+
+        function animMoinsDeux() {
+            self.context.drawImage(self.moinsDeuxAnimationFrames[i], (x * self.spriteWidth), (y * self.spriteHeight) - self.spriteHeight, self.moinsDeuxAnimationFrames[i].width, self.moinsDeuxAnimationFrames[i].height)
+            i++
+            if (i < self.moinsDeuxAnimationFrames.length) {
+                requestAnimationFrame(animMoinsDeux);
+            }
+        }
+
+        if(number == 1){
+            animMoinsUn(0)
+        }else if (number == 2){
+            animMoinsDeux(0)
+        }
+        
+    }
+
     /**
-     * anime le piege
+     * anime piège, reward
      */
     animation() {
         let self = this
@@ -705,7 +756,7 @@ class Vue {
             function anim() {
                 self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
                 i++
-               if(controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
+                if (controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
                 if (i < self.explosionAnimationFrames.length) {
                     requestAnimationFrame(anim);
                 }
@@ -718,9 +769,9 @@ class Vue {
                 x = trapsRewards.reward.x_
                 y = trapsRewards.reward.y_
                 function anim() {
-                    self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
+                    self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth), (y * self.spriteHeight) - self.spriteHeight, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
                     i++
-                    if(controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
+                    if (controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
                     if (i < self.rewardAnimationFrames.length) {
                         requestAnimationFrame(anim);
                     }

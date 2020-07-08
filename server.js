@@ -245,7 +245,7 @@ server.listen(port, function () {
                                 rew.triggered = Date.now()
                                 console.log("player : ", player.id, " walk on reward : ", rew)
                                 isColliding = true
-                                io.to(room).emit("reward-animation", rew.position)
+
                                 rewardPlayer(rew, player, room)
                                 return true
                             }
@@ -387,7 +387,7 @@ function randomPosition(room) {
  * @param {*} y 
  */
 function isAValidPosition(x, y, room) {
-    if (rooms[room].model.map[y][x] == 0) {
+    if (rooms[room].model.map[y][x] != 1 && rooms[room].model.map[y][x] != -1) {
         let trap = rooms[room].model.traps.filter(tr => tr.position == position(x, y))
         let rew = rooms[room].model.rewards.filter(rew => rew.position == position(x, y))
         let otherPlayers = rooms[room].model.players.filter(pl => pl.position == position(x, y))
@@ -475,6 +475,8 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     let trapAuthor = getPlayerFromId(trap1.parentId, room)
     if (trap1.parentId == pl.id) { //si marche sur son propre piege -2 points
         trapAuthor.score = trapAuthor.score - 2
+        console.log(" ----> -2 au joueur ", actualPlayer.name, " car active son propre piège")
+        io.to(actualPlayer.id).emit("play-(-2)-animation", trap1.position)
     } else {
         trapAuthor.score++
     }
@@ -493,10 +495,12 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     io.to(room).emit("scores-update")
 
     io.to(room).emit("play-sound", "trapMain", songsContainer.trapMain)
-    setTimeout(function(){ 
-        io.to(actualPlayer.id).emit("play-sound", "trap", Math.floor(Math.random() * (+(songsContainer.trap.length - 1) - +0)) + +(songsContainer.trap.length - 1))
-     }, 1000);
-    
+    setTimeout(function () {
+        let index = Math.floor(Math.random() * (songsContainer.trap.length))
+        console.log("index : ",index," sur ",songsContainer.trap.length)
+        io.to(actualPlayer.id).emit("play-sound", "trap",index   )
+    }, fuzeTime *3);
+
 
 }, fuzeTime)
 
@@ -531,15 +535,35 @@ function explodeTrapWallNeighboor(trapPosition, room,) {
 const rewardPlayer = (rewardUsed, player, room) => {
     let pl = rooms[room].model.players.find(p => p.id == player.id)
 
-    if (rewardUsed.parentId != pl.id) { //si marche sur son propre piege -2 points
-        pl.score++
-    }
-
     rooms[room].model.rewards = rooms[room].model.rewards.filter(Boolean).filter(rew => rew.position != rewardUsed.position)
     console.log("player : ", pl.id, " score is : ", pl.score)
-    //updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
-    io.to(player.id).emit("play-sound", "rewardMain",songsContainer.trapReward)
+
+    if (rewardUsed.parentId == pl.id) { //si marche sur sa propre récompense -1
+        pl.score = pl.score - 1
+        io.to(player.id).emit("play-sound", "trapMain", songsContainer.trapReward)
+
+        io.to(room).emit("scores-update")
+        io.to(player.id).emit("play-(-1)-animation", rewardUsed.position)
+
+
+        setTimeout(function () {
+            let index = Math.floor(Math.random() * (songsContainer.trap.length))
+            io.to(pl.id).emit("play-sound", "trap", index)
+        }, fuzeTime *3);
+
+    } else { //pas sa recompense
+        pl.score++
+        io.to(player.id).emit("play-sound", "rewardMain", songsContainer.trapReward)
+        io.to(player.id).emit("reward-animation", rewardUsed.position)
+        io.to(room).emit("scores-update")
+
+        setTimeout(function () {
+            let index = Math.floor(Math.random() * (songsContainer.trap.length))
+            io.to(pl.id).emit("play-sound", "reward", index)
+        }, fuzeTime *3);
+
+    }
 }
 
 /**

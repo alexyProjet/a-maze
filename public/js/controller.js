@@ -85,7 +85,7 @@ $(() => {
                 songsLists.trapMain.play()
             } else if (type == "trap") {
                 songsLists.trap[data].play()
-            } else if(type == "rewardMain") {
+            } else if (type == "rewardMain") {
                 songsLists.rewardMain.play()
             } else if (type == "reward") {
                 songsLists.reward[data].play()
@@ -127,6 +127,16 @@ $(() => {
         /**
         * ---------------------- Gestion d'une partie ----------------------------------
         */
+        self.socket.on('play-(-1)-animation', function (position) {
+            console.log("animation malus -1 en", position)
+            vue.animateMalus(position,1)
+        })
+
+        self.socket.on('play-(-2)-animation', function (position) {
+            console.log("animation malus -2 en", position)
+            vue.animateMalus(position,2)
+        })
+
         self.socket.on('model-update', function (data) {
             Object.assign(model, data)
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)

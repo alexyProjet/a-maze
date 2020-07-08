@@ -16,6 +16,6 @@
 <br>
 <b>Spécificité : </b> 
 <span class="marge"><br>Marcher sur votre propre piège fait perdre 2 points</span>
-<span class="marge"><br>Vos propres récompenses ne vous rapportent rien.</span>
+<span class="marge"><br>Vos propres récompenses font perdre 1 points.</span>
 <br>
 <br><b> But du jeu :</b>  Avoir le meilleur score
