@@ -1,5 +1,6 @@
 let controller = null;
 var gameStarted = false;
+var soundActived = true;
 
 $(() => {
 
@@ -76,22 +77,6 @@ $(() => {
             songsLists.trapMain = sound
         })
 
-        /**
-         * 
-         */
-        self.socket.on('play-sound', function (type, data) {
-            console.log("RECU JOUE SON", data)
-            if (type == "trapMain") {
-                songsLists.trapMain.play()
-            } else if (type == "trap") {
-                songsLists.trap[data].play()
-            } else if (type == "rewardMain") {
-                songsLists.rewardMain.play()
-            } else if (type == "reward") {
-                songsLists.reward[data].play()
-            }
-        })
-
         //Nouvel utilisateur dans le salon
         self.socket.on('user-connected-in-lobby', function (name, roomReceived) {
             myId = socket.id
@@ -99,6 +84,7 @@ $(() => {
                 room = roomReceived
                 vue.renderLeftLobbyPannel()
                 vue.renderRightLobbyPannel()
+                vue.lobbyMusic()
             } else {
                 room = roomReceived
             }
@@ -127,6 +113,25 @@ $(() => {
         /**
         * ---------------------- Gestion d'une partie ----------------------------------
         */
+       
+        /**
+         * 
+         */
+        self.socket.on('play-sound', function (type, data) {
+            console.log("RECU JOUE SON", data)
+            if(soundActived){
+                if (type == "trapMain") {
+                    songsLists.trapMain.play()
+                } else if (type == "trap") {
+                    songsLists.trap[data].play()
+                } else if (type == "rewardMain") {
+                    songsLists.rewardMain.play()
+                } else if (type == "reward") {
+                    songsLists.reward[data].play()
+                }
+            }
+        })
+
         self.socket.on('play-(-1)-animation', function (position) {
             console.log("animation malus -1 en", position)
             vue.animateMalus(position,1)
@@ -193,11 +198,11 @@ $(() => {
             }
         }
 
-
         /**
          * Signale qu'il faut affiche le jeu
          */
         self.socket.on('display-game', function (timeStop, mod) {
+            vue.lobbyMusicFile.pause()
             console.log("CONTROLLER: display-game ")
             Object.assign(model, mod)
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
@@ -214,8 +219,6 @@ $(() => {
             console.log("fin displaygame.... launching vue.renderGame()...")
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
-
-
 
         const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))

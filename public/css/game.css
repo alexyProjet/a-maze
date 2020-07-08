@@ -237,3 +237,7 @@ body{
 	font-size: 2.0vw;
 	position: relative;
 }
+
+p {
+	font-family: 'Roboto', sans-serif;
+}

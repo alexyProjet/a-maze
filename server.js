@@ -217,7 +217,7 @@ server.listen(port, function () {
         socket.on('move-player', function (room, newPosition, dir) {
             //console.log("[MOVE-PLAYER] : recu du salon : ", room)
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
-            if (newPosition.x > 30 || newPosition.y > 20) {
+            if (newPosition.x > 30 || newPosition.y > 20 || newPosition.x < 0 || newPosition.y < 0) {
                 // console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
             }
             else if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
@@ -387,7 +387,12 @@ function randomPosition(room) {
  * @param {*} y 
  */
 function isAValidPosition(x, y, room) {
-    if (rooms[room].model.map[y][x] != 1 && rooms[room].model.map[y][x] != -1) {
+    if (rooms[room].model.map[y][x] != 1 && rooms[room].model.map[y][x] != -1) { //si sur du sol
+        rooms[room].model.players.some(pl => {
+            if (Math.floor(pl.position.x) == x && Math.floor(pl.position.y) == y) {
+                return false
+            }
+        })
         let trap = rooms[room].model.traps.filter(tr => tr.position == position(x, y))
         let rew = rooms[room].model.rewards.filter(rew => rew.position == position(x, y))
         let otherPlayers = rooms[room].model.players.filter(pl => pl.position == position(x, y))
@@ -497,9 +502,9 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     io.to(room).emit("play-sound", "trapMain", songsContainer.trapMain)
     setTimeout(function () {
         let index = Math.floor(Math.random() * (songsContainer.trap.length))
-        console.log("index : ",index," sur ",songsContainer.trap.length)
-        io.to(actualPlayer.id).emit("play-sound", "trap",index   )
-    }, fuzeTime *3);
+        console.log("index : ", index, " sur ", songsContainer.trap.length)
+        io.to(actualPlayer.id).emit("play-sound", "trap", index)
+    }, fuzeTime * 3);
 
 
 }, fuzeTime)
@@ -550,7 +555,7 @@ const rewardPlayer = (rewardUsed, player, room) => {
         setTimeout(function () {
             let index = Math.floor(Math.random() * (songsContainer.trap.length))
             io.to(pl.id).emit("play-sound", "trap", index)
-        }, fuzeTime *3);
+        }, fuzeTime * 3);
 
     } else { //pas sa recompense
         pl.score++
@@ -561,7 +566,7 @@ const rewardPlayer = (rewardUsed, player, room) => {
         setTimeout(function () {
             let index = Math.floor(Math.random() * (songsContainer.trap.length))
             io.to(pl.id).emit("play-sound", "reward", index)
-        }, fuzeTime *3);
+        }, fuzeTime * 3);
 
     }
 }

@@ -2,7 +2,7 @@
 var tempTrapsRewardsArray = { trap: null, reward: null }
 var lastRole
 var lastInventoryCount
-
+var countdown
 class Vue {
 
     constructor() {
@@ -21,6 +21,12 @@ class Vue {
         this.canva.setAttribute('height', this.spriteHeight * 20);
         this.isAssetLoadingOver = false
         this.biais = 3.0
+        this.lobbyMusicFile = new Howl({
+            src: ['../sound/musiques/lobby.mp3'],
+            autoplay: false,
+            loop: true,
+            volume: 0.5,
+        });
     }
 
     /**
@@ -138,7 +144,7 @@ class Vue {
     }
 
     launchCountdown(stop) {
-        var x = setInterval(function () {
+        countdown = setInterval(function () {
             var now = new Date().getTime();
             var distance = stop - now;
             var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -150,12 +156,12 @@ class Vue {
             if (seconds < 10) {
                 seconds = "0" + seconds
             }
-            document.getElementById('countdown').innerHTML = minutes + ":" + seconds
-
             //Lorsque fini
             if (distance <= 0) {
-                clearInterval(x);
+                clearInterval(countdown);
             }
+
+            document.getElementById('countdown').innerHTML = minutes + ":" + seconds
         }, 1000);
     }
     /**
@@ -183,6 +189,24 @@ class Vue {
 
         divOptions.innerHTML = "<h2>OPTIONS</h2>"
 
+        var checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.name = "Désactiver le son : ";
+        checkbox.value = "false";
+        checkbox.id = "soundActivated";
+        checkbox.checked = false;
+
+        checkbox.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                soundActived = false
+            } else {
+                soundActived = true
+            }
+            this.lobbyMusic()
+        })
+
+        let soundActivatedLabel = document.createTextNode("Désactiver le son : ");
+
         let inputBox = document.createElement("input");
         inputBox.type = "text";
         let btnName = document.createElement("button");
@@ -196,7 +220,8 @@ class Vue {
         divNameContainer.append(btnName)
 
         divOptions.append(divNameContainer)
-
+        divOptions.append(soundActivatedLabel)
+        divOptions.append(checkbox)
         divColonneGauche.append(divOptions)
 
 
@@ -236,6 +261,15 @@ class Vue {
             }
 
         });
+    }
+
+    lobbyMusic() {
+        if (soundActived) {
+            this.lobbyMusicFile.play()
+        } else {
+            this.lobbyMusicFile.pause()
+        }
+
     }
 
     /**
@@ -503,6 +537,33 @@ class Vue {
     renderInGameMenus(inventory) {
         document.getElementById("rewardsList").innerHTML = "";
         document.getElementById("trapsList").innerHTML = "";
+        document.getElementById("sound-check-box-div").innerHTML = "";
+
+        let soundCheckBoxDiv = document.createElement("div")
+        soundCheckBoxDiv.setAttribute("id", "sound-check-box-container")
+
+        var checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.name = "Désactiver le son : ";
+        checkbox.value = "false";
+        checkbox.id = "soundActivated";
+        checkbox.checked = true;
+        if (soundActived == true) checkbox.checked = false
+
+
+        checkbox.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                soundActived = false
+            } else {
+                soundActived = true
+            }
+        })
+
+        let soundActivatedLabel = document.createTextNode("Désactiver le son : ");
+        soundCheckBoxDiv.append(soundActivatedLabel)
+        soundCheckBoxDiv.append(checkbox)
+        $("#sound-check-box-div").append(soundCheckBoxDiv)
+
 
         this.trapsMenu = document.getElementById("trapsMenu")
         this.rewardsMenu = document.getElementById("rewardsMenu")
@@ -619,6 +680,7 @@ class Vue {
 
             document.getElementById("rewardsList").innerHTML = "";
             document.getElementById("trapsList").innerHTML = "";
+            document.getElementById("sound-check-box-div").innerHTML = "";
             this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         }
     }
@@ -709,7 +771,7 @@ class Vue {
     }
 
 
-    animateMalus(position,number) {
+    animateMalus(position, number) {
         let x = position.x_
         let y = position.y_
         let self = this
@@ -731,12 +793,12 @@ class Vue {
             }
         }
 
-        if(number == 1){
+        if (number == 1) {
             animMoinsUn(0)
-        }else if (number == 2){
+        } else if (number == 2) {
             animMoinsDeux(0)
         }
-        
+
     }
 
     /**
