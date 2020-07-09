@@ -19,4 +19,6 @@ head
     div#createRoom-container
       form(action='/room', method='POST')#createRoom
         input(name='room', type='text', required='')
+        input(name='state', type='checkbox')
+        <label for="state">Salon privé</label>
         button(type='submit').btn Nouveau Salon

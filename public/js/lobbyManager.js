@@ -5,7 +5,7 @@ $(() => {
     const roomContainer = document.getElementById('room-container')
 
     //Nouveau salon dans le menu des salons
-    this.socket.on('new-roon', room => {
+    this.socket.on('new-room', room => {
         console.log("LobbyManager: Nouveau salon reçu :", room)
         const roomLink = document.createElement('button')
         roomLink.setAttribute("class","room")

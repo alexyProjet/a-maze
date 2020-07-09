@@ -169,6 +169,16 @@ class Vue {
      * -------------------------------------- RENDU DU SALON --------------------------------------
      */
 
+     
+    lobbyMusic() {
+        if (soundActived) {
+            this.lobbyMusicFile.play()
+        } else {
+            this.lobbyMusicFile.pause()
+        }
+
+    }
+    
     /**
      * Rendu du panneau gauche dans le salon
      * gauche : Options de joueur et options de partie (seulement pour le maitre de salon)
@@ -261,15 +271,6 @@ class Vue {
             }
 
         });
-    }
-
-    lobbyMusic() {
-        if (soundActived) {
-            this.lobbyMusicFile.play()
-        } else {
-            this.lobbyMusicFile.pause()
-        }
-
     }
 
     /**
@@ -648,40 +649,40 @@ class Vue {
             indicationTextBalise.appendChild(indicationText);
 
             document.getElementById("indication").append(indicationTextBalise);
-        } else {
-            var indicationTextBalise = document.createElement("p");
-            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
+            if (tempTrapsRewardsArray["trap"] != null) {
+                this.context.globalAlpha = 0.5;
+                x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
+                y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
+                this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
+                this.context.globalAlpha = 1.0;
+            }
+            if (tempTrapsRewardsArray["reward"] != null) {
+                this.context.globalAlpha = 0.5;
+                x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
+                y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
+                this.context.drawImage(this.rewardAsset, x, y, this.rewardAsset.width, this.rewardAsset.height)
+                this.context.globalAlpha = 1.0;
+            }
 
-            indicationTextBalise.appendChild(indicationText);
+            //si envoi
+            if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
+                controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
 
-            document.getElementById("indication").append(indicationTextBalise);
-        }
+                tempTrapsRewardsArray["trap"] = null
+                tempTrapsRewardsArray["reward"] = null
 
-        if (tempTrapsRewardsArray["trap"] != null) {
-            this.context.globalAlpha = 0.5;
-            x = tempTrapsRewardsArray["trap"].x_ * this.spriteWidth
-            y = tempTrapsRewardsArray["trap"].y_ * this.spriteWidth
-            this.context.drawImage(this.trapAsset, x, y, this.trapAsset.width, this.trapAsset.height)
-            this.context.globalAlpha = 1.0;
-        }
-        if (tempTrapsRewardsArray["reward"] != null) {
-            this.context.globalAlpha = 0.5;
-            x = tempTrapsRewardsArray["reward"].x_ * this.spriteWidth
-            y = tempTrapsRewardsArray["reward"].y_ * this.spriteWidth
-            this.context.drawImage(this.rewardAsset, x, y, this.rewardAsset.width, this.rewardAsset.height)
-            this.context.globalAlpha = 1.0;
-        }
-        //si envoi
-        if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
-            controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
+                document.getElementById("rewardsList").innerHTML = "";
+                document.getElementById("trapsList").innerHTML = "";
+                document.getElementById("sound-check-box-div").innerHTML = "";
+                this.renderInGameMenus(controller.getCurrentPlayer().inventory)
+            } else {
+                var indicationTextBalise = document.createElement("p");
+                var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
 
-            tempTrapsRewardsArray["trap"] = null
-            tempTrapsRewardsArray["reward"] = null
+                indicationTextBalise.appendChild(indicationText);
 
-            document.getElementById("rewardsList").innerHTML = "";
-            document.getElementById("trapsList").innerHTML = "";
-            document.getElementById("sound-check-box-div").innerHTML = "";
-            this.renderInGameMenus(controller.getCurrentPlayer().inventory)
+                document.getElementById("indication").append(indicationTextBalise);
+            }
         }
     }
 

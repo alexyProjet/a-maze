@@ -33,9 +33,17 @@ app.post('/room', (req, res) => {
     if (rooms[req.body.room] != null) {
         return res.redirect('/')
     }
-    rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null }
+    //Salon public ou privé ?
+    if(req.body.state == "on"){
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false }   
+        console.log("SERVEUR : nouveau salon PRIVE créé", req.body.room, req.body.state)
+    }else{
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true }
+        console.log("SERVEUR : nouveau salon PUBLIC créé", req.body.room, req.body.state)
+        io.emit('new-room',req.body.room)
+    }
     res.redirect(req.body.room)
-    console.log("SERVEUR : nouveau salon créé", req.body.room)
+    
 })
 
 /**
