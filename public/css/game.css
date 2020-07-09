@@ -240,4 +240,5 @@ body{
 
 p {
 	font-family: 'Roboto', sans-serif;
+	display: inline-block;
 }

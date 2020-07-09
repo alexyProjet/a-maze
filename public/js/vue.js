@@ -169,7 +169,7 @@ class Vue {
      * -------------------------------------- RENDU DU SALON --------------------------------------
      */
 
-     
+
     lobbyMusic() {
         if (soundActived) {
             this.lobbyMusicFile.play()
@@ -178,7 +178,7 @@ class Vue {
         }
 
     }
-    
+
     /**
      * Rendu du panneau gauche dans le salon
      * gauche : Options de joueur et options de partie (seulement pour le maitre de salon)
@@ -215,7 +215,12 @@ class Vue {
             this.lobbyMusic()
         })
 
+        let soundSettingContainer = document.createElement("div")
+        let pBalise = document.createElement("p");
         let soundActivatedLabel = document.createTextNode("Désactiver le son : ");
+        pBalise.append(soundActivatedLabel)
+        soundSettingContainer.append(pBalise)
+        soundSettingContainer.append(checkbox)
 
         let inputBox = document.createElement("input");
         inputBox.type = "text";
@@ -230,8 +235,7 @@ class Vue {
         divNameContainer.append(btnName)
 
         divOptions.append(divNameContainer)
-        divOptions.append(soundActivatedLabel)
-        divOptions.append(checkbox)
+        divOptions.append(soundSettingContainer)
         divColonneGauche.append(divOptions)
 
 
@@ -675,14 +679,14 @@ class Vue {
                 document.getElementById("trapsList").innerHTML = "";
                 document.getElementById("sound-check-box-div").innerHTML = "";
                 this.renderInGameMenus(controller.getCurrentPlayer().inventory)
-            } else {
-                var indicationTextBalise = document.createElement("p");
-                var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
-
-                indicationTextBalise.appendChild(indicationText);
-
-                document.getElementById("indication").append(indicationTextBalise);
             }
+        } else {
+            var indicationTextBalise = document.createElement("p");
+            var indicationText = document.createTextNode("EXPLORER : trouve des récompenses mais attention aux pièges...");
+
+            indicationTextBalise.appendChild(indicationText);
+
+            document.getElementById("indication").append(indicationTextBalise);
         }
     }
 
