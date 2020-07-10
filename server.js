@@ -216,19 +216,19 @@ server.listen(port, function () {
             let reward_instance = reward(player.id, data.reward)
             if (player.inventory.length != 0) {
                 if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
-                    console.log("SERVEUR on place : positions identiques invalides")
+                   // console.log("SERVEUR on place : positions identiques invalides")
                 } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
-                    console.log("trap et reward placés valides")
+//console.log("trap et reward placés valides")
                     rooms[room].model.traps.push(trap_instance)
                     rooms[room].model.rewards.push(reward_instance)
                     player.inventory.pop()
                     player.inventory.pop()
-                    console.log(rooms[room].model.traps)
+                   // console.log(rooms[room].model.traps)
                 } else {
-                    console.log("trap et reward placés NON valides")
+                   // console.log("trap et reward placés NON valides")
                 }
             } else {
-                console.log
+//console.log
             }
         });
 
@@ -316,34 +316,24 @@ server.listen(port, function () {
         //move bot
         socket.on('move-bot', (room, name, moveType, newPosition) => {
             if (newPosition.x > 30 || newPosition.y > 20 || newPosition.x < 0 || newPosition.y < 0) {
-                // console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
             } else if (rooms[room].botList.some(botName => botName == name) && socket.id == rooms[room].roomLeader) { //si c'est bien un bot et demande de la part du roomleader
                 let bot = rooms[room].model.players.find(pl => pl.id == name)
                 switch (moveType) {
                     case 'move':
-
                         bot.position = newPosition
-                        //  console.log("bot moved")
-                        // console.log("[ MOVE-BOT ] : déplacement de : ", name, ' dans salon : ', room)
                         break;
                     case 'onEntity':
-
-
                         let posX = Math.floor(newPosition.x)
                         let posY = Math.floor(newPosition.y)
-                        console.log(posX, posY)
                         //check collision avec pieges
                         rooms[room].model.traps.some(function (trap, index) {
-                            console.log("trap", trap.position.x_, trap.position.y_)
                             if (trap.position.x_ == posX && trap.position.y_ == posY) {
                                 if (trap.triggered == null) {
                                     trap.triggered = Date.now()
-                                    console.log("bot : ", bot.id, " walk on trap : ", trap)
                                     isColliding = true
                                     io.to(room).emit("trap-animation", trap.position)
                                     io.to(room).emit("shake-game")
                                     plan_explosion(trap, bot, room);
-                                    console.log("[ MOVE-BOT ] : TRAPPED  : ", name, ' dans salon : ', room)
                                     return true
                                 }
                             }
@@ -351,14 +341,11 @@ server.listen(port, function () {
 
                         //check collision avec recompenses
                         rooms[room].model.rewards.some(function (rew, index) {
-                            console.log("rewards", rew.position.x_, rew.position.y_)
                             if (rew.position.x_ == posX && rew.position.y_ == posY) {
                                 if (rew.triggered == null) {
                                     rew.triggered = Date.now()
-                                    console.log("bot : ", bot.id, " walk on reward : ", rew)
                                     isColliding = true
                                     rewardPlayer(rew, bot, room)
-                                    console.log("[ MOVE-BOT ] : REWARDED  : ", name, ' dans salon : ', room)
                                     return true
                                 }
                             }
@@ -377,8 +364,6 @@ server.listen(port, function () {
           * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
           */
         socket.on('place-trap-and-reward', function (room, data, botName) {
-            console.log("[ PLACE ] : request from :", botName,data.trapPosition,data.rewardPosition)
-
             let player = null
 
             if (botName != null && socket.id == rooms[room].roomLeader) { //si un bot et appartient bien à rommleader
@@ -391,16 +376,14 @@ server.listen(port, function () {
             let reward_instance = reward(player.id, data.reward)
             if (player.inventory.length != 0) {
                 if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
-                    console.log("SERVEUR on place : positions identiques invalides")
                 } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
-                    console.log("trap et reward placés valides")
                     rooms[room].model.traps.push(trap_instance)
                     rooms[room].model.rewards.push(reward_instance)
                     player.inventory.pop()
                     player.inventory.pop()
                     console.log(rooms[room].model.traps)
                 } else {
-                    console.log("trap et reward placés NON valides")
+                    console.log("trap et reward placés NON valides",room)
                 }
             }
         });

@@ -33,7 +33,7 @@ class Bot {
         this.actualCase.y = Math.floor(myPlayer.position.y)
         this.nextCase = this.chooseNextCase(xBot, yBot, self.model)
         this.refreshModel = setInterval(function () { self.model = controller.getModel()}, 2000);
-        this.intervalMove = setInterval(function () { self.makeMove(self); }, this.refreshRate);
+        this.intervalMove = setInterval(function () { self.makeMove(self); }, 100);
         this.intervalPlace = setInterval(function () { self.place(self); }, 8000);
         console.log("bot : ", this.name, " starting....")
         this.directionReverse = { down: "up", up: "down", right: "left", left: "right" }
@@ -126,22 +126,18 @@ class Bot {
         mod.entities.some(function (entite) {
             if (entite.position.y_ == x + 1 && entite.position.x_ == y) { //pas un mur
                 res = { x: x + 1, y: y, dir: "down" }
-                console.log(res)
                 return true
             }
             if (entite.position.y_ == x - 1 && entite.position.x_ == y) { //pas un mur
                 res = { x: x - 1, y: y, dir: "up" }
-                console.log(res)
                 return true
             }
             if (entite.position.y_ == x && entite.position.x_ == y + 1) { //pas un mur
                 res = { x: x, y: y + 1, dir: "right" }
-                console.log(res)
                 return true
             }
             if (entite.position.y_ == x && entite.position.x_ == y - 1) { //pas un mur
                 res = { x: x, y: y - 1, dir: "left" }
-                console.log(res)
                 return true
             }
         })
