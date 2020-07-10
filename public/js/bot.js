@@ -31,7 +31,7 @@ class Bot {
         let xBot = myPlayer.position.y
         this.actualCase.x = Math.floor(myPlayer.position.x)
         this.actualCase.y = Math.floor(myPlayer.position.y)
-        this.nextCase = this.chooseNextCase(xBot, yBot, model)
+        this.nextCase = this.chooseNextCase(xBot, yBot, self.model)
         this.refreshModel = setInterval(function () { self.model = controller.getModel()}, 2000);
         this.intervalMove = setInterval(function () { self.makeMove(self); }, this.refreshRate);
         this.intervalPlace = setInterval(function () { self.place(self); }, 8000);
