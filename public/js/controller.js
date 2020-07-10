@@ -9,8 +9,7 @@ $(() => {
     self.socket = io();
     var trapsRewardsToAnimate = { trap: null, reward: null }
     var songsLists = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers  mp3
-    var botList = [] //contient liste des bots
-    
+
     controller = (() => {
         let room = {}
         let myId = null
@@ -110,14 +109,6 @@ $(() => {
             vue.renderRightLobbyPannel()
         })
 
-        //partie bot ----------------------------
-        const addBotButtonClicked = () => {
-            let name = "bot" + Math.floor((Math.random() * 10000) + 1)
-            self.socket.emit("new-bot", roomName, name)
-            let bot = new Bot(refreshRate, name,speed)
-            botList.push(bot)
-            console.log("bot added ", botList)
-        }
 
 
         /**
@@ -225,15 +216,13 @@ $(() => {
             //attend un peu puis lance le set interval pour être sur que tout pret
             initListener()
 
-            botList.forEach(bot => bot.startBot())
 
             console.log("fin displaygame.... launching vue.renderGame()...")
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
 
         const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
-        const moveBot = (position, name, moveType) => self.socket.emit("move-bot", roomName, name, moveType, position) //send la position
-        const place = (trapPosition, rewardPosition,botName=null) => self.socket.emit("place-trap-and-reward", roomName, { trap: trapPosition, reward: rewardPosition}, botName)
+        const place = (trapPosition, rewardPosition) => self.socket.emit("place-trap-and-reward", roomName, { trap: trapPosition, reward: rewardPosition})
         const getModel = () => model //renvoi le model
         const setName = (name) => self.socket.emit("set-name", roomName, name)
         const getRoomUsers = () => Object.assign({}, room.users) //renvoi le les users de la room
@@ -242,7 +231,7 @@ $(() => {
         const getName = () => room.users[getId()]
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
         const getTrapsRewardsToAnimate = () => trapsRewardsToAnimate //renvoi le current player
-        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, moveBot, getRoomLeader, getId, getName, getTrapsRewardsToAnimate, addBotButtonClicked } //
+        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName, getTrapsRewardsToAnimate } //
     })()
 
 

@@ -35,10 +35,10 @@ app.post('/room', (req, res) => {
     }
     //Salon public ou privé ?
     if (req.body.state == "on") {
-        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false, botList: [], timer: null }
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false, timer: null }
         console.log("SERVEUR : nouveau salon PRIVE créé", req.body.room, req.body.state)
     } else {
-        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true, botList: [] }
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true, }
         console.log("SERVEUR : nouveau salon PUBLIC créé", req.body.room, req.body.state)
         io.emit('new-room', req.body.room)
     }
@@ -122,7 +122,6 @@ server.listen(port, function () {
                             io.in(room).emit("redirectPlayer")
                             delete rooms[room]
                         } else {//reste assez de joueur
-                            //delete affiliate bots, cherche botlist et supprime dans users
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
                             io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                         }
@@ -139,7 +138,6 @@ server.listen(port, function () {
                         delete rooms[room]
                         io.in(room).emit("redirectPlayer")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
-                        //delete affiliate bots, cherche botlist et supprime dans users
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
@@ -295,82 +293,10 @@ server.listen(port, function () {
         })
 
         /**
-         * PARTIE BOT
-         */
-        /**
-        * Enregistrement du nouvel utilisateur connecté
-        */
-        socket.on('new-bot', (room, name) => {
-            console.log("[NEW-USER] : nouveau bot : ", name, " dans le salon : ", room)
-            if (rooms[room].roomLeader == socket.id) { //seulement leader peu creer bot
-                if (rooms[room] == undefined) {
-                    console.log(" ----> [NEW-USER] : salon inexistant... abandon.")
-                } else if (rooms[room].state != "inGame") { //si dans le lobby
-                    rooms[room].users[name] = name
-                    rooms[room].botList.push(name)
-                    io.in(room).emit("user-connected-in-lobby", name, rooms[room])
-                }
-            }
-        });
-
-        //move bot
-        socket.on('move-bot', (room, name, moveType, newPosition) => {
-            if (newPosition.x > 30 || newPosition.y > 20 || newPosition.x < 0 || newPosition.y < 0) {
-            } else if (rooms[room].botList.some(botName => botName == name) && socket.id == rooms[room].roomLeader) { //si c'est bien un bot et demande de la part du roomleader
-                let bot = rooms[room].model.players.find(pl => pl.id == name)
-                switch (moveType) {
-                    case 'move':
-                        bot.position = newPosition
-                        break;
-                    case 'onEntity':
-                        let posX = Math.floor(newPosition.x)
-                        let posY = Math.floor(newPosition.y)
-                        //check collision avec pieges
-                        rooms[room].model.traps.some(function (trap, index) {
-                            if (trap.position.x_ == posX && trap.position.y_ == posY) {
-                                if (trap.triggered == null) {
-                                    trap.triggered = Date.now()
-                                    isColliding = true
-                                    io.to(room).emit("trap-animation", trap.position)
-                                    io.to(room).emit("shake-game")
-                                    plan_explosion(trap, bot, room);
-                                    return true
-                                }
-                            }
-                        })
-
-                        //check collision avec recompenses
-                        rooms[room].model.rewards.some(function (rew, index) {
-                            if (rew.position.x_ == posX && rew.position.y_ == posY) {
-                                if (rew.triggered == null) {
-                                    rew.triggered = Date.now()
-                                    isColliding = true
-                                    rewardPlayer(rew, bot, room)
-                                    return true
-                                }
-                            }
-                        })
-                        break;
-                    default:
-                        console.log(`Error in move-bot `, name, room);
-                }
-
-            } else {
-                console.log("[ MOVE-BOT ] : pas un bot : ", name, ' dans salon : ', room)
-            }
-        })
-
-        /**
           * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
           */
-        socket.on('place-trap-and-reward', function (room, data, botName) {
-            let player = null
-
-            if (botName != null && socket.id == rooms[room].roomLeader) { //si un bot et appartient bien à rommleader
-                player = rooms[room].model.players.find(pl => pl.id == botName)
-            } else {
-                player = rooms[room].model.players.find(pl => pl.id == socket.id)
-            }
+        socket.on('place-trap-and-reward', function (room, data) {
+            let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
             let trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
             let reward_instance = reward(player.id, data.reward)
