@@ -9,6 +9,8 @@ $(() => {
     self.socket = io();
     var trapsRewardsToAnimate = { trap: null, reward: null }
     var songsLists = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers  mp3
+    var botList = [] //contient liste des bots
+    
 
 
     controller = (() => {
@@ -79,8 +81,8 @@ $(() => {
 
         //Nouvel utilisateur dans le salon
         self.socket.on('user-connected-in-lobby', function (name, roomReceived) {
-            myId = socket.id
             if (Object.keys(room).length == 0) {  //premiere connexion de l'utilisateur, room est vide
+                myId = socket.id
                 room = roomReceived
                 vue.renderLeftLobbyPannel()
                 vue.renderRightLobbyPannel()
@@ -110,16 +112,26 @@ $(() => {
             vue.renderRightLobbyPannel()
         })
 
+        //partie bot ----------------------------
+        const addBotButtonClicked = () => {
+            let name = "bot" + Math.floor((Math.random() * 10000) + 1)
+            self.socket.emit("new-bot", roomName, name)
+            let bot = new Bot(refreshRate, name,speed)
+            botList.push(bot)
+            console.log("bot added ", botList)
+        }
+
+
         /**
         * ---------------------- Gestion d'une partie ----------------------------------
         */
-       
+
         /**
          * 
          */
         self.socket.on('play-sound', function (type, data) {
             console.log("RECU JOUE SON", data)
-            if(soundActived){
+            if (soundActived) {
                 if (type == "trapMain") {
                     songsLists.trapMain.play()
                 } else if (type == "trap") {
@@ -134,12 +146,12 @@ $(() => {
 
         self.socket.on('play-(-1)-animation', function (position) {
             console.log("animation malus -1 en", position)
-            vue.animateMalus(position,1)
+            vue.animateMalus(position, 1)
         })
 
         self.socket.on('play-(-2)-animation', function (position) {
             console.log("animation malus -2 en", position)
-            vue.animateMalus(position,2)
+            vue.animateMalus(position, 2)
         })
 
         self.socket.on('model-update', function (data) {
@@ -187,7 +199,6 @@ $(() => {
             vue.shake()
         })
 
-
         //Signale au serveur que le bouton start est cliqué
         const startButtonClicked = () => {
             let time = document.getElementById("inputBoxTime").value
@@ -216,11 +227,14 @@ $(() => {
             //attend un peu puis lance le set interval pour être sur que tout pret
             initListener()
 
+            botList.forEach(bot => bot.startBot())
+
             console.log("fin displaygame.... launching vue.renderGame()...")
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
 
         const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
+        const moveBot = (position, name, moveType, dir) => self.socket.emit("move-bot", roomName, name, moveType, position) //send la position
         const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
         const getModel = () => model //renvoi le model
         const setName = (name) => self.socket.emit("set-name", roomName, name)
@@ -230,7 +244,7 @@ $(() => {
         const getName = () => room.users[getId()]
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
         const getTrapsRewardsToAnimate = () => trapsRewardsToAnimate //renvoi le current player
-        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName, getTrapsRewardsToAnimate } //
+        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, moveBot, getRoomLeader, getId, getName, getTrapsRewardsToAnimate, addBotButtonClicked } //
     })()
 
 

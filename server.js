@@ -34,16 +34,16 @@ app.post('/room', (req, res) => {
         return res.redirect('/')
     }
     //Salon public ou privé ?
-    if(req.body.state == "on"){
-        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false }   
+    if (req.body.state == "on") {
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false, botList: [], timer: null }
         console.log("SERVEUR : nouveau salon PRIVE créé", req.body.room, req.body.state)
-    }else{
-        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true }
+    } else {
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true, botList: [] }
         console.log("SERVEUR : nouveau salon PUBLIC créé", req.body.room, req.body.state)
-        io.emit('new-room',req.body.room)
+        io.emit('new-room', req.body.room)
     }
     res.redirect(req.body.room)
-    
+
 })
 
 /**
@@ -65,6 +65,7 @@ server.listen(port, function () {
     loadSongs()
     io.on('connection', function (socket) {
 
+
         /**
          * Enregistrement du nouvel utilisateur connecté
          */
@@ -73,6 +74,7 @@ server.listen(port, function () {
             if (rooms[room] == undefined) {
                 console.log(" ----> [NEW-USER] : salon inexistant... abandon.")
                 io.to(socket.id).emit("redirectPlayer")
+
             } else if (rooms[room].state != "inGame") { //si dans le lobby
                 socket.join(room)
                 rooms[room].users[socket.id] = name
@@ -89,9 +91,15 @@ server.listen(port, function () {
         /**
          * MAJ du pseudo demandé par l'utilisateur
          */
-        socket.on('set-name', function (room, name) {
-            console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id], " Nouveau : ", name)
-            rooms[room].users[socket.id] = name
+        socket.on('set-name', function (room, newName) {
+            console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id], " Nouveau : ", newName)
+            const noms = Object.values(rooms[room].users)
+            if (noms.some(nom => nom == newName)) {
+                rooms[room].users[socket.id] = newName
+            } else {
+                console.log(" ---> déja pris, abandon...")
+            }
+
             io.to(room).emit("lobby-changes-occured", rooms[room])
         })
 
@@ -114,6 +122,7 @@ server.listen(port, function () {
                             io.in(room).emit("redirectPlayer")
                             delete rooms[room]
                         } else {//reste assez de joueur
+                            //delete affiliate bots, cherche botlist et supprime dans users
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
                             io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                         }
@@ -126,9 +135,11 @@ server.listen(port, function () {
                     if (Object.keys(rooms[room].users).length <= 2) { //si plus personne, on detruit le salon
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         clearInterval(rooms[room].refreshing);
+                        clearInterval(rooms[room].timer);
                         delete rooms[room]
                         io.in(room).emit("redirectPlayer")
                     } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
+                        //delete affiliate bots, cherche botlist et supprime dans users
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
@@ -171,21 +182,22 @@ server.listen(port, function () {
                     io.in(room).emit('remove-room-from-lobby-menu', room)
 
                     //for les clés dans users ->push player avec id
-                    let idArray = Object.keys(rooms[room].users)
+                    let usersKeysArray = Object.keys(rooms[room].users)
 
-                    idArray.forEach(id => {
-                        let ref
+                    usersKeysArray.forEach(userKey => {
+                        let newPlayer
                         if (rooms[room].model.players.filter(pl => pl.role == "trapper").length == 0) {
-                            ref = player(randomPosition(room), roles.trapper, 0, trapperInventory.slice())
+                            newPlayer = player(randomPosition(room), roles.trapper, 0, trapperInventory.slice())
                         } else {
-                            ref = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
+                            newPlayer = player(randomPosition(room), roles.explorer, 0, []) // construit nouveau joeur a position 11 et role explore
                         }
-                        ref.id = id
-                        ref.name = rooms[room].users[id]
-                        if (id == rooms[room].roomLeader) {
-                            ref.isRoomLeader = true
+                        newPlayer.id = userKey
+                        newPlayer.name = rooms[room].users[userKey]
+                        if (userKey == rooms[room].roomLeader) {
+                            newPlayer.isRoomLeader = true
                         }
-                        rooms[room].model.players.push(ref)
+                        rooms[room].model.players.push(newPlayer)
+                        console.log("newplayer set id: ", newPlayer.id, " name : ", newPlayer.name)
                     })
                     updateModelsEveryRefreshRate(room)
                     io.in(room).emit('display-game', timeStop.getTime(), rooms[room].model)
@@ -253,7 +265,6 @@ server.listen(port, function () {
                                 rew.triggered = Date.now()
                                 console.log("player : ", player.id, " walk on reward : ", rew)
                                 isColliding = true
-
                                 rewardPlayer(rew, player, room)
                                 return true
                             }
@@ -280,6 +291,85 @@ server.listen(port, function () {
                 console.log("----> [MOVE-PLAYER] : erreur position, triche probable", Math.abs(newPosition.x - player.position.x), Math.abs(newPosition.y - player.position.y))
             }
         })
+
+        /**
+         * PARTIE BOT
+         */
+        /**
+        * Enregistrement du nouvel utilisateur connecté
+        */
+        socket.on('new-bot', (room, name) => {
+            console.log("[NEW-USER] : nouveau bot : ", name, " dans le salon : ", room)
+            if (rooms[room].roomLeader == socket.id) { //seulement leader peu creer bot
+                if (rooms[room] == undefined) {
+                    console.log(" ----> [NEW-USER] : salon inexistant... abandon.")
+                } else if (rooms[room].state != "inGame") { //si dans le lobby
+                    rooms[room].users[name] = name
+                    rooms[room].botList.push(name)
+                    io.in(room).emit("user-connected-in-lobby", name, rooms[room])
+                }
+            }
+        });
+
+        //move bot
+        socket.on('move-bot', (room, name, moveType, newPosition) => {
+            if (rooms[room].botList.some(botName => botName == name) && socket.id == rooms[room].roomLeader) { //si c'est bien un bot et demande de la part du roomleader
+                let bot = rooms[room].model.players.find(pl => pl.id == name)
+                switch (moveType) {
+                    case 'move':
+
+                        bot.position = newPosition
+                        //  console.log("bot moved")
+                        // console.log("[ MOVE-BOT ] : déplacement de : ", name, ' dans salon : ', room)
+                        break;
+                    case 'onEntity':
+                        
+
+                        let posX = Math.floor(newPosition.x)
+                        let posY = Math.floor(newPosition.y)
+                        console.log(posX,posY)
+                        //check collision avec pieges
+                        rooms[room].model.traps.some(function (trap, index) {
+                            console.log("trap",trap.position.x_ ,trap.position.y_)
+                            if (trap.position.x_ == posX && trap.position.y_ == posY) {
+                                if (trap.triggered == null) {
+                                    trap.triggered = Date.now()
+                                    console.log("bot : ", bot.id, " walk on trap : ", trap)
+                                    isColliding = true
+                                    io.to(room).emit("trap-animation", trap.position)
+                                    io.to(room).emit("shake-game")
+                                    plan_explosion(trap, bot, room);
+                                    console.log("[ MOVE-BOT ] : TRAPPED  : ", name, ' dans salon : ', room)
+                                    return true
+                                }
+                            }
+                        })
+
+                        //check collision avec recompenses
+                        rooms[room].model.rewards.some(function (rew, index) {
+                            console.log("rewards",rew.position.x_ ,rew.position.y_)
+                            if (rew.position.x_ == posX && rew.position.y_ == posY) {
+                                if (rew.triggered == null) {
+                                    rew.triggered = Date.now()
+                                    console.log("bot : ", bot.id, " walk on reward : ", rew)
+                                    isColliding = true
+                                    rewardPlayer(rew, bot, room)
+                                    console.log("[ MOVE-BOT ] : REWARDED  : ", name, ' dans salon : ', room)
+                                    return true
+                                }
+                            }
+                        })
+                        break;
+                    default:
+                        console.log(`Error in move-bot `, name, room);
+                }
+
+            } else {
+                console.log("[ MOVE-BOT ] : pas un bot : ", name, ' dans salon : ', room)
+            }
+        })
+
+
     });
 });
 
@@ -318,13 +408,13 @@ function getRoomFromPlayerId(socket) {
  * @param {*} room 
  */
 function timer(stop, room) {
-    let x = setInterval(function () {
+    rooms[room].timer = setInterval(function () {
         let now = new Date().getTime();
 
         let distance = stop - now;
         //Lorsque fini
         if (distance <= 0) {
-            clearInterval(x);
+            clearInterval(rooms[room].timer);
             io.to(room).emit("countdown-over")
             delete rooms[room]
         }
@@ -356,8 +446,12 @@ function updateModelsEveryRefreshRate(room) {
                     newModel.traps = []
                     newModel.rewards = []
                     io.to(socketId).emit('model-update', newModel);
+
                 } else {
-                    io.to(socketId).emit('model-update', mod);
+                    let newModel = Object.assign({}, mod)
+                    newModel.entities = newModel.rewards.concat(newModel.traps)
+                    io.to(socketId).emit('model-update', newModel);
+
                 }
             })
         }

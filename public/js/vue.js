@@ -206,14 +206,6 @@ class Vue {
         checkbox.id = "soundActivated";
         checkbox.checked = false;
 
-        checkbox.addEventListener('change', (event) => {
-            if (event.target.checked) {
-                soundActived = false
-            } else {
-                soundActived = true
-            }
-            this.lobbyMusic()
-        })
 
         let soundSettingContainer = document.createElement("div")
         let pBalise = document.createElement("p");
@@ -222,6 +214,7 @@ class Vue {
         soundSettingContainer.append(pBalise)
         soundSettingContainer.append(checkbox)
 
+        //Changement de nom
         let inputBox = document.createElement("input");
         inputBox.type = "text";
         let btnName = document.createElement("button");
@@ -234,8 +227,26 @@ class Vue {
         divNameContainer.append(inputBox)
         divNameContainer.append(btnName)
 
+        let roomLinkContainer = document.createElement("div")
+        roomLinkContainer.setAttribute("id", "room-link-container")
+        let roomLinkTextBalise = document.createElement("p");
+        let roomLinkText = document.createTextNode("Lien du salon : ");
+        roomLinkTextBalise.append(roomLinkText)
+
+        let link = window.location.href
+        let roomLinkBalise = document.createElement("a")
+        roomLinkBalise.href  = link
+        roomLinkBalise.target = '_blank'
+        roomLinkBalise.innerText = link
+
+        roomLinkContainer.append(roomLinkTextBalise)
+        roomLinkContainer.append(roomLinkBalise)
+       
+
+        //on accroche tout ça
         divOptions.append(divNameContainer)
         divOptions.append(soundSettingContainer)
+        divOptions.append(roomLinkContainer)
         divColonneGauche.append(divOptions)
 
 
@@ -260,6 +271,14 @@ class Vue {
 
             divOptionsPartie.append(dureeDiv)
 
+            let btnAddBot = document.createElement("button");
+            btnAddBot.setAttribute("id", "add-bot")
+            btnAddBot.innerHTML = "Ajouter un bot.";
+            btnAddBot.addEventListener("click", function () {
+                controller.addBotButtonClicked()
+            });
+            divOptionsPartie.append(btnAddBot)
+
             this.setInputFilter(inputBoxTime, function (value) { //empeche de retnrer autre chose que des entiers
                 return /^-?\d*$/.test(value);
             });
@@ -275,11 +294,20 @@ class Vue {
             }
 
         });
+
+        checkbox.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                soundActived = false
+            } else {
+                soundActived = true
+            }
+            this.lobbyMusic()
+        })
     }
 
     /**
      * COLONNE DE DROITE
-     * SET PSEUDO, OPTIONS...
+     * SET regles
      */
     renderRightLobbyPannel() {
         if (document.getElementById('colonne-droite-div') != null) {
@@ -459,25 +487,25 @@ class Vue {
      */
     renderScoreList() {
         document.getElementById("scoreList").innerHTML = "";
-        //for controller.model.players
         let scorePrecedent = 0
-        for (const player of controller.getModel().players) {
-
-            var div = document.createElement("div");
+        //console.log(controller.getModel().players[0].id,controller.getModel().players[0].name)
+        for (let player of controller.getModel().players) {
+            //console.log(player)
+            let div = document.createElement("div");
             div.setAttribute("class", "scoreDiv");
 
-            var divName = document.createElement("div");
+            let divName = document.createElement("div");
             divName.setAttribute("class", "score-container");
-            var playerNameBalise = document.createElement("p");
+            let playerNameBalise = document.createElement("p");
             playerNameBalise.setAttribute("class", "scoreName");
             let nameText = player.name
             if (player.id == controller.getId()) nameText = nameText + " (toi)"
-            var text = document.createTextNode(nameText);
+            let text = document.createTextNode(nameText);
             playerNameBalise.appendChild(text);
             divName.append(playerNameBalise)
 
             if (player.isRoomLeader) {
-                var imgLeader = document.createElement("img")
+                let imgLeader = document.createElement("img")
                 imgLeader.src = '/img/misc/crown.png';
                 imgLeader.setAttribute('width', '24px');
                 imgLeader.setAttribute('height', '24px');
@@ -485,7 +513,7 @@ class Vue {
                 divName.append(imgLeader)
             }
 
-            var playerScoreBalise = document.createElement("p")
+            let playerScoreBalise = document.createElement("p")
             playerScoreBalise.setAttribute("class", "scoreText");
             text = document.createTextNode(player.score);
             playerScoreBalise.appendChild(text);
@@ -769,7 +797,6 @@ class Vue {
             if (entitiesArray[i]) {
                 let coordX = entitiesArray[i].position.x_
                 let coordY = entitiesArray[i].position.y_
-                let myPlayer = controller.getCurrentPlayer()
                 this.context.drawImage(this.anonymousEntityAsset, coordX * this.spriteWidth, coordY * this.spriteHeight, this.anonymousEntityAsset.width, this.anonymousEntityAsset.height) // Entité anonyme 
             }
         }

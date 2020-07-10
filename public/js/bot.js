@@ -1,0 +1,210 @@
+class Bot {
+    /**
+     * -1 : mur (bloquant)
+     * 0 : sol (marchable)
+     * 1 : mur (bloquant)
+     * 2 : mur detruit (marchable)
+     * 3 : trace bombe (marchable)
+     */
+    constructor(refreshR, botName, speed) {
+        this.refreshRate = refreshR
+        this.name = botName
+        this.interval = null
+        this.alreadyVisited = []
+        this.nextCase = { x: null, y: null }
+        this.actualCase = { x: null, y: null }
+        this.dir = ""
+        this.speed = speed
+        this.fallBack = 0 //permet de revenir en arrière quand cul de sac
+        this.entityMap = [[]] //contient une simulation de souvenir lorsque le bot était trapper, chaque entité à un pourcentage de "confiance"
+        this.isOnEntityCase = false
+    }
+
+    startBot() {
+        let self = this
+        let model = controller.getModel()
+        let myPlayer = model.players.find(pl => pl.name == self.name)
+        let yBot = myPlayer.position.x //échange car tableau fonctionne inversé
+        let xBot = myPlayer.position.y
+        this.actualCase.x = Math.floor(myPlayer.position.x)
+        this.actualCase.y = Math.floor(myPlayer.position.y)
+        this.nextCase = this.chooseNextCase(xBot, yBot, model)
+        this.interval = setInterval(function () { self.makeMove(self); }, this.refreshRate);
+        console.log("bot : ", this.name, " starting....")
+        this.directionReverse = { down: "up", up: "down", right: "left", left: "right" }
+    }
+
+    makeMove(self) {
+        let model = controller.getModel()
+        let myPlayer = model.players.find(pl => pl.name == self.name)
+
+        if (myPlayer.role == "explorer") {
+            //console.log("heading to : ", self.nextCase, "is on : ", self.actualCase)
+            let myPlayer = model.players.find(pl => pl.name == self.name)
+            let yBot = myPlayer.position.x //échange car tableau fonctionne inversé
+            let xBot = myPlayer.position.y
+            let myPlayerPosition = myPlayer.position
+            self.actualCase.x = Math.floor(myPlayer.position.y)
+            self.actualCase.y = Math.floor(myPlayer.position.x)
+
+            if (self.nextCase.x == self.actualCase.x && self.nextCase.y == self.actualCase.y) { //on est sur la case suivante
+                if (self.isOnEntityCase) {
+                    controller.moveBot(myPlayerPosition, self.name, "onEntity", self.dir) //position, name, moveType,dir   
+                    self.isOnEntityCase = false
+                }else{
+                    self.nextCase = self.chooseNextCase(xBot, yBot, model)
+                }
+            } else {
+                self.move(self.dir, myPlayerPosition)
+            }
+        } else if (myPlayer.role == "trapper") {
+
+        }
+    }
+
+    entityAccessibleInView() {
+
+    }
+
+    move(dir, position) {
+        switch (dir) {
+            case 'up':
+                position.y = position.y - this.speed
+                break;
+            case 'down':
+                position.y = position.y + this.speed
+                break;
+            case 'left':
+                position.x = position.x - this.speed
+                break;
+            case 'right':
+                position.x = position.x + this.speed
+                break;
+            default:
+                console.log(`erreur moveBot`);
+        }
+        controller.moveBot(position, this.name, "move", this.dir) //position, name, moveType,dir   
+    }
+
+    isEntityAround(x, y, mod) {
+        x = Math.floor(x)
+        y = Math.floor(y)
+        let res = null
+
+        mod.entities.some(function(entite) {
+            if (entite.position.y_ == x + 1 && entite.position.x_ == y) { //pas un mur
+                res = { x: x + 1, y: y, dir: "down" }
+                console.log(res)
+                return true
+            }
+            if (entite.position.y_ == x - 1 && entite.position.x_ == y) { //pas un mur
+                res ={ x: x - 1, y: y, dir: "up" }
+                console.log(res)
+                return true
+            }
+            if (entite.position.y_ == x && entite.position.x_ == y + 1) { //pas un mur
+                res ={ x: x, y: y + 1, dir: "right" }
+                console.log(res)
+                return true
+            }
+            if (entite.position.y_ == x && entite.position.x_ == y - 1) { //pas un mur
+                res = { x: x, y: y - 1, dir: "left" }
+                console.log(res)
+                return true
+            }
+        })
+        
+        return res
+    }
+
+    chooseNextCase(xBot, yBot, mod) {
+        let newPossibilities = []
+        let coordEntity = this.isEntityAround(xBot, yBot, mod)
+
+        if (coordEntity != null) {
+            this.isOnEntityCase = true
+            newPossibilities.push({ x: coordEntity.x, y: coordEntity.y, dir: coordEntity.dir })
+        } else {
+            if (this.isCaseFree(xBot + 1, yBot, mod)) { //haut
+                if (!this.isCaseVisited(xBot + 1, yBot, mod)) {
+                    newPossibilities.push({ x: xBot + 1, y: yBot, dir: "down" })
+                }
+            }
+            if (this.isCaseFree(xBot - 1, yBot, mod)) {
+                if (!this.isCaseVisited(xBot - 1, yBot, mod)) {
+                    newPossibilities.push({ x: xBot - 1, y: yBot, dir: "up" })
+                }
+            }
+            if (this.isCaseFree(xBot, yBot - 1, mod)) {
+                if (!this.isCaseVisited(xBot, yBot - 1, mod)) {
+                    newPossibilities.push({ x: xBot, y: yBot - 1, dir: "left" })
+                }
+            }
+            if (this.isCaseFree(xBot, yBot + 1, mod)) {
+                if (!this.isCaseVisited(xBot, yBot + 1, mod)) {
+                    newPossibilities.push({ x: xBot, y: yBot + 1, dir: "right" })
+                }
+            }
+        }
+
+        if (newPossibilities.length != 0) {
+            let nxt = newPossibilities[Math.floor(Math.random() * newPossibilities.length)]
+            this.dir = nxt.dir
+            this.alreadyVisited.push({ x: Math.floor(nxt.x), y: Math.floor(nxt.y) })
+            if (this.fallBack != 0) {
+                //coupe already
+                let lgth = this.alreadyVisited.length
+                this.alreadyVisited = this.alreadyVisited.slice(lgth - this.fallBack, lgth);
+            }
+            this.fallBack = 0
+            return { x: Math.floor(nxt.x), y: Math.floor(nxt.y) } //reinverse
+
+        } else {
+            this.fallBack++
+            let coord = this.alreadyVisited[(this.alreadyVisited.length - 1) - this.fallBack]
+            this.dir = this.getDirection(this.actualCase.x, this.actualCase.y, coord.x, coord.y)
+            return { x: coord.x, y: coord.y }
+        }
+    }
+    //retourne vrai si jamais visités et pas un mur
+    isCaseFree(x, y, mod) {
+        x = Math.floor(x)
+        y = Math.floor(y)
+        if (mod.map[x][y] != 1 && mod.map[x][y] != -1) { //pas un mur
+            return true
+        }
+        return false
+    }
+
+    isCaseVisited(x, y, mod) {
+        x = Math.floor(x)
+        y = Math.floor(y)
+        let isVisited = this.alreadyVisited.some(pos => { //vrai si deja visité
+            if (Math.floor(pos.x) == x && Math.floor(pos.y) == y) {
+                console.log("true")
+                return true
+            }
+        })
+        if (isVisited) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    getDirection(oldX, oldY, newX, newY) {
+        if (oldX < newX) {
+            return "down"
+        }
+        if (oldX > newX) {
+            return "up"
+        }
+        if (oldY < newY) {
+            return "right"
+        }
+        if (oldY > newY) {
+            return "left"
+        }
+    }
+
+}
