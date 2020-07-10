@@ -33,7 +33,7 @@ class Bot {
         this.actualCase.y = Math.floor(myPlayer.position.y)
         this.nextCase = this.chooseNextCase(xBot, yBot, self.model)
         this.refreshModel = setInterval(function () { self.model = controller.getModel()}, 2000);
-        this.intervalMove = setInterval(function () { self.makeMove(self); }, 100);
+        this.intervalMove = setInterval(function () { self.makeMove(self); }, 25);
         this.intervalPlace = setInterval(function () { self.place(self); }, 8000);
         console.log("bot : ", this.name, " starting....")
         this.directionReverse = { down: "up", up: "down", right: "left", left: "right" }
