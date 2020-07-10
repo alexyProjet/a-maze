@@ -180,9 +180,7 @@ class Bot {
             this.dir = nxt.dir
             this.alreadyVisited.push({ x: Math.floor(nxt.x), y: Math.floor(nxt.y) })
             if (this.fallBack != 0) {
-                //coupe already
-                let lgth = this.alreadyVisited.length
-                this.alreadyVisited = this.alreadyVisited.slice(lgth - this.fallBack, lgth);
+                this.alreadyVisited = []
             }
             this.fallBack = 0
             return { x: Math.floor(nxt.x), y: Math.floor(nxt.y) } //reinverse
