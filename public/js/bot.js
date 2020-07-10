@@ -26,7 +26,7 @@ class Bot {
     startBot() {
         let self = this
         self.model = controller.getModel()
-        let myPlayer = model.players.find(pl => pl.name == self.name)
+        let myPlayer = self.model.players.find(pl => pl.name == self.name)
         let yBot = myPlayer.position.x //échange car tableau fonctionne inversé
         let xBot = myPlayer.position.y
         this.actualCase.x = Math.floor(myPlayer.position.x)
@@ -45,7 +45,7 @@ class Bot {
             let trapCoord = null
             let rewardCoord = null
 
-            let map = model.map
+            let map = self.model.map
             let mapLimitX = map.length
             let mapLimitY = map[0].length
 
