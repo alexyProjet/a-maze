@@ -7,7 +7,7 @@ class Bot {
      * 3 : trace bombe (marchable)
      */
     constructor(refreshR, botName, speed) {
-        this.refreshRate = refreshR
+        this.refreshRate = refreshR*3
         this.name = botName
         this.intervalMove = null
         this.intervalPlace = null
@@ -17,7 +17,7 @@ class Bot {
         this.nextCase = { x: null, y: null }
         this.actualCase = { x: null, y: null }
         this.dir = ""
-        this.speed = speed
+        this.speed = speed*3
         this.fallBack = 0 //permet de revenir en arrière quand cul de sac
         this.entityMap = [[]] //contient une simulation de souvenir lorsque le bot était trapper, chaque entité à un pourcentage de "confiance"
         this.isOnEntityCase = false
@@ -32,8 +32,8 @@ class Bot {
         this.actualCase.x = Math.floor(myPlayer.position.x)
         this.actualCase.y = Math.floor(myPlayer.position.y)
         this.nextCase = this.chooseNextCase(xBot, yBot, self.model)
-        this.refreshModel = setInterval(function () { self.model = controller.getModel()}, 2000);
-        this.intervalMove = setInterval(function () { self.makeMove(self); }, 25);
+        this.refreshModel = setInterval(function () { self.model = controller.getModel()}, 1000);
+        this.intervalMove = setInterval(function () { self.makeMove(self); }, self.refreshRate);
         this.intervalPlace = setInterval(function () { self.place(self); }, 8000);
         console.log("bot : ", this.name, " starting....")
         this.directionReverse = { down: "up", up: "down", right: "left", left: "right" }
