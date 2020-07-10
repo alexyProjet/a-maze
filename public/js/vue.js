@@ -698,7 +698,7 @@ class Vue {
 
             //si envoi
             if (tempTrapsRewardsArray["trap"] != null && tempTrapsRewardsArray["reward"] != null) {
-                controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"], controller.getCurrentPlayer())
+                controller.place(tempTrapsRewardsArray["trap"], tempTrapsRewardsArray["reward"])
 
                 tempTrapsRewardsArray["trap"] = null
                 tempTrapsRewardsArray["reward"] = null
@@ -749,7 +749,7 @@ class Vue {
     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
     */
     darken(position) {
-
+/*
         let coordX = position.x
         let coordY = position.y
         this.context.beginPath()
@@ -757,7 +757,7 @@ class Vue {
         //x,y,rayon,angles...
         this.context.arc(coordX * this.spriteWidth + this.biais, coordY * this.spriteHeight + this.biais, this.spriteHeight * 2.5, 0, Math.PI * 2, true);
         this.context.fillStyle = "black";
-        this.context.fill();
+        this.context.fill();*/
     }
 
     /**

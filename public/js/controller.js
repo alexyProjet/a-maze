@@ -11,8 +11,6 @@ $(() => {
     var songsLists = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers  mp3
     var botList = [] //contient liste des bots
     
-
-
     controller = (() => {
         let room = {}
         let myId = null
@@ -234,8 +232,8 @@ $(() => {
         })
 
         const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
-        const moveBot = (position, name, moveType, dir) => self.socket.emit("move-bot", roomName, name, moveType, position) //send la position
-        const place = (trapPosition, rewardPosition, actualplayer) => self.socket.emit("place-trap-and-reward", roomName, JSON.stringify({ trap: trapPosition, reward: rewardPosition, player: actualplayer }))
+        const moveBot = (position, name, moveType) => self.socket.emit("move-bot", roomName, name, moveType, position) //send la position
+        const place = (trapPosition, rewardPosition,botName=null) => self.socket.emit("place-trap-and-reward", roomName, { trap: trapPosition, reward: rewardPosition}, botName)
         const getModel = () => model //renvoi le model
         const setName = (name) => self.socket.emit("set-name", roomName, name)
         const getRoomUsers = () => Object.assign({}, room.users) //renvoi le les users de la room

@@ -9,7 +9,8 @@ class Bot {
     constructor(refreshR, botName, speed) {
         this.refreshRate = refreshR
         this.name = botName
-        this.interval = null
+        this.intervalMove = null
+        this.intervalPlace = null
         this.alreadyVisited = []
         this.nextCase = { x: null, y: null }
         this.actualCase = { x: null, y: null }
@@ -29,36 +30,66 @@ class Bot {
         this.actualCase.x = Math.floor(myPlayer.position.x)
         this.actualCase.y = Math.floor(myPlayer.position.y)
         this.nextCase = this.chooseNextCase(xBot, yBot, model)
-        this.interval = setInterval(function () { self.makeMove(self); }, this.refreshRate);
+        this.intervalMove = setInterval(function () { self.makeMove(self); }, this.refreshRate);
+        this.intervalPlace = setInterval(function () { self.place(self); }, 8000);
         console.log("bot : ", this.name, " starting....")
         this.directionReverse = { down: "up", up: "down", right: "left", left: "right" }
     }
 
+    place(self) {
+        let model = controller.getModel()
+        let bot = model.players.find(pl => pl.name == self.name)
+        if (bot.role == "trapper" && bot.inventory.length != 0) {
+            let trapCoord = null
+            let rewardCoord = null
+
+            let map = model.map
+            let mapLimitX = map.length
+            let mapLimitY = map[0].length
+
+            while (trapCoord == null) {
+                let x = Math.floor(Math.random() * (mapLimitX - 1) + 1)
+                let y = Math.floor(Math.random() * (mapLimitY - 1) + 1)
+
+                if (map[x][y] != -1 && map[x][y] != 1) {
+                    trapCoord = { x_: x, y_: y }
+                }
+            }
+
+            while (rewardCoord == null) {
+                let x = Math.floor(Math.random() * (mapLimitX - 1) + 1)
+                let y = Math.floor(Math.random() * (mapLimitY - 1) + 1)
+
+                if (map[x][y] != -1 && map[x][y] != 1) {
+                    rewardCoord = { x_: x, y_: y }
+                }
+            }
+
+            controller.place({ x_: trapCoord.y_, y_: trapCoord.x_ }, { x_: rewardCoord.y_, y_: rewardCoord.x_ }, bot.name)
+        }
+    }
+
     makeMove(self) {
         let model = controller.getModel()
-        let myPlayer = model.players.find(pl => pl.name == self.name)
+        let bot = model.players.find(pl => pl.name == self.name)
 
-        if (myPlayer.role == "explorer") {
-            //console.log("heading to : ", self.nextCase, "is on : ", self.actualCase)
-            let myPlayer = model.players.find(pl => pl.name == self.name)
-            let yBot = myPlayer.position.x //échange car tableau fonctionne inversé
-            let xBot = myPlayer.position.y
-            let myPlayerPosition = myPlayer.position
-            self.actualCase.x = Math.floor(myPlayer.position.y)
-            self.actualCase.y = Math.floor(myPlayer.position.x)
+        if (bot.role == "explorer") {
+            let yBot = bot.position.x //échange car tableau fonctionne inversé
+            let xBot = bot.position.y
+            let myBotPosition = bot.position
+            self.actualCase.x = Math.floor(bot.position.y)
+            self.actualCase.y = Math.floor(bot.position.x)
 
             if (self.nextCase.x == self.actualCase.x && self.nextCase.y == self.actualCase.y) { //on est sur la case suivante
                 if (self.isOnEntityCase) {
-                    controller.moveBot(myPlayerPosition, self.name, "onEntity", self.dir) //position, name, moveType,dir   
+                    controller.moveBot(myBotPosition, self.name, "onEntity", self.dir) //position, name, moveType,dir   
                     self.isOnEntityCase = false
-                }else{
+                } else {
                     self.nextCase = self.chooseNextCase(xBot, yBot, model)
                 }
             } else {
-                self.move(self.dir, myPlayerPosition)
+                self.move(self.dir, myBotPosition)
             }
-        } else if (myPlayer.role == "trapper") {
-
         }
     }
 
@@ -91,19 +122,19 @@ class Bot {
         y = Math.floor(y)
         let res = null
 
-        mod.entities.some(function(entite) {
+        mod.entities.some(function (entite) {
             if (entite.position.y_ == x + 1 && entite.position.x_ == y) { //pas un mur
                 res = { x: x + 1, y: y, dir: "down" }
                 console.log(res)
                 return true
             }
             if (entite.position.y_ == x - 1 && entite.position.x_ == y) { //pas un mur
-                res ={ x: x - 1, y: y, dir: "up" }
+                res = { x: x - 1, y: y, dir: "up" }
                 console.log(res)
                 return true
             }
             if (entite.position.y_ == x && entite.position.x_ == y + 1) { //pas un mur
-                res ={ x: x, y: y + 1, dir: "right" }
+                res = { x: x, y: y + 1, dir: "right" }
                 console.log(res)
                 return true
             }
@@ -113,7 +144,7 @@ class Bot {
                 return true
             }
         })
-        
+
         return res
     }
 

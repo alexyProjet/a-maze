@@ -209,24 +209,26 @@ server.listen(port, function () {
         /**
          * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
          */
-        socket.on('place-trap-and-reward', function (room, dataJSON) {
-            let data = JSON.parse(dataJSON)
+        socket.on('place-trap-and-reward', function (room, data) {
             let player = rooms[room].model.players.find(pl => pl.id == socket.id)
 
             let trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
             let reward_instance = reward(player.id, data.reward)
-
-            if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
-                console.log("SERVEUR on place : positions identiques invalides")
-            } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
-                console.log("trap et reward placés valides")
-                rooms[room].model.traps.push(trap_instance)
-                rooms[room].model.rewards.push(reward_instance)
-                getPlayerFromId(player.id, room).inventory.pop()
-                getPlayerFromId(player.id, room).inventory.pop()
-                console.log(rooms[room].model.traps)
+            if (player.inventory.length != 0) {
+                if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
+                    console.log("SERVEUR on place : positions identiques invalides")
+                } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
+                    console.log("trap et reward placés valides")
+                    rooms[room].model.traps.push(trap_instance)
+                    rooms[room].model.rewards.push(reward_instance)
+                    player.inventory.pop()
+                    player.inventory.pop()
+                    console.log(rooms[room].model.traps)
+                } else {
+                    console.log("trap et reward placés NON valides")
+                }
             } else {
-                console.log("trap et reward placés NON valides")
+                console.log
             }
         });
 
@@ -313,7 +315,9 @@ server.listen(port, function () {
 
         //move bot
         socket.on('move-bot', (room, name, moveType, newPosition) => {
-            if (rooms[room].botList.some(botName => botName == name) && socket.id == rooms[room].roomLeader) { //si c'est bien un bot et demande de la part du roomleader
+            if (newPosition.x > 30 || newPosition.y > 20 || newPosition.x < 0 || newPosition.y < 0) {
+                // console.log("----> [MOVE-PLAYER] : position en dehors du plateau.")
+            } else if (rooms[room].botList.some(botName => botName == name) && socket.id == rooms[room].roomLeader) { //si c'est bien un bot et demande de la part du roomleader
                 let bot = rooms[room].model.players.find(pl => pl.id == name)
                 switch (moveType) {
                     case 'move':
@@ -323,14 +327,14 @@ server.listen(port, function () {
                         // console.log("[ MOVE-BOT ] : déplacement de : ", name, ' dans salon : ', room)
                         break;
                     case 'onEntity':
-                        
+
 
                         let posX = Math.floor(newPosition.x)
                         let posY = Math.floor(newPosition.y)
-                        console.log(posX,posY)
+                        console.log(posX, posY)
                         //check collision avec pieges
                         rooms[room].model.traps.some(function (trap, index) {
-                            console.log("trap",trap.position.x_ ,trap.position.y_)
+                            console.log("trap", trap.position.x_, trap.position.y_)
                             if (trap.position.x_ == posX && trap.position.y_ == posY) {
                                 if (trap.triggered == null) {
                                     trap.triggered = Date.now()
@@ -347,7 +351,7 @@ server.listen(port, function () {
 
                         //check collision avec recompenses
                         rooms[room].model.rewards.some(function (rew, index) {
-                            console.log("rewards",rew.position.x_ ,rew.position.y_)
+                            console.log("rewards", rew.position.x_, rew.position.y_)
                             if (rew.position.x_ == posX && rew.position.y_ == posY) {
                                 if (rew.triggered == null) {
                                     rew.triggered = Date.now()
@@ -369,7 +373,37 @@ server.listen(port, function () {
             }
         })
 
+        /**
+          * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
+          */
+        socket.on('place-trap-and-reward', function (room, data, botName) {
+            console.log("[ PLACE ] : request from :", botName,data.trapPosition,data.rewardPosition)
 
+            let player = null
+
+            if (botName != null && socket.id == rooms[room].roomLeader) { //si un bot et appartient bien à rommleader
+                player = rooms[room].model.players.find(pl => pl.id == botName)
+            } else {
+                player = rooms[room].model.players.find(pl => pl.id == socket.id)
+            }
+
+            let trap_instance = trap(player.id, data.trap) //creer un piege avec les données recu et ce qu'on a deja
+            let reward_instance = reward(player.id, data.reward)
+            if (player.inventory.length != 0) {
+                if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
+                    console.log("SERVEUR on place : positions identiques invalides")
+                } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
+                    console.log("trap et reward placés valides")
+                    rooms[room].model.traps.push(trap_instance)
+                    rooms[room].model.rewards.push(reward_instance)
+                    player.inventory.pop()
+                    player.inventory.pop()
+                    console.log(rooms[room].model.traps)
+                } else {
+                    console.log("trap et reward placés NON valides")
+                }
+            }
+        });
     });
 });
 
@@ -485,11 +519,14 @@ function randomPosition(room) {
 /**
  * Vérfie qu'il n'y a que du sol à la position donnée
  * (cad : pas de pieges, pas recompenses, pas d'autres joueurs)
+ * Inverse les coordonnées pour vérfier dans la map, les coord passées sont celles du canvas
  * @param {*} x 
  * @param {*} y 
  */
 function isAValidPosition(x, y, room) {
-    if (rooms[room].model.map[y][x] != 1 && rooms[room].model.map[y][x] != -1) { //si sur du sol
+    if (y > 30 || x > 20 || y < 0 || x < 0) {
+        return false
+    } else if (rooms[room].model.map[y][x] != 1 && rooms[room].model.map[y][x] != -1) { //si sur du sol
         rooms[room].model.players.some(pl => {
             if (Math.floor(pl.position.x) == x && Math.floor(pl.position.y) == y) {
                 return false
