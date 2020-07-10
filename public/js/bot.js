@@ -11,6 +11,8 @@ class Bot {
         this.name = botName
         this.intervalMove = null
         this.intervalPlace = null
+        this.refreshModel = null
+        this.model = null
         this.alreadyVisited = []
         this.nextCase = { x: null, y: null }
         this.actualCase = { x: null, y: null }
@@ -23,13 +25,14 @@ class Bot {
 
     startBot() {
         let self = this
-        let model = controller.getModel()
+        self.model = controller.getModel()
         let myPlayer = model.players.find(pl => pl.name == self.name)
         let yBot = myPlayer.position.x //échange car tableau fonctionne inversé
         let xBot = myPlayer.position.y
         this.actualCase.x = Math.floor(myPlayer.position.x)
         this.actualCase.y = Math.floor(myPlayer.position.y)
         this.nextCase = this.chooseNextCase(xBot, yBot, model)
+        this.refreshModel = setInterval(function () { self.model = controller.getModel()}, 2000);
         this.intervalMove = setInterval(function () { self.makeMove(self); }, this.refreshRate);
         this.intervalPlace = setInterval(function () { self.place(self); }, 8000);
         console.log("bot : ", this.name, " starting....")
@@ -37,8 +40,7 @@ class Bot {
     }
 
     place(self) {
-        let model = controller.getModel()
-        let bot = model.players.find(pl => pl.name == self.name)
+        let bot = self.model.players.find(pl => pl.name == self.name)
         if (bot.role == "trapper" && bot.inventory.length != 0) {
             let trapCoord = null
             let rewardCoord = null
@@ -70,8 +72,7 @@ class Bot {
     }
 
     makeMove(self) {
-        let model = controller.getModel()
-        let bot = model.players.find(pl => pl.name == self.name)
+        let bot = self.model.players.find(pl => pl.name == self.name)
 
         if (bot.role == "explorer") {
             let yBot = bot.position.x //échange car tableau fonctionne inversé
@@ -85,7 +86,7 @@ class Bot {
                     controller.moveBot(myBotPosition, self.name, "onEntity", self.dir) //position, name, moveType,dir   
                     self.isOnEntityCase = false
                 } else {
-                    self.nextCase = self.chooseNextCase(xBot, yBot, model)
+                    self.nextCase = self.chooseNextCase(xBot, yBot, self.model)
                 }
             } else {
                 self.move(self.dir, myBotPosition)

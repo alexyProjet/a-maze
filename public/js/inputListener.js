@@ -39,7 +39,6 @@ function routine() {
             controller.getCurrentPlayer().direction = "up"
             let newY = myPlayerPosition.y - speed
             let newX = myPlayerPosition.x
-            console.log("s touche : ", newY - Math.floor(newY))
             if (qKey || dKey) newY = myPlayerPosition.y - speed / 2.0
 
             if (Math.floor(newY) != Math.floor(oldY)) { //Si changement de case
