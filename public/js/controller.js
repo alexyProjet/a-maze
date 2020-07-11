@@ -143,8 +143,10 @@ $(() => {
             vue.animateMalus(position, 2)
         })
 
-        self.socket.on('model-update', function (data) {
-            Object.assign(model, data)
+        self.socket.on('model-update', function (mod,spd,rfrhRate) {
+            Object.assign(model, mod)
+            speed = spd // anti-triche
+            refreshRate = rfrhRate // anti-triche
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
         })
 
@@ -221,8 +223,14 @@ $(() => {
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
 
+        //partie bot ----------------------------
+        const addBotButtonClicked = () => {
+            let botName = "bot" + Math.floor((Math.random() * 10000) + 1)
+            self.socket.emit("new-bot", roomName, botName)
+        }
+
         const moveTo = (position, dir) => self.socket.emit("move-player", roomName, position, dir) //send la position
-        const place = (trapPosition, rewardPosition) => self.socket.emit("place-trap-and-reward", roomName, { trap: trapPosition, reward: rewardPosition})
+        const place = (trapPosition, rewardPosition) => self.socket.emit("place-trap-and-reward", roomName, { trap: trapPosition, reward: rewardPosition })
         const getModel = () => model //renvoi le model
         const setName = (name) => self.socket.emit("set-name", roomName, name)
         const getRoomUsers = () => Object.assign({}, room.users) //renvoi le les users de la room
@@ -231,7 +239,7 @@ $(() => {
         const getName = () => room.users[getId()]
         const getCurrentPlayer = () => Object.assign({}, model.currentPlayer) //renvoi le current player
         const getTrapsRewardsToAnimate = () => trapsRewardsToAnimate //renvoi le current player
-        return { moveTo, place, getModel, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName, getTrapsRewardsToAnimate } //
+        return { moveTo, place, getModel, addBotButtonClicked, getCurrentPlayer, startButtonClicked, setName, getRoomUsers, getRoomLeader, getId, getName, getTrapsRewardsToAnimate } //
     })()
 
 
