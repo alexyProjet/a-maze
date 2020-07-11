@@ -24,7 +24,13 @@ var songsContainer = { trap: [], reward: [], mainTrap: null, mainReward: null } 
  * Rendu de la page dans le menu des salons
  */
 app.get('/', (req, res) => {
-    res.render('lobby', { rooms: rooms, roomName: "lobbyMenu" })
+    let publicRooms = {}
+    for (let roomName in rooms) {
+        if(rooms[roomName].isPublic == true){
+            publicRooms[roomName] = rooms[roomName]
+        }
+    }
+    res.render('lobby', { rooms: publicRooms, roomName: "lobbyMenu" })
 })
 
 /**
