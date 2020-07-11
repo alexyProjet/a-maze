@@ -36,10 +36,10 @@ app.post('/room', (req, res) => {
     }
     //Salon public ou privé ?
     if (req.body.state == "on") {
-        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false, timer: null, botList: [] }
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: false, timer: null }
         console.log("SERVEUR : nouveau salon PRIVE créé", req.body.room, req.body.state)
     } else {
-        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true, timer: null, botList: [] }
+        rooms[req.body.room] = { users: {}, model: model(), roomLeader: null, state: "lobby", refreshing: null, isPublic: true, timer: null }
         console.log("SERVEUR : nouveau salon PUBLIC créé", req.body.room, req.body.state)
         io.emit('new-room', req.body.room)
     }
@@ -65,14 +65,6 @@ server.listen(port, function () {
     console.log(`En écoute sur ${server.address().port}`);
     loadSongs()
     io.on('connection', function (socket) {
-
-        socket.on('new-bot', (room, botName) => {
-            console.log("[NEW-USER] : nouveau bot : ", botName, " dans le salon : ", room)
-            if (rooms[room].roomLeader == socket.id) {//bot peut être ajotué seulement par room leader
-                rooms[room].botList.push(botName)
-                updateLobby(room, botName)
-            }
-        });
 
         /**
          * Enregistrement du nouvel utilisateur connecté
@@ -201,18 +193,6 @@ server.listen(port, function () {
                         }
                         rooms[room].model.players.push(newPlayer)
                     })
-                    console.log(rooms[room].users)
-                    //ajotue les bots si il y en a
-                    let bots = rooms[room].botList
-                    bots.forEach(botName => {
-                        let newPlayer = player(randomPosition(room), roles.explorer, 0, [])
-                        newPlayer.id = botName
-                        newPlayer.name = botName
-                        rooms[room].model.players.push(newPlayer)
-                        newPlayer.botOption.NextCase = newPlayer.position
-                        setInterval(function () { bot(newPlayer, room) }, refreshRate);
-                    })
-
                     updateModelsEveryRefreshRate(room)
                     io.in(room).emit('display-game', timeStop.getTime(), rooms[room].model)
                 }
@@ -237,165 +217,14 @@ server.listen(port, function () {
         });
     });
 });
-/**
- * 
- * on travaille ici en coord canva
- * @param {*} player 
- * @param {*} room 
- */
-function bot(player, room) {
-    if (player.role == "explorer") {
-        let xActualCase = Math.floor(player.position.x)
-        let yActualCase = Math.floor(player.position.y) //on inverse
-        let NextCase = player.botOption.NextCase
-
-       // console.log("ACT,nex,act,next",xActualCase,Math.floor(NextCase.x) ,yActualCase ,Math.floor(NextCase.y))
-        if (xActualCase == Math.floor(NextCase.x) && yActualCase == Math.floor(NextCase.y)){
-           // console.log(" ---- > sur meme case next ")
-            player.botOption.alreadyVisited.push(player.position)
-            player.botOption.NextCase = chooseNextCase(player.position,rooms[room].model,player)
-        }else{
-            let position = player.position
-            switch (player.direction) {
-                case 'up':
-                    position.y = position.y - speed
-                    break;
-                case 'down':
-                    position.y = position.y + speed
-                    break;
-                case 'left':
-                    position.x = position.x - speed
-                    break;
-                case 'right':
-                    position.x = position.x + speed
-                    break;
-                default:
-                    console.log(`erreur moveBot`);
-            }
-            //console.log(" ---- > move en ",position)
-            movePlayer(room, position, player.direction, player.id)
-        }
-    } else if (player.role == "trapper") {
-
-    }
-
-}
-
-//choisi next case dans map donc inversion coord
-function chooseNextCase(position,mod,player){
-    let x = position.y
-    let y = position.x
-
-    let newPossibilities = []
-    let coordEntity = isEntityAround(x, y, mod)
-
-    if (coordEntity != null) {
-        newPossibilities.push({ x: coordEntity.x, y: coordEntity.y, direction: coordEntity.direction })
-    } else {
-        if (isCaseFree(x + 1, y, mod)) { //haut
-            if (!isCaseVisited(x + 1, y, mod,player)) {
-                newPossibilities.push({ x: x + 1, y: y, direction: "down" })
-            }
-        }
-        if (isCaseFree(x - 1, y, mod)) {
-            if (!isCaseVisited(x - 1, y, mod,player)) {
-                newPossibilities.push({ x: x - 1, y: y, direction: "up" })
-            }
-        }
-        if (isCaseFree(x, y - 1, mod)) {
-            if (!isCaseVisited(x, y - 1, mod,player)) {
-                newPossibilities.push({ x: x, y: y - 1, direction: "left" })
-            }
-        }
-        if (isCaseFree(x, y + 1, mod)) {
-            if (!isCaseVisited(x, y + 1, mod,player)) {
-                newPossibilities.push({ x: x, y: y + 1, direction: "right" })
-            }
-        }
-    }
-
-    if (newPossibilities.length != 0) {
-        let nxt = newPossibilities[Math.floor(Math.random() * newPossibilities.length)]
-        player.direction = nxt.direction
-        return { x: Math.floor(nxt.y), y: Math.floor(nxt.x) } //reinverse
-    } else {
-        player.botOption.alreadyVisited = []
-        return chooseNextCase(position,mod,player)
-    }
-
-}
-
-function isEntityAround(x, y, mod) {
-    x = Math.floor(x)
-    y = Math.floor(y)
-    let res = null
-
-    mod.entities.some(function (entite) {
-        if (entite.position.y_ == x + 1 && entite.position.x_ == y) { //pas un mur
-            res = { x: x + 1, y: y, direction: "down" }
-            return true
-        }
-        if (entite.position.y_ == x - 1 && entite.position.x_ == y) { //pas un mur
-            res = { x: x - 1, y: y, direction: "up" }
-            return true
-        }
-        if (entite.position.y_ == x && entite.position.x_ == y + 1) { //pas un mur
-            res = { x: x, y: y + 1, direction: "right" }
-            return true
-        }
-        if (entite.position.y_ == x && entite.position.x_ == y - 1) { //pas un mur
-            res = { x: x, y: y - 1, direction: "left" }
-            return true
-        }
-    })
-
-    return res
-}
-
-
-function isCaseFree(x, y, mod) {
-    x = Math.floor(x)
-    y = Math.floor(y)
-    if (mod.map[x][y] != 1 && mod.map[x][y] != -1) { //pas un mur
-        return true
-    }
-    return false
-}
-
-/**
- * 
- * @param {*} x 
- * @param {*} y 
- * @param {*} mod 
- * @param {*} player 
- */
-function isCaseVisited(x, y, mod,player) {
-    x = Math.floor(x)
-    y = Math.floor(y)
-    let isVisited = player.botOption.alreadyVisited.some(pos => { 
-        if (Math.floor(pos.x) == x && Math.floor(pos.y) == y) { //inverse car en canva dans alreadyvisited
-            console.log("ALREADY VISITED")
-            return true
-        }
-    })
-    if (isVisited) {
-        return true
-    } else {
-        return false
-    }
-}
 
 
 /**
- * Met à jour le lobby avec users et listbot
+ * Met à jour le lobby avec users
  * @param {*} room 
  */
 function updateLobby(room, name) {
-    let botAndPlayers = JSON.parse(JSON.stringify(rooms[room]))
-    rooms[room].botList.forEach(botName => {
-        botAndPlayers.users[botName] = botName
-    })
-    io.in(room).emit("user-connected-in-lobby", name, botAndPlayers)
+    io.in(room).emit("user-connected-in-lobby", name, rooms[room])
 }
 
 /**
@@ -638,7 +467,7 @@ let model = () => Object({
 
 const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
 const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false, direction = "down", botOption = { alreadyVisited: [], nextCase: [] }) => Object({ id, position, name, role, isRoomLeader, score, inventory, direction, botOption }) //champs player
+const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false, direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
 const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
 const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
 const map = () => {

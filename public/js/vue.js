@@ -270,14 +270,7 @@ class Vue {
             dureeDiv.append(inputBoxTime)
 
             divOptionsPartie.append(dureeDiv)
-            
-            let btnAddBot = document.createElement("button");
-            btnAddBot.setAttribute("id", "add-bot")
-            btnAddBot.innerHTML = "Ajouter un bot.";
-            btnAddBot.addEventListener("click", function () {
-                controller.addBotButtonClicked()
-            });
-            divOptionsPartie.append(btnAddBot)
+
             this.setInputFilter(inputBoxTime, function (value) { //empeche de retnrer autre chose que des entiers
                 return /^-?\d*$/.test(value);
             });
