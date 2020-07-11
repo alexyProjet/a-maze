@@ -29,7 +29,7 @@ var songsContainer = { trap: [], reward: [], mainTrap: null, mainReward: null } 
 app.get('/', (req, res) => {
     let publicRooms = {}
     for (let roomName in rooms) {
-        if(rooms[roomName].isPublic == true){
+        if (rooms[roomName].isPublic == true) {
             publicRooms[roomName] = rooms[roomName]
         }
     }
@@ -103,10 +103,16 @@ server.listen(port, function () {
         socket.on('set-name', function (room, newName) {
             console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id], " Nouveau : ", newName)
             const noms = Object.values(rooms[room].users)
+            let alreadyInUse = false
             if (noms.some(nom => nom == newName)) {
-                rooms[room].users[socket.id] = newName
-            } else {
+                alreadyInUse = true
+            }
+
+            if (alreadyInUse) {
                 console.log(" ---> déja pris, abandon...")
+            } else {
+                rooms[room].users[socket.id] = newName
+
             }
 
             io.to(room).emit("lobby-changes-occured", rooms[room])

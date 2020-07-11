@@ -1,7 +1,9 @@
 /**
  * Gère le menu principal des salons
  */
+this.socket = io();
 $(() => {
+
     const roomContainer = document.getElementById('room-container')
 
     //Nouveau salon dans le menu des salons
