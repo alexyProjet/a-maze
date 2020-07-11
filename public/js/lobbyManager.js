@@ -24,8 +24,11 @@ $(() => {
     })
     //Supprime un salon du menu des salons
     this.socket.on('remove-room-from-lobby-menu', (room) => {
-        console.log("Suppression du salon : ", room," dans le menu.")
-        document.getElementById(room).parentNode.removeChild(document.getElementById(room));
+        console.log("Tentative de suppression du salon : ", room," dans le menu.")
+        if(document.getElementById(room) == null){
+            console.log(" ---> salon privé effacé.")
+        }else{
+            document.getElementById(room).parentNode.removeChild(document.getElementById(room));
+        }
     })
-
 })

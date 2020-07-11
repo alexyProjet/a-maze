@@ -1,9 +1,12 @@
 var express = require('express');
 var app = express();
+const noSniff = require('dont-sniff-mimetype')
+app.use(noSniff())
 var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
 var generate = require("@indutny/maze")
 const fs = require('fs');
+
 
 
 app.set('views', './views')
