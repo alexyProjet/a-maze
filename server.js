@@ -355,7 +355,6 @@ function loadSongs() {
 function getRoomFromPlayerId(id) {
     return Object.entries(rooms).reduce((roomName, [name, room]) => {
         if (room.users[id] != null) roomName.push(name)
-        console.log("SORTIE", roomName)
         return roomName
     }, [])
 }
@@ -543,7 +542,7 @@ const roles = {
  */
 const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     //MAJ le joueur qui a marché sur le piege
-    let pl = rooms[room].model.players.find(p => p.id == actualPlayer.id)
+    let pl = actualPlayer
     pl.role = roles.trapper
     pl.inventory = trapperInventory.slice() //l'ordre est important
 
@@ -554,6 +553,12 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
         console.log(" ----> -2 au joueur ", actualPlayer.name, " car active son propre piège")
         io.to(actualPlayer.id).emit("play-(-2)-animation", trap1.position)
     } else {
+        //autre joueur que celui marché deviennent explorer
+        rooms[room].model.players.filter(player => {
+            if (pl.id != player.id) {
+                player.role = roles.explorer
+            }
+        })
         trapAuthor.score++
     }
 
@@ -573,7 +578,6 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     io.to(room).emit("play-sound", "trapMain", songsContainer.trapMain)
     setTimeout(function () {
         let index = Math.floor(Math.random() * (songsContainer.trap.length))
-        console.log("index : ", index, " sur ", songsContainer.trap.length)
         io.to(actualPlayer.id).emit("play-sound", "trap", index)
     }, fuzeTime * 3);
 

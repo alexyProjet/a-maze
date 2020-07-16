@@ -3,7 +3,7 @@
 <span class="marge"><br>Trouvez des récompenses... mais attention, il y a également des pièges
 		posés par d'autres joueurs que vous ne pouvez différencier des récompenses. </span>
 <span class="marge"><br>1 récompense = 1 point..</span>
-<span class="marge"><br>Si vous marchez sur une piège, vous devenez Trapper</span>
+<span class="marge"><br>Si vous marchez sur un piège, vous devenez Trapper</span>
 <br>
 <br>
 <b>Trapper : </b> 
