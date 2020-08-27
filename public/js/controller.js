@@ -20,25 +20,27 @@ $(() => {
             traps: [],
             entities: [],
             rewards: [],
-            map: [[]],
+            map: [
+                []
+            ],
             currentPlayer: '',
             roomLeader: null
         }
 
-        let vue = null;//creer l'ui
+        let vue = null; //creer l'ui
         let idtemp = Math.floor(Math.random() * 1000);
         name = name + idtemp
         vue = new Vue();
-        self.socket.on('connect', function () {
+        self.socket.on('connect', function() {
             socket.emit('new-user', roomName, name);
         });
 
 
         /**
-        * ---------------------- Gestion du salon ----------------------------------
-        */
+         * ---------------------- Gestion du salon ----------------------------------
+         */
         //Met à jour la liste des sons
-        self.socket.on('songs-list-update', function (songsContainer) {
+        self.socket.on('songs-list-update', function(songsContainer) {
             songsContainer.trap.forEach(song => {
                 let sound = new Howl({
                     src: ['../sound/trap-fx/' + song],
@@ -77,8 +79,8 @@ $(() => {
         })
 
         //Nouvel utilisateur dans le salon
-        self.socket.on('user-connected-in-lobby', function (name, roomReceived) {
-            if (Object.keys(room).length == 0) {  //premiere connexion de l'utilisateur, room est vide
+        self.socket.on('user-connected-in-lobby', function(name, roomReceived) {
+            if (Object.keys(room).length == 0) { //premiere connexion de l'utilisateur, room est vide
                 myId = socket.id
                 room = roomReceived
                 vue.renderLeftLobbyPannel()
@@ -91,19 +93,19 @@ $(() => {
             room = roomReceived
             vue.renderMiddleLobbyPannel()
             vue.renderRightLobbyPannel()
-            console.log("[IO] Nouvelle utilisateur : ", name, "dans : ", roomReceived)
+            console.log("[ controller.js ] : [IO] Nouvelle utilisateur : ", name, "dans : ", roomReceived)
         })
 
 
         //Utilisateur se deconnecte
-        self.socket.on('user-disconnected-lobby', function (name, roomReceived) {
-            console.log("[IO] ", name, "s'est deconnecté")
+        self.socket.on('user-disconnected-lobby', function(name, roomReceived) {
+            console.log("[ controller.js ] : [IO] ", name, "s'est deconnecté")
             room = roomReceived
             vue.renderMiddleLobbyPannel()
         })
 
         //Changement dans le lobby
-        self.socket.on('lobby-changes-occured', function (roomReceived) {
+        self.socket.on('lobby-changes-occured', function(roomReceived) {
             room = roomReceived
             vue.renderMiddleLobbyPannel()
             vue.renderRightLobbyPannel()
@@ -112,14 +114,13 @@ $(() => {
 
 
         /**
-        * ---------------------- Gestion d'une partie ----------------------------------
-        */
+         * ---------------------- Gestion d'une partie ----------------------------------
+         */
 
         /**
          * 
          */
-        self.socket.on('play-sound', function (type, data) {
-            console.log("RECU JOUE SON", data)
+        self.socket.on('play-sound', function(type, data) {
             if (soundActived) {
                 if (type == "trapMain") {
                     songsLists.trapMain.play()
@@ -133,17 +134,15 @@ $(() => {
             }
         })
 
-        self.socket.on('play-(-1)-animation', function (position) {
-            console.log("animation malus -1 en", position)
+        self.socket.on('play-(-1)-animation', function(position) {
             vue.animateMalus(position, 1)
         })
 
-        self.socket.on('play-(-2)-animation', function (position) {
-            console.log("animation malus -2 en", position)
+        self.socket.on('play-(-2)-animation', function(position) {
             vue.animateMalus(position, 2)
         })
 
-        self.socket.on('model-update', function (mod,spd,rfrhRate) {
+        self.socket.on('model-update', function(mod, spd, rfrhRate) {
             Object.assign(model, mod)
             speed = spd // anti-triche
             refreshRate = rfrhRate // anti-triche
@@ -161,7 +160,7 @@ $(() => {
         /**
          * Animation de piège
          */
-        self.socket.on('trap-animation', function (position) {
+        self.socket.on('trap-animation', function(position) {
             trapsRewardsToAnimate.trap = position
 
         })
@@ -169,24 +168,24 @@ $(() => {
         /**
          * Animation de recompense
          */
-        self.socket.on('reward-animation', function (position) {
+        self.socket.on('reward-animation', function(position) {
             trapsRewardsToAnimate.reward = position
         })
 
         /**
          * erreur de position d'un joueur
          */
-        self.socket.on('error-position', function () {
-            myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
-        })
-        //Fin du chronometre
-        self.socket.on('countdown-over', function () {
+        self.socket.on('error-position', function() {
+                myPlayerPosition = Object.assign({}, controller.getCurrentPlayer().position)
+            })
+            //Fin du chronometre
+        self.socket.on('countdown-over', function() {
             clearTimeout(gameTimeout)
             clearInterval(gameInterval)
             vue.renderEndGame()
         })
 
-        self.socket.on('shake-game', function () {
+        self.socket.on('shake-game', function() {
             vue.shake()
         })
 
@@ -203,12 +202,12 @@ $(() => {
         /**
          * Signale qu'il faut affiche le jeu
          */
-        self.socket.on('display-game', function (timeStop, mod) {
+        self.socket.on('display-game', function(timeStop, mod) {
             vue.lobbyMusicFile.pause()
-            console.log("CONTROLLER: display-game ")
+            console.log("[ controller.js ] :  display-game ")
             Object.assign(model, mod)
             model.currentPlayer = model.players.find(pl => pl.id == self.socket.id)
-            console.log("CONTROLLER ON : UpdateModel recu", model.players)
+            console.log("[ controller.js ] :  UpdateModel recu", model.players)
 
             gameStarted = true
             vue.initGame()
@@ -219,7 +218,7 @@ $(() => {
             initListener()
 
 
-            console.log("fin displaygame.... launching vue.renderGame()...")
+            console.log("[ controller.js ] : fin displaygame.... launching vue.renderGame()...")
             gameTimeout = setTimeout(gameInterval = setInterval(() => vue.renderGame(myPlayerPosition), refreshRate), 200)
         })
 

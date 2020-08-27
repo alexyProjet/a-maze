@@ -3,6 +3,7 @@ var tempTrapsRewardsArray = { trap: null, reward: null }
 var lastRole
 var lastInventoryCount
 var countdown
+
 class Vue {
 
     constructor() {
@@ -67,9 +68,7 @@ class Vue {
                 self.explosionAnimationFrames[i] = new Image(self.spriteWidth * 3, self.spriteHeight * 3)
                 self.explosionAnimationFrames[i].src = "/img/Animations/trap/trap_animation-" + i + ".png"
                 i++
-                console.log(self.explosionAnimationFrames[i])
             }
-            console.log(self.explosionAnimationFrames)
         }
         async function fillRewardFramesArray(self) {
             let i = 0
@@ -77,9 +76,7 @@ class Vue {
                 self.rewardAnimationFrames[i] = new Image(self.spriteWidth * 2, self.spriteHeight * 2)
                 self.rewardAnimationFrames[i].src = "/img/Animations/reward/gold-" + i + ".png"
                 i++
-                console.log(self.rewardAnimationFrames[i])
             }
-            console.log(self.rewardAnimationFrames)
         }
         async function fillMoinsDeuxFramesArray(self) {
             let i = 0
@@ -117,12 +114,15 @@ class Vue {
                 resolve(result)
             }
             result.onerror = reject
-        }).catch(error => console.log(error))
+        }).catch(error => console.log("[vue.js]: " + error))
     }
 
     /**
      * 
      * -------------------------------------- DIVERS --------------------------------------
+     */
+    /**
+     * gère l'affichage des balises de la page
      */
     gameBaliseShown(value) {
         if (value) {
@@ -139,12 +139,15 @@ class Vue {
 
     }
 
+    /**
+     * Nettoie le canva
+     */
     clearAll() {
         this.context.clearRect(0, 0, this.canva.width, this.canva.height);
     }
 
     launchCountdown(stop) {
-        countdown = setInterval(function () {
+        countdown = setInterval(function() {
             var now = new Date().getTime();
             var distance = stop - now;
             var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -164,12 +167,15 @@ class Vue {
             document.getElementById('countdown').innerHTML = minutes + ":" + seconds
         }, 1000);
     }
+
     /**
      * 
      * -------------------------------------- RENDU DU SALON --------------------------------------
      */
 
-
+    /**
+     * Gère la musique dans le salon
+     */
     lobbyMusic() {
         if (soundActived) {
             this.lobbyMusicFile.play()
@@ -235,13 +241,13 @@ class Vue {
 
         let link = window.location.href
         let roomLinkBalise = document.createElement("a")
-        roomLinkBalise.href  = link
+        roomLinkBalise.href = link
         roomLinkBalise.target = '_blank'
         roomLinkBalise.innerText = link
 
         roomLinkContainer.append(roomLinkTextBalise)
         roomLinkContainer.append(roomLinkBalise)
-       
+
 
         //on accroche tout ça
         divOptions.append(divNameContainer)
@@ -271,18 +277,18 @@ class Vue {
 
             divOptionsPartie.append(dureeDiv)
 
-            this.setInputFilter(inputBoxTime, function (value) { //empeche de retnrer autre chose que des entiers
+            this.setInputFilter(inputBoxTime, function(value) { //empeche de retnrer autre chose que des entiers
                 return /^-?\d*$/.test(value);
             });
             divColonneGauche.append(divOptionsPartie)
         }
         $("#container").append(divColonneGauche)
 
-        btnName.addEventListener("click", function () {
+        btnName.addEventListener("click", function() {
             if (inputBox.value != "" && inputBox.value.length < 21) {
                 controller.setName(inputBox.value)
             } else {
-                alert("Format de pseudo incorrect (>20 ou vide)")
+                alert("Format de pseudo incorrect (>20 ou vide)") //peut être rendu plus élégant...
             }
 
         });
@@ -315,91 +321,87 @@ class Vue {
         let pseudoP = document.createElement("div")
         pseudoP.setAttribute("id", "rulesP")
 
-        //let rules = document.createTextNode( );
-        // pseudoP.appendChild(pseudo);
-
         divRulesContainer.append(pseudoP);
         divColonneDroite.append(divRulesContainer);
         $("#container").append(divColonneDroite)
 
         $("#rulesP").load("rules.txt");
     }
+
     /**
      * Rendu des panneaux du central (liste joueur)
      * centre : liste des joueurs dans le salon
      */
     renderMiddleLobbyPannel() {
-        //cacher container
-        console.log("rendering lobby..")
-        this.gameBaliseShown(false)
+            //cacher container
+            console.log("[ vue.js ] : rendering lobby..")
+            this.gameBaliseShown(false)
 
-        if (document.getElementById("colonne-milieu-div") != null) {
-            document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
-        }
-        let btnStart = document.createElement("button");
-        btnStart.setAttribute("id", "btnStart")
-        btnStart.innerHTML = "Lancer la partie";
-
-        let divColonneMilieu = document.createElement("div")
-        divColonneMilieu.setAttribute("id", "colonne-milieu-div")
-
-        let ulListUsers = document.createElement("ul");
-        ulListUsers.setAttribute("id", "listPlayers-container")
-        console.log(controller.getRoomUsers())
-        let usersArray = Object.entries(controller.getRoomUsers())
-        usersArray.forEach(entrie => {
-            let userName = entrie[1]
-            let li = document.createElement("li");
-            li.setAttribute("class", "userInList")
-            let pBalise = document.createElement("p");
-            let name = ""
-
-            if (entrie[0] == controller.getId()) {
-                name = document.createTextNode(userName + "(toi)");
-            } else {
-                name = document.createTextNode(userName);
+            if (document.getElementById("colonne-milieu-div") != null) {
+                document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
             }
-            pBalise.appendChild(name);
-            if (entrie[0] == controller.getRoomLeader()) {
-                var imgLeader = document.createElement("img")
-                imgLeader.src = '/img/misc/crown.png';
-                imgLeader.setAttribute('width', '24px');
-                imgLeader.setAttribute('height', '24px');
-                imgLeader.setAttribute('id', 'leaderImg');
-                pBalise.append(imgLeader)
+            let btnStart = document.createElement("button");
+            btnStart.setAttribute("id", "btnStart")
+            btnStart.innerHTML = "Lancer la partie";
+
+            let divColonneMilieu = document.createElement("div")
+            divColonneMilieu.setAttribute("id", "colonne-milieu-div")
+
+            let ulListUsers = document.createElement("ul");
+            ulListUsers.setAttribute("id", "listPlayers-container")
+            console.log(controller.getRoomUsers())
+            let usersArray = Object.entries(controller.getRoomUsers())
+            usersArray.forEach(entrie => {
+                let userName = entrie[1]
+                let li = document.createElement("li");
+                li.setAttribute("class", "userInList")
+                let pBalise = document.createElement("p");
+                let name = ""
+
+                if (entrie[0] == controller.getId()) {
+                    name = document.createTextNode(userName + "(toi)");
+                } else {
+                    name = document.createTextNode(userName);
+                }
+                pBalise.appendChild(name);
+                if (entrie[0] == controller.getRoomLeader()) {
+                    var imgLeader = document.createElement("img")
+                    imgLeader.src = '/img/misc/crown.png';
+                    imgLeader.setAttribute('width', '24px');
+                    imgLeader.setAttribute('height', '24px');
+                    imgLeader.setAttribute('id', 'leaderImg');
+                    pBalise.append(imgLeader)
+                }
+
+
+                li.appendChild(pBalise);
+                ulListUsers.append(li)
+            })
+
+            divColonneMilieu.innerHTML = "<h2>LISTE DE JOUEURS</h2>"
+            divColonneMilieu.append(ulListUsers)
+
+            if (controller.getId() != controller.getRoomLeader()) {
+                btnStart.innerHTML = "En attente du lancement...";
             }
+            divColonneMilieu.append(btnStart)
+
+            $("#container").append(divColonneMilieu)
 
 
-            li.appendChild(pBalise);
-            ulListUsers.append(li)
-        })
-
-        divColonneMilieu.innerHTML = "<h2>LISTE DE JOUEURS</h2>"
-        divColonneMilieu.append(ulListUsers)
-
-        console.log("getid", controller.getId())
-        console.log("roomleader", controller.getRoomLeader())
-        if (controller.getId() != controller.getRoomLeader()) {
-            btnStart.innerHTML = "En attente du lancement...";
+            btnStart.addEventListener("click", function() {
+                controller.startButtonClicked()
+            });
+            console.log("[ vue.js ] : ..END OF rendering lobby")
         }
-        divColonneMilieu.append(btnStart)
-
-        $("#container").append(divColonneMilieu)
-
-
-        btnStart.addEventListener("click", function () {
-            controller.startButtonClicked()
-        });
-        console.log("..END OF rendering lobby")
-    }
-    /**
-     * Empeche la saisie de caractere autres que des entiers dans la box de durée
-     * @param {*} textbox 
-     * @param {*} inputFilter 
-     */
+        /**
+         * Empeche la saisie de caractere autres que des entiers dans la box de durée
+         * @param {*} textbox 
+         * @param {*} inputFilter 
+         */
     setInputFilter(textbox, inputFilter) {
-        ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function (event) {
-            textbox.addEventListener(event, function () {
+        ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
+            textbox.addEventListener(event, function() {
                 if (inputFilter(this.value)) {
                     this.oldValue = this.value;
                     this.oldSelectionStart = this.selectionStart;
@@ -424,7 +426,7 @@ class Vue {
      */
     initGame() {
 
-        console.log("Initialisation de la partie....")
+        console.log("[ vue.js ] : Initialisation de la partie....")
         if (document.getElementById("colonne-milieu-div") != null) {
             document.getElementById('colonne-milieu-div').parentNode.removeChild(document.getElementById('colonne-milieu-div'));
             document.getElementById('colonne-gauche-div').parentNode.removeChild(document.getElementById('colonne-gauche-div'));
@@ -433,7 +435,7 @@ class Vue {
         this.loadAssets()
         this.renderInGameMenus(controller.getCurrentPlayer().inventory)
         this.gameBaliseShown(true)
-        console.log("Initialisation terminée....")
+        console.log("[ vue.js ] : Initialisation terminée....")
     }
 
     /**
@@ -445,22 +447,20 @@ class Vue {
         document.getElementById('indication').parentNode.removeChild(document.getElementById('indication'));
         document.getElementById('canvaContainer').parentNode.removeChild(document.getElementById('canvaContainer'));
         document.getElementById('scoreLabel').parentNode.removeChild(document.getElementById('scoreLabel'));
-        $("#scoreListContainer").css(
-            {
-                "padding-left": "0",
-                "padding-right": "0",
-                "margin-left": "18%",
-                "margin-right": "18%",
-                "display": "block",
-                "width": "64%"
-            });
-        $("#container").css(
-            {
-                "margin-left": "auto",
-                "margin-right": "auto",
-                "width": "80%",
-                "height": "100%"
-            });
+        $("#scoreListContainer").css({
+            "padding-left": "0",
+            "padding-right": "0",
+            "margin-left": "18%",
+            "margin-right": "18%",
+            "display": "block",
+            "width": "64%"
+        });
+        $("#container").css({
+            "margin-left": "auto",
+            "margin-right": "auto",
+            "width": "80%",
+            "height": "100%"
+        });
 
         var resultatBalise = document.createElement("p");
         resultatBalise.setAttribute("id", "endResults");
@@ -471,7 +471,7 @@ class Vue {
         $("#scoreListContainer").prepend(resultatBalise)
 
         gameStarted = false;
-        console.log("Game session ended properly.")
+        console.log("[ vue.js ] : Session de jeu terminée avec succès.")
     }
 
     /**
@@ -480,9 +480,7 @@ class Vue {
     renderScoreList() {
         document.getElementById("scoreList").innerHTML = "";
         let scorePrecedent = 0
-        //console.log(controller.getModel().players[0].id,controller.getModel().players[0].name)
         for (let player of controller.getModel().players) {
-            //console.log(player)
             let div = document.createElement("div");
             div.setAttribute("class", "scoreDiv");
 
@@ -595,10 +593,10 @@ class Vue {
 
         /**
          * Affichage du menu des pieges/recompenses
-        */
+         */
         let trapSlotUsed = 0;
         let rewardSlotUsed = 0;
-        inventory.forEach(element => {//reparti 0 et 1 en piege et recompenses
+        inventory.forEach(element => { //reparti 0 et 1 en piege et recompenses
             if (element == 0) { //c'est une recompenses
                 rewardSlotUsed++
                 $("#rewardsList").append('<li><img class="rewards" src="/img/Environment/reward.png" width="' + this.spriteWidth + '" height="' + this.spriteHeight + '"></li>');
@@ -711,15 +709,14 @@ class Vue {
     }
 
     /**
-     * Shake the game
-     * @param {*} mapArray 
+     * Secoue le plateau
      */
     shake() {
-        $("#canva").effect("shake", { times: 3, distance: 4, direction: 'left' }, 250);
-    }
-    /**
-     * Dessine le plateau de jeu
-     */
+            $("#canva").effect("shake", { times: 3, distance: 4, direction: 'left' }, 250);
+        }
+        /**
+         * Dessine le plateau de jeu
+         */
     map(mapArray) {
         for (var i = 0; i < mapArray.length; i++) {
             for (var j = 0; j < mapArray[i].length; j++) {
@@ -738,8 +735,8 @@ class Vue {
     }
 
     /**
-    * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
-    */
+     * Dessine le cercle de lumière autour du joueur (ou plutot assombri tout autour)
+     */
     darken(position) {
 
         let coordX = position.x
@@ -794,7 +791,9 @@ class Vue {
         }
     }
 
-
+    /**
+     * Anime les chiffres de malus
+     */
     animateMalus(position, number) {
         let x = position.x_
         let y = position.y_
@@ -826,7 +825,7 @@ class Vue {
     }
 
     /**
-     * anime piège, reward
+     * Gestion des animations d'explosions, recompenses'
      */
     animation() {
         let self = this
@@ -839,6 +838,7 @@ class Vue {
         if (trapsRewards.trap != null) {
             x = trapsRewards.trap.x_
             y = trapsRewards.trap.y_
+
             function anim() {
                 self.context.drawImage(self.explosionAnimationFrames[i], (x * self.spriteWidth) - self.spriteWidth, (y * self.spriteHeight) - self.spriteHeight - self.biais, self.explosionAnimationFrames[i].width, self.explosionAnimationFrames[i].height)
                 i++
@@ -851,24 +851,28 @@ class Vue {
             anim(0)
 
         } else
-            if (trapsRewards.reward != null) {
-                x = trapsRewards.reward.x_
-                y = trapsRewards.reward.y_
-                function anim() {
-                    self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth), (y * self.spriteHeight) - self.spriteHeight, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
-                    i++
-                    if (controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
-                    if (i < self.rewardAnimationFrames.length) {
-                        requestAnimationFrame(anim);
-                    }
+        if (trapsRewards.reward != null) {
+            x = trapsRewards.reward.x_
+            y = trapsRewards.reward.y_
+
+            function anim() {
+                self.context.drawImage(self.rewardAnimationFrames[i], (x * self.spriteWidth), (y * self.spriteHeight) - self.spriteHeight, self.rewardAnimationFrames[i].width, self.rewardAnimationFrames[i].height)
+                i++
+                if (controller.getCurrentPlayer().role == 'explorer') self.darken(controller.getCurrentPlayer().position)
+                if (i < self.rewardAnimationFrames.length) {
+                    requestAnimationFrame(anim);
                 }
-                anim(0)
-                trapsRewards.reward = null
             }
+            anim(0)
+            trapsRewards.reward = null
+        }
 
 
     }
 
+    /**
+     * Rend le joueur de l'utilsiateur
+     */
     player(position) {
         let dir = controller.getCurrentPlayer().direction
         switch (dir) {
@@ -886,16 +890,14 @@ class Vue {
             default:
                 this.context.drawImage(this.playerUpAsset, position.x * this.spriteWidth - this.halfWidth / 2.0, position.y * this.spriteHeight - this.halfWidth / 2.0, this.playerUpAsset.width, this.playerUpAsset.height)
         }
-
-        // this.context.drawImage(this.blackCube, (position.x * this.spriteWidth) - this.halfWidth / 2.0 , (position.y * this.spriteHeight) - this.halfWidth / 2.0, this.blackCube.width, this.blackCube.height)
-        //this.context.fillRect(position.x * this.spriteWidth, position.y * this.spriteHeight, 2,2);
-
     }
 
+    /**
+     * Rend les autres joueurs
+     */
     otherPlayers(players) {
-
         players.forEach(pl => {
-            if (pl.id != controller.getId() && pl.role != "trapper") {//pas notre joueur
+            if (pl.id != controller.getId() && pl.role != "trapper") {
                 this.context.font = "8px Roboto";
                 let txtLength = this.context.measureText(pl.name).width;
                 this.context.fillText(pl.name, pl.position.x * this.spriteWidth - this.halfWidth / 2.0 - txtLength / 2.0, pl.position.y * this.spriteHeight - this.halfWidth);

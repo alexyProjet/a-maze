@@ -7,8 +7,6 @@ var io = require('socket.io').listen(server);
 var generate = require("@indutny/maze")
 const fs = require('fs');
 
-
-
 app.set('views', './views')
 app.set('view engine', 'pug')
 app.use(express.static(__dirname + '/public'));
@@ -19,9 +17,9 @@ const rooms = {}
 const refreshRate = 25
 const speed = 0.15
 const trapperInventory = [0, 1, 0, 1, 0, 1, 0, 1]
-const fuzeTime = 150 //temps de suspense
-const playerHalfSize = 0.20 // taille joueur et piege, rayon à verifier
-var songsContainer = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers  mp3
+const fuzeTime = 150 //délai entre la collision avec une entité et la réaction
+const playerHalfSize = 0.20
+var songsContainer = { trap: [], reward: [], mainTrap: null, mainReward: null } //contient les tableau avec les noms des fichiers mp3 (les taunts)
 
 /**
  * Rendu de la page dans le menu des salons
@@ -53,7 +51,6 @@ app.post('/room', (req, res) => {
         io.emit('new-room', req.body.room)
     }
     res.redirect(req.body.room)
-
 })
 
 /**
@@ -70,10 +67,10 @@ app.get('/:room', (req, res) => {
 
 var port = process.env.PORT || 3000
 
-server.listen(port, function () {
+server.listen(port, function() {
     console.log(`En écoute sur ${server.address().port}`);
     loadSongs()
-    io.on('connection', function (socket) {
+    io.on('connection', function(socket) {
 
         /**
          * Enregistrement du nouvel utilisateur connecté
@@ -98,9 +95,9 @@ server.listen(port, function () {
         });
 
         /**
-         * MAJ du pseudo demandé par l'utilisateur
+         * MAJ du pseudo demandée par l'utilisateur
          */
-        socket.on('set-name', function (room, newName) {
+        socket.on('set-name', function(room, newName) {
             console.log("SERVEUR : changement de nom dans le salon : ", room, "Ancien : ", rooms[room].users[socket.id], " Nouveau : ", newName)
             const noms = Object.values(rooms[room].users)
             let alreadyInUse = false
@@ -114,45 +111,51 @@ server.listen(port, function () {
                 rooms[room].users[socket.id] = newName
 
             }
-
             io.to(room).emit("lobby-changes-occured", rooms[room])
         })
 
         /**
          * Gestion de tous les cas possibles de deconnexion
          */
-        socket.on('disconnect', function () {
+        socket.on('disconnect', function() {
             getRoomFromPlayerId(socket.id).forEach(room => {
-                if (rooms[room].state != "inGame") { //si deconnexion en lobby
+                //si deconnexion en salon
+                if (rooms[room].state != "inGame") {
                     let name = rooms[room].users[socket.id]
-                    if (Object.keys(rooms[room].users).length == 1) { //si plus personne, on detruit le salon
+                        // //si plus personne dans le salon, on le detruit
+                    if (Object.keys(rooms[room].users).length == 1) {
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         delete rooms[room]
                         io.emit('remove-room-from-lobby-menu', room)
-                    } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part,  nouveau leader
+                            //si le leader du salon part, on prend un nouveau leader
+                    } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) {
                         let newLeader = null
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
-                        if (Object.keys(rooms[room].users).length == 0) {//plus personne en jeu
+                        if (Object.keys(rooms[room].users).length == 0) { //plus personne en jeu
                             io.in(room).emit("redirectPlayer")
                             delete rooms[room]
-                        } else {//reste assez de joueur
+                        } else {
                             rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
                             io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                         }
+                        //autre
                     } else {
                         console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         delete rooms[room].users[socket.id]
                         io.to(room).emit("user-disconnected-lobby", name, rooms[room])
                     }
-                } else { //si deconnexion en jeu
-                    if (Object.keys(rooms[room].users).length <= 2) { //si plus personne, on detruit le salon
+                    //si deconnexion en jeu
+                } else {
+                    //si plus personne, on detruit le salon
+                    if (Object.keys(rooms[room].users).length <= 2) {
                         console.log("SERVEUR : Destruction du salon : ", rooms[room], " raison : vide.")
                         clearInterval(rooms[room].refreshing);
                         clearInterval(rooms[room].timer);
                         delete rooms[room]
                         io.in(room).emit("redirectPlayer")
-                    } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) { //le leader part
+                            //si le leader part
+                    } else if (rooms[room].users[socket.id] == rooms[room].users[rooms[room].roomLeader]) {
                         console.log("SERVEUR : Deconnexion du maitre de salon dans : ", room, " tentative de réaffectation...")
                         delete rooms[room].users[socket.id]
                         rooms[room].roomLeader = Object.keys(rooms[room].users)[0];
@@ -162,13 +165,13 @@ server.listen(port, function () {
                         }
                         getPlayerFromId(rooms[room].roomLeader, room).isRoomLeader = true
                         removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
-                        rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
+                        rooms[room].model.players = rooms[room].model.players.filter(function(pl) {
                             return pl.id !== socket.id;
                         });
                     } else {
                         console.log("SERVEUR : deconnexion de : ", rooms[room].users[socket.id], "dans : ", room)
                         removeEntityAssociatedtoPlayer(getPlayerFromId(socket.id, room), room)
-                        rooms[room].model.players = rooms[room].model.players.filter(function (pl) {
+                        rooms[room].model.players = rooms[room].model.players.filter(function(pl) {
                             return pl.id !== socket.id;
                         });
                         delete rooms[room].users[socket.id]
@@ -178,12 +181,13 @@ server.listen(port, function () {
         });
 
         /**
-        * Client demande le debut de partie, si oui alors on prépare
-        */
-        socket.on('start-game', function (room, time) {
+         * Client demande le debut de partie, si oui alors on prépare
+         */
+        socket.on('start-game', function(room, time) {
             if (socket.id == rooms[room].roomLeader) {
-                if (false/*Object.keys(rooms[room].users).length == 1*/) { // a enlever 
-                    console.log("[ START GAME ] : 1 seul joueur, annulation...", room)
+                //Vérifie qu'il y a plus d'un joueur
+                if (Object.keys(rooms[room].users).length == 1) {
+                    console.log("[ SERVEUR ] : 1 seul joueur, annulation dans le salon ", room)
                     io.in(room).emit('game-ready', "missingPlayers")
                 } else {
                     rooms[room].state = "inGame"
@@ -212,7 +216,6 @@ server.listen(port, function () {
                     io.in(room).emit('display-game', timeStop.getTime(), rooms[room].model)
                 }
             }
-
         })
 
         /**
@@ -220,19 +223,18 @@ server.listen(port, function () {
          * Valide ou non le déplacement
          * les coordonnées sont déjà en version canva (pour rappel canva et array sont inversés)
          */
-        socket.on('move-player', function (room, newPosition, dir) {
+        socket.on('move-player', function(room, newPosition, dir) {
             movePlayer(room, newPosition, dir, socket.id)
         })
 
         /**
-          * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
-          */
-        socket.on('place-trap-and-reward', function (room, data) {
+         * Place un piège et une recompense si emplacement valide (pas d'entités, pas les deux sur la même case etc...)
+         */
+        socket.on('place-trap-and-reward', function(room, data) {
             placeTrapsAndRewards(room, data.trap, data.reward, socket.id)
         });
     });
 });
-
 
 /**
  * Met à jour le lobby avec users
@@ -252,41 +254,40 @@ function updateLobby(room, name) {
 function movePlayer(room, newPosition, dir, id) {
     let player = rooms[room].model.players.find(pl => pl.id == id)
     if (newPosition.x > mapSize.width || newPosition.y > mapSize.height || newPosition.x < 0 || newPosition.y < 0) {
-        console.log("[MOVE-PLAYER] : position en dehors du plateau.", room, player.id)
-    }
-    else if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
+        console.log("[MOVE-PLAYER] : position du joueur en dehors du plateau dans ", room, player.id)
+    } else if (player.role == "explorer" && Math.abs(newPosition.x - player.position.x) < 1.0 && Math.abs(newPosition.y - player.position.y) < 1.0) {
         let isColliding = false;
-        collision(newPosition, playerHalfSize).some(function (pos, ind) {
-            //regarde si il y a une collision à la nouvelle position avec...
-            //... des pièges
-            rooms[room].model.traps.some(function (trap, index) {
-                if (trap.position.x_ == pos.x && trap.position.y_ == pos.y) {
-                    if (trap.triggered == null) {
-                        trap.triggered = Date.now()
-                        isColliding = true
-                        io.to(room).emit("trap-animation", trap.position)
-                        io.to(room).emit("shake-game")
-                        plan_explosion(trap, player, room);
-                        return true
+        collision(newPosition, playerHalfSize).some(function(pos, ind) {
+                //regarde si il y a une collision à la nouvelle position avec...
+                //... des pièges
+                rooms[room].model.traps.some(function(trap, index) {
+                        if (trap.position.x_ == pos.x && trap.position.y_ == pos.y) {
+                            if (trap.triggered == null) {
+                                trap.triggered = Date.now()
+                                isColliding = true
+                                io.to(room).emit("trap-animation", trap.position)
+                                io.to(room).emit("shake-game")
+                                plan_explosion(trap, player, room);
+                                return true
+                            }
+                        }
+                    })
+                    //...des recompenses
+                rooms[room].model.rewards.some(function(rew, index) {
+                    if (rew.position.x_ == pos.x && rew.position.y_ == pos.y) {
+                        if (rew.triggered == null) {
+                            rew.triggered = Date.now()
+                            isColliding = true
+                            rewardPlayer(rew, player, room)
+                            return true
+                        }
                     }
+                })
+                if (isColliding) {
+                    return true
                 }
             })
-            //...des recompenses
-            rooms[room].model.rewards.some(function (rew, index) {
-                if (rew.position.x_ == pos.x && rew.position.y_ == pos.y) {
-                    if (rew.triggered == null) {
-                        rew.triggered = Date.now()
-                        isColliding = true
-                        rewardPlayer(rew, player, room)
-                        return true
-                    }
-                }
-            })
-            if (isColliding) {
-                return true
-            }
-        })
-        //check collisions avec murs
+            //check collisions avec murs
         let isCollidingWall = collision(newPosition, playerHalfSize).some(pos => {
             return rooms[room].model.map[pos.y][pos.x] == 1 || rooms[room].model.map[pos.y][pos.x] == -1
         })
@@ -303,7 +304,7 @@ function movePlayer(room, newPosition, dir, id) {
 }
 
 /**
- * Place des peiges et recompenses si endroit disponible
+ * Place des pieges et recompenses si l'endroit est disponible
  * @param {nom de salon} room 
  * @param {coord du piege {x,y}} trapPosition 
  * @param {coord de la recompense {x,y}} rewardPosition 
@@ -312,18 +313,17 @@ function movePlayer(room, newPosition, dir, id) {
 function placeTrapsAndRewards(room, trapPosition, rewardPosition, id) {
     let player = rooms[room].model.players.find(pl => pl.id == id)
 
-    let trap_instance = trap(player.id, trapPosition) //creer un piege avec les données recu et ce qu'on a deja
+    let trap_instance = trap(player.id, trapPosition) //creer un piege avec les données recues et ce qu'on a deja
     let reward_instance = reward(player.id, rewardPosition)
     if (player.inventory.length != 0) {
-        if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {
-        } else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) {//si placement possible
+        if (trap_instance.position.x_ == reward_instance.position.x_ && trap_instance.position.y_ == reward_instance.position.y_) {} else if (isAValidPosition(trap_instance.position.x_, trap_instance.position.y_, room) && isAValidPosition(reward_instance.position.x_, reward_instance.position.y_, room)) { //si placement possible
             rooms[room].model.traps.push(trap_instance)
             rooms[room].model.rewards.push(reward_instance)
             player.inventory.pop()
             player.inventory.pop()
             console.log(rooms[room].model.traps)
         } else {
-            console.log("trap et reward placés NON valides", room)
+            //console.log("[ placeTrapsAndRewards ] trap et reward placés NON valides dans ", room)
         }
     }
 }
@@ -349,7 +349,7 @@ function loadSongs() {
 }
 
 /**
- * Return a room
+ * Retourne un salon
  * @param {*} id 
  */
 function getRoomFromPlayerId(id) {
@@ -365,7 +365,7 @@ function getRoomFromPlayerId(id) {
  * @param {date} room 
  */
 function timer(stop, room) {
-    rooms[room].timer = setInterval(function () {
+    rooms[room].timer = setInterval(function() {
         let now = new Date().getTime();
 
         let distance = stop - now;
@@ -379,24 +379,23 @@ function timer(stop, room) {
 }
 
 /**
- * Met à jour le model tous les refreshRate ms
+ * Met à jour le modele tous les #refreshRate ms
  * @param {Object model} mod 
  * @param {string} room 
  * @param {Boolean} withmap 
  */
 
 function updateModelsEveryRefreshRate(room) {
-    let x = setInterval(function () {
+    let x = setInterval(function() {
 
         if (rooms[room] == undefined) {
             clearInterval(x)
-        }
-        else {
+        } else {
             // console.log("[REFRESHING MODEL] room : ", room)
             let mod = rooms[room].model
             mod.players.forEach(pl => {
                 let socketId = pl.id
-                //mesure anti-triche, les explorer n'ont pas à avoir la lsite des pieges et traps mais seulement la liste d'entités
+                    //mesure anti-triche, les explorer n'ont pas à avoir la ~liste des pieges et récompenses mais seulement la liste des entités
                 if (pl.role == "explorer") {
                     let newModel = Object.assign({}, mod)
                     newModel.entities = newModel.rewards.concat(newModel.traps)
@@ -421,10 +420,10 @@ function updateModelsEveryRefreshRate(room) {
  * @param {string} room 
  */
 function removeEntityAssociatedtoPlayer(player, room) {
-    rooms[room].model.traps = rooms[room].model.traps.filter(function (tr) {
+    rooms[room].model.traps = rooms[room].model.traps.filter(function(tr) {
         return tr.parentId !== player.id;
     });
-    rooms[room].model.rewards = rooms[room].model.rewards.filter(function (rew) {
+    rooms[room].model.rewards = rooms[room].model.rewards.filter(function(rew) {
         return rew.parentId !== player.id;
     });
 }
@@ -446,7 +445,7 @@ function randomPosition(room) {
 
 /**
  * Vérfie qu'il n'y a que du sol à la position donnée
- * (cad : pas de pieges, pas recompenses, pas d'autres joueurs)
+ * (cad : pas de pieges, pas de récompenses, pas d'autres joueurs)
  * Inverse les coordonnées pour vérfier dans la map, les coord passées sont celles du canvas
  * @param {float} x 
  * @param {float} y 
@@ -468,32 +467,6 @@ function isAValidPosition(x, y, room) {
         }
     }
     return false
-}
-
-let model = () => Object({
-    players: [],
-    traps: [],
-    rewards: [],
-    entities: [],
-    map: map(),
-    roomLeader: null
-})
-
-const newId = () => Math.floor(Math.random() * 1000000000)//génère un id aléatoire
-const position = (x, y) => Object({ x, y }) //creer un objet position
-const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false, direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
-const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
-const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
-const map = () => {
-    console.log("[ GENERATING MAP ]")
-    //cette librairie est pratique mais bug, il faut donc checker les bords qui parfois ne sont pas rendus
-    let maze = generate({ width: 29, height: 19, empty: '0', wall: '1' });
-    while (!bordersPresents(maze)) {
-        maze = generate({ width: 29, height: 19, empty: '0', wall: '1' });
-        console.log(" ---> [ GENERATING MAP ] failed... retrying !")
-    }
-    console.log(" ---> [ GENERATING MAP ] succes !")
-    return maze
 }
 
 /**
@@ -528,6 +501,32 @@ function bordersPresents(maze) {
     return true
 }
 
+let model = () => Object({
+    players: [],
+    traps: [],
+    rewards: [],
+    entities: [],
+    map: map(),
+    roomLeader: null
+})
+
+const newId = () => Math.floor(Math.random() * 1000000000) //génère un id aléatoire
+const position = (x, y) => Object({ x, y }) //creer un objet position
+const player = (position, role, score = 0, inventory = [], name = null, id = null, isRoomLeader = false, direction = "down") => Object({ id, position, name, role, isRoomLeader, score, inventory, direction }) //champs player
+const trap = (parentId, position, triggered = null, id = newId()) => Object({ parentId, position, triggered }) //champs de trap
+const reward = (parentId, position, score = 1, triggered = null) => Object({ parentId, position, score, triggered }) //champ reward
+const map = () => {
+    console.log("[ GENERATING MAP ]")
+        //cette librairie est pratique mais bug, il faut donc checker les bords qui parfois ne sont pas rendus...
+    let maze = generate({ width: 29, height: 19, empty: '0', wall: '1' });
+    while (!bordersPresents(maze)) {
+        maze = generate({ width: 29, height: 19, empty: '0', wall: '1' });
+        console.log(" ---> [ GENERATING MAP ] failed... retrying!")
+    }
+    console.log(" ---> [ GENERATING MAP ] succes !")
+    return maze
+}
+
 const roles = {
     explorer: "explorer",
     trapper: "trapper"
@@ -548,7 +547,8 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
 
     //MAJ le joueur auteur du piege
     let trapAuthor = getPlayerFromId(trap1.parentId, room)
-    if (trap1.parentId == pl.id) { //si marche sur son propre piege -2 points
+        //si marche sur son propre piege -2 points
+    if (trap1.parentId == pl.id) {
         trapAuthor.score = trapAuthor.score - 2
         console.log(" ----> -2 au joueur ", actualPlayer.name, " car active son propre piège")
         io.to(actualPlayer.id).emit("play-(-2)-animation", trap1.position)
@@ -572,11 +572,11 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
     //Fait exploser mur à côté
     explodeTrapWallNeighboor(trap1.position, room)
     rooms[room].model.traps = rooms[room].model.traps.filter(Boolean).filter(tr => tr.position != trap1.position)
-    //updateModels(rooms[room].model, room)
+        //updateModels(rooms[room].model, room)
     io.to(room).emit("scores-update")
 
     io.to(room).emit("play-sound", "trapMain", songsContainer.trapMain)
-    setTimeout(function () {
+    setTimeout(function() {
         let index = Math.floor(Math.random() * (songsContainer.trap.length))
         io.to(actualPlayer.id).emit("play-sound", "trap", index)
     }, fuzeTime * 3);
@@ -589,13 +589,13 @@ const plan_explosion = (trap1, actualPlayer, room) => setTimeout(() => {
  * @param {{x,y}} trapPosition 
  * @param {string} room 
  */
-function explodeTrapWallNeighboor(trapPosition, room,) {
+function explodeTrapWallNeighboor(trapPosition, room, ) {
     let neighboors = []
     let map = rooms[room].model.map
     let y = trapPosition.x_
     let x = trapPosition.y_
-    //2 = mur detruit
-    //3= trace d'explosion
+        //2 = mur detruit
+        //3 = trace d'explosion
     if (map[x + 1][y] == 1) {
         map[x + 1][y] = 2
     }
@@ -613,8 +613,8 @@ function explodeTrapWallNeighboor(trapPosition, room,) {
 }
 
 /**
- * Recompense le joueur qui a recupéré la reward
- * supprime du model
+ * Recompense le joueur qui a recupéré la récompense et la
+ * supprime du modele
  * @param {{parentId,x_,y_}} rewardUsed 
  * @param {*} player 
  */
@@ -633,18 +633,18 @@ const rewardPlayer = (rewardUsed, player, room) => {
         io.to(player.id).emit("play-(-1)-animation", rewardUsed.position)
 
 
-        setTimeout(function () {
+        setTimeout(function() {
             let index = Math.floor(Math.random() * (songsContainer.trap.length))
             io.to(pl.id).emit("play-sound", "trap", index)
         }, fuzeTime * 3);
 
     } else { //pas sa recompense
         pl.score++
-        io.to(player.id).emit("play-sound", "rewardMain", songsContainer.trapReward)
+            io.to(player.id).emit("play-sound", "rewardMain", songsContainer.trapReward)
         io.to(player.id).emit("reward-animation", rewardUsed.position)
         io.to(room).emit("scores-update")
 
-        setTimeout(function () {
+        setTimeout(function() {
             let index = Math.floor(Math.random() * (songsContainer.trap.length))
             io.to(pl.id).emit("play-sound", "reward", index)
         }, fuzeTime * 3);
@@ -660,10 +660,10 @@ const rewardPlayer = (rewardUsed, player, room) => {
 const collision = (pos, size) => {
 
     let a = [
-        position(Math.floor(pos.x - size), Math.floor(pos.y - size)),// haut ET gauche
-        position(Math.floor(pos.x - size), Math.floor(pos.y + size)),// haut droite
-        position(Math.floor(pos.x + size), Math.floor(pos.y + size)),// bas droite
-        position(Math.floor(pos.x + size), Math.floor(pos.y - size))// bas gauche
+        position(Math.floor(pos.x - size), Math.floor(pos.y - size)), // haut ET gauche
+        position(Math.floor(pos.x - size), Math.floor(pos.y + size)), // haut droite
+        position(Math.floor(pos.x + size), Math.floor(pos.y + size)), // bas droite
+        position(Math.floor(pos.x + size), Math.floor(pos.y - size)) // bas gauche
     ]
     return a
 }
