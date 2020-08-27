@@ -3,13 +3,16 @@
 Créé avec NodeJs, socket.io, pug, exclusivement en Javascript 
 --------------------------------------------------------------
 Lancer une partie :
-#Installe les modules
+#Installe les modules :
+
 npm install
 
-#Lance le serveur
+#Lance le serveur :
+
 node server.js
 
-#Dans le navigateur écrire
+#Dans le navigateur écrire :
+
 localhost:3000
 
 OU
