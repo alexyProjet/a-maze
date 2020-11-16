@@ -2,8 +2,8 @@
 
 Créé avec NodeJs, socket.io, pug, exclusivement en Javascript 
 --------------------------------------------------------------
-Lancer une partie :
-#Installe les modules :
+Pour lancer une partie :
+#Installer les modules :
 
 npm install
 
@@ -16,9 +16,9 @@ node server.js
 localhost:3000
 
 OU
-https://a-mazze.herokuapp.com/
+Version live : https://a-mazze.herokuapp.com/
 
-/!\ : Vous ne pouvez pas lancer une partie sans un autre joueur, il suffit d'ouvrir un autre onglet et taper localhost:3000, puis rejoindre le salon créé précédemment.
+/!\ : Vous ne pouvez pas lancer une partie sans un autre joueur. Pour cela, il suffit d'ouvrir un autre onglet et de taper localhost:3000, puis de rejoindre le salon créé précédemment.
 
 Touches :
 Déplacement avec ZQSD
@@ -41,23 +41,23 @@ Trapper : Vous voyez le labyrinthe dans son intégralité.
 FEATURES:
 --------------------------------------------------------------
 - Système de gestion de salons (suppression, ajout, mis à jour en temps réel, connexion/deconnexion, menu de salons, etc...)
-- Roles de trapper et explorer entièrements fonctionnels
+- Rôles de trapper et explorer entièrement fonctionnels
 - Scores et classement
 - Gestion des collisions avec l'environement
-- Maitre de room, seul lui peut lancer une partie, il est automatiquement remplacé par qq d'autre si il part
+- Maitre de salon, seul lui peut lancer une partie, il est automatiquement remplacé par quelqu'un d'autre si il part
 - Impossible de rejoindre une partie en cours
-- Feedback visuel quand un piege et une recompense sont validés par le serveur + indication qu'il faut poser 1 de chaque pour que ce soit valide
-- Joueur (et ses entités) disparaissent de la partie quand il quitte la partie
+- Feedback visuel quand un piège et une récompense sont validés par le serveur. Indication visuel qu'il faut poser un de chaque pour que ce soit valide
+- Le joueur (et ses entités) disparaissent de la partie quand il quitte la partie
 - Chronomètre de partie
 - Ecran de fin de partie
 - Couleur de personnage différente des ennemis
-- L'image du joueur adaptée à la direction du mouvement
-- Animations des entités
+- L'image du joueur est adaptée à la direction du mouvement
+- Les entités sont animées
 - Affichage du nom des autres joueurs sur le plateau, en jeu
 - Map générée aléatoirement
-- Taunt automatique par le serveur (bruitages, recompenses et pieges)
+- Taunt automatique par le serveur (bruitages, récompenses et pièges)
 - Salon privé/public
-- Mesures anti-triche (anonymisation des entités pour le role explorer, déplacements impossibles)
+- Mesures anti-triche (anonymisation des entités pour le role explorer, bloquage des déplacements impossibles...)
 
 AMELIORATIONS POSSIBLES:
 --------------------------------------------------------------
