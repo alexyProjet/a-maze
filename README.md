@@ -20,6 +20,9 @@ https://a-mazze.herokuapp.com/
 
 /!\ : Vous ne pouvez pas lancer une partie sans un autre joueur, il suffit d'ouvrir un autre onglet et taper localhost:3000, puis rejoindre le salon créé précédemment.
 
+Touches :
+Déplacement avec ZQSD
+
 But du jeu :
 --------------------------------------------------------------
 2 Rôles : Trapper et Explorer
